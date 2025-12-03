@@ -1,50 +1,125 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+同步影响报告:
+- 版本变更: [初始模板] → 1.0.0
+- 为Flutter跨平台桌面应用程序（macOS + Windows）创建章程
+- 添加了5个针对Flutter桌面开发的核心原则
+- 添加了平台要求部分
+- 添加了开发工作流程部分
+- 需要更新的模板:
+  ✅ plan-template.md (已审核 - 兼容Flutter结构)
+  ✅ spec-template.md (已审核 - 兼容用户故事格式)
+  ✅ tasks-template.md (已审核 - 兼容Flutter项目结构)
+- 后续待办事项: 无 - 所有占位符已填充
+-->
 
-## Core Principles
+# 聊天桌面应用章程
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## 核心原则
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### 一、跨平台一致性
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+应用程序必须在macOS和Windows平台上提供相同的功能和用户体验。平台特定代码必须隔离在平台接口实现中，所有业务逻辑必须保持平台无关。任何平台特定行为必须明确记录并说明理由。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**理由**: 用户期望无论使用哪个操作系统都能获得一致的行为。此原则确保了可维护性，防止代码库碎片化，同时承认合理的平台差异（如菜单栏、键盘快捷键）。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### 二、Flutter最佳实践
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+代码必须遵循Flutter和Dart约定：尽可能使用不可变widget、正确的状态管理分离、有效使用const构造函数、遵守flutter_lints规则。必须优先使用widget组合而非继承。业务逻辑必须与UI代码分离。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**理由**: Flutter的响应式框架在遵循其预期模式时性能最佳。糟糕的状态管理和可变widget会导致不必要的重建、性能问题和难以调试的行为。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### 三、桌面优先设计
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+UI必须针对桌面交互模式进行优化：键盘导航、窗口调整大小、适当的多窗口支持、原生上下文菜单以及正确处理鼠标悬停状态。不得将移动端的触摸优先模式作为主要交互范式。
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+**理由**: 桌面用户期望键盘快捷键、右键菜单、可调整大小的窗口和多窗口工作流。将桌面视为"放大的移动端"会导致糟糕的用户体验和未满足的用户期望。
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### 四、平台集成
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+应用程序必须集成原生平台功能：系统通知、文件系统对话框、原生窗口控件、平台适配的键盘快捷键（macOS上的Cmd，Windows上的Ctrl），并遵守平台UI约定（macOS上的菜单栏，Windows上的标题栏菜单）。
+
+**理由**: 用户期望桌面应用程序在其平台上具有原生感。忽略平台约定的应用程序会显得格格不入，并在用户工作流中产生摩擦。
+
+### 五、可测试性与可维护性
+
+所有功能必须是可测试的，具有清晰的关注点分离。Widget测试必须验证UI行为，单元测试必须覆盖业务逻辑，集成测试必须验证关键用户流程。代码必须组织得当，以最小化平台层、UI和业务逻辑之间的耦合。
+
+**理由**: Flutter桌面应用程序跨越多个平台，涉及复杂的状态管理。如果没有强大的测试实践和清晰的架构，跨平台bug将难以识别和修复，重构也会变得风险重重。
+
+## 平台要求
+
+### 平台一致性强制
+
+- 所有面向用户的功能必须在macOS和Windows上以相同方式工作，除非明确记录为平台特定功能
+- 平台特定实现必须通过公共接口抽象化
+- CI/CD流水线必须在两个目标平台上构建和测试
+- 发布构件必须同时为两个平台生成
+- 任何平台特定限制必须在发布说明中记录
+
+### 原生集成标准
+
+- 文件操作必须使用平台适配的文件选择器和对话框
+- 键盘快捷键必须遵守平台约定（Command键 vs Control键）
+- 应用程序菜单必须遵循平台指南（菜单栏 vs 窗口菜单）
+- 窗口管理必须遵守平台行为（最小化、最大化、关闭）
+- 系统集成功能（通知、托盘图标）必须在可用时使用平台API
+
+## 开发工作流程
+
+### 代码组织
+
+- 平台特定代码必须位于专用的平台接口实现中
+- 共享业务逻辑必须是平台无关的，并可独立测试
+- UI组件必须由具有清晰职责的可重用widget组成
+- 状态管理必须在整个应用程序中使用一致的模式
+- 功能模块应按功能域组织，而非技术层
+
+### 质量门禁
+
+- 所有代码必须通过`flutter analyze`，无错误或警告
+- 所有测试必须在macOS和Windows上通过后才能合并
+- Widget测试必须覆盖关键用户交互
+- 平台特定实现必须有相应的单元测试
+- 集成测试必须在两个平台上验证端到端用户流程
+- 性能必须在每个平台的低配目标硬件上验证
+
+### 测试要求
+
+- UI组件和交互的Widget测试
+- 业务逻辑、服务和工具的单元测试
+- 关键用户旅程的集成测试
+- 验证平台特定实现的平台测试
+- 适当的Golden测试（截图测试）用于视觉回归检测
+
+## 治理
+
+### 修订程序
+
+章程修订需要：
+1. 带有理由和影响评估的书面提案
+2. 审查受影响的模板（计划、规格、任务、命令）
+3. 如果更改破坏兼容性，需要为现有功能制定迁移计划
+4. 按照语义化版本规则递增版本
+
+### 版本策略
+
+- **主版本（MAJOR）**: 删除或重新定义使现有架构无效的核心原则
+- **次版本（MINOR）**: 添加新原则或大幅扩展现有指南
+- **补丁版本（PATCH）**: 澄清、措辞改进、非语义细化
+
+### 合规审查
+
+- 所有功能规格必须参考章程合规性
+- 所有实施计划必须包括章程检查点
+- 代码审查必须验证对原则的遵守
+- 违规必须在复杂性跟踪部分记录和说明
+- 应定期审计以验证整个代码库的持续合规性
+
+### 跨平台验证
+
+- 功能必须在macOS和Windows上测试后才能批准
+- 平台特定代码必须由熟悉目标平台的开发人员审查
+- UI/UX更改必须根据平台设计指南进行验证
+- 性能必须在每个平台的代表性硬件上测量
+
+**版本**: 1.0.0 | **批准日期**: 2025-11-27 | **最后修订**: 2025-11-27

@@ -1,0 +1,125 @@
+name: Build Windows Application
+
+on:
+  push:
+    tags:
+      - 'v*'  # 推送v开头的标签时触发，如 v1.0.0
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-windows:
+    name: 构建Windows版本
+    runs-on: windows-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Flutter环境
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+
+    - name: 启用Windows桌面支持
+      run: flutter config --enable-windows-desktop
+
+    - name: 检查Flutter环境
+      run: flutter doctor -v
+
+    - name: 获取依赖
+      run: flutter pub get
+
+    - name: 运行代码生成器
+      run: flutter pub run build_runner build --delete-conflicting-outputs
+      continue-on-error: true  # 如果没有需要生成的代码，不中断流程
+
+    - name: 创建.env配置文件
+      run: |
+        echo "AI_API_URL=${{ secrets.AI_API_URL }}" > .env
+        echo "AI_API_KEY=${{ secrets.AI_API_KEY }}" >> .env
+        echo "AI_SSE_URL=${{ secrets.AI_SSE_URL }}" >> .env
+      shell: bash
+
+    - name: 构建Windows Release版本
+      run: flutter build windows --release --tree-shake-icons
+
+    - name: 复制.env到构建目录
+      run: |
+        Copy-Item .env build\windows\x64\runner\Release\.env
+      shell: pwsh
+
+    - name: 创建README文件
+      run: |
+        @"
+        ChatDesktop - Windows版本
+
+        使用说明：
+        1. 双击 chat_desktop.exe 启动应用
+        2. 修改 .env 文件可以更改API配置
+        3. 首次运行可能需要安装 VC++ Redistributable
+
+        系统要求：
+        - Windows 10/11 (64位)
+        - 至少 4GB 内存
+
+        如遇到问题，请访问项目主页获取帮助。
+
+        构建时间: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+        版本: ${{ github.ref_name }}
+        "@ | Out-File -FilePath build\windows\x64\runner\Release\README.txt -Encoding UTF8
+      shell: pwsh
+
+    - name: 打包构建产物
+      run: |
+        cd build\windows\x64\runner\Release
+        Compress-Archive -Path * -DestinationPath ..\..\..\..\..\..\ChatDesktop-${{ github.ref_name }}-Windows.zip
+      shell: pwsh
+
+    - name: 上传构建产物到Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ChatDesktop-Windows-${{ github.ref_name }}
+        path: ChatDesktop-${{ github.ref_name }}-Windows.zip
+        retention-days: 90  # 保留90天
+
+    - name: 创建GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ChatDesktop-${{ github.ref_name }}-Windows.zip
+        body: |
+          ## ChatDesktop ${{ github.ref_name }}
+
+          ### Windows版本
+
+          **下载**: ChatDesktop-${{ github.ref_name }}-Windows.zip
+
+          **使用方法**:
+          1. 解压ZIP文件
+          2. 双击 `chat_desktop.exe` 启动应用
+          3. 如需修改API配置，编辑 `.env` 文件
+
+          **系统要求**:
+          - Windows 10/11 (64位)
+          - 可能需要安装 [VC++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+          ### 更新内容
+          请参考 [CHANGELOG.md](./CHANGELOG.md)
+
+          ---
+
+          构建时间: ${{ github.event.head_commit.timestamp }}
+          提交ID: ${{ github.sha }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 构建成功通知
+      if: success()
+      run: |
+        echo "✅ Windows构建成功！"
+        echo "版本: ${{ github.ref_name }}"
+        echo "下载地址将在Release页面提供"
