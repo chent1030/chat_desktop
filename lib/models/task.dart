@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:uuid/uuid.dart';
 
 part 'task.g.dart';
 
@@ -20,6 +21,10 @@ enum TaskSource {
 class Task {
   /// 任务ID (自动生成)
   Id id = Isar.autoIncrement;
+
+  /// 全局唯一标识符 (用于MQTT同步去重)
+  @Index(unique: true, replace: true)
+  String? uuid;
 
   /// 任务标题
   @Index(type: IndexType.value)
@@ -70,6 +75,7 @@ class Task {
   /// 构造函数
   Task({
     this.id = Isar.autoIncrement,
+    this.uuid,
     required this.title,
     this.description,
     this.priority = Priority.medium,
@@ -83,11 +89,15 @@ class Task {
     this.tags,
     this.isSynced = false,
     this.lastSyncedAt,
-  });
+  }) {
+    // 如果uuid为null，生成一个新的
+    uuid ??= const Uuid().v4();
+  }
 
   /// 复制方法 (用于更新任务)
   Task copyWith({
     Id? id,
+    String? uuid,
     String? title,
     String? description,
     Priority? priority,
@@ -104,6 +114,7 @@ class Task {
   }) {
     return Task(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       title: title ?? this.title,
       description: description ?? this.description,
       priority: priority ?? this.priority,
@@ -157,59 +168,89 @@ class Task {
     updatedAt = DateTime.now();
   }
 
-  /// 转换为JSON (用于WebSocket同步)
+  /// 转换为JSON (用于MQTT同步)
   Map<String, dynamic> toJson() {
+    final dateFormat = 'yyyy-MM-dd HH:mm:ss';
+
+    String? formatDateTime(DateTime? dateTime) {
+      if (dateTime == null) return null;
+      return '${dateTime.year.toString().padLeft(4, '0')}-'
+          '${dateTime.month.toString().padLeft(2, '0')}-'
+          '${dateTime.day.toString().padLeft(2, '0')} '
+          '${dateTime.hour.toString().padLeft(2, '0')}:'
+          '${dateTime.minute.toString().padLeft(2, '0')}:'
+          '${dateTime.second.toString().padLeft(2, '0')}';
+    }
+
     return {
       'id': id,
+      'uuid': uuid,
       'title': title,
       'description': description,
       'priority': priority.index,
       'isCompleted': isCompleted,
-      'dueDate': dueDate?.toIso8601String(),
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'dueDate': formatDateTime(dueDate),
+      'createdAt': formatDateTime(createdAt),
+      'updatedAt': formatDateTime(updatedAt),
       'source': source.index,
       'createdByAgentId': createdByAgentId,
-      'completedAt': completedAt?.toIso8601String(),
+      'completedAt': formatDateTime(completedAt),
       'tags': tags,
       'isSynced': isSynced,
-      'lastSyncedAt': lastSyncedAt?.toIso8601String(),
+      'lastSyncedAt': formatDateTime(lastSyncedAt),
     };
   }
 
-  /// 从JSON创建 (用于WebSocket同步)
+  /// 从JSON创建 (用于MQTT同步)
   factory Task.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDateTime(String? dateTimeStr) {
+      if (dateTimeStr == null || dateTimeStr.isEmpty) return null;
+      try {
+        // 支持 yyyy-MM-dd HH:mm:ss 格式
+        final parts = dateTimeStr.split(' ');
+        if (parts.length == 2) {
+          final dateParts = parts[0].split('-');
+          final timeParts = parts[1].split(':');
+
+          return DateTime(
+            int.parse(dateParts[0]),
+            int.parse(dateParts[1]),
+            int.parse(dateParts[2]),
+            int.parse(timeParts[0]),
+            int.parse(timeParts[1]),
+            int.parse(timeParts[2]),
+          );
+        }
+        // 兼容ISO8601格式
+        return DateTime.parse(dateTimeStr);
+      } catch (e) {
+        print('解析时间失败: $dateTimeStr, error: $e');
+        return null;
+      }
+    }
+
     return Task(
       id: json['id'] as Id? ?? Isar.autoIncrement,
+      uuid: json['uuid'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
       priority: Priority.values[json['priority'] as int? ?? 1],
       isCompleted: json['isCompleted'] as bool? ?? false,
-      dueDate: json['dueDate'] != null
-          ? DateTime.parse(json['dueDate'] as String)
-          : null,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : DateTime.now(),
+      dueDate: parseDateTime(json['dueDate'] as String?),
+      createdAt: parseDateTime(json['createdAt'] as String?) ?? DateTime.now(),
+      updatedAt: parseDateTime(json['updatedAt'] as String?) ?? DateTime.now(),
       source: TaskSource.values[json['source'] as int? ?? 0],
       createdByAgentId: json['createdByAgentId'] as String?,
-      completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'] as String)
-          : null,
+      completedAt: parseDateTime(json['completedAt'] as String?),
       tags: json['tags'] as String?,
       isSynced: json['isSynced'] as bool? ?? false,
-      lastSyncedAt: json['lastSyncedAt'] != null
-          ? DateTime.parse(json['lastSyncedAt'] as String)
-          : null,
+      lastSyncedAt: parseDateTime(json['lastSyncedAt'] as String?),
     );
   }
 
   @override
   String toString() {
-    return 'Task(id: $id, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate)';
+    return 'Task(id: $id, uuid: $uuid, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate)';
   }
 }
 

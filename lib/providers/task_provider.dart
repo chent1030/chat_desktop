@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../services/mqtt_service.dart';
 
 // ============================================
 // TaskService Provider
@@ -76,14 +78,48 @@ class TaskListState {
 /// TaskListProvider - 管理任务列表的状态和操作
 class TaskListNotifier extends StateNotifier<TaskListState> {
   final TaskService _taskService;
+  StreamSubscription<void>? _taskWatchSubscription;
+  StreamSubscription<void>? _mqttTaskChangeSubscription;
 
   TaskListNotifier(this._taskService) : super(const TaskListState()) {
+    print('🎯 [Provider] TaskListNotifier 初始化');
+
     // 初始化时加载任务
     loadTasks();
+
+    // 监听数据库变化，自动刷新任务列表
+    _taskWatchSubscription = _taskService.watchTasks().listen((_) {
+      print('📊 [Provider] 检测到数据库变化（Isar Watch），重新加载任务列表');
+      loadTasks();
+    });
+
+    // 监听MQTT任务变更通知
+    try {
+      _mqttTaskChangeSubscription = MqttService.instance.taskChangeStream.listen(
+        (_) {
+          print('📊 [Provider] 收到MQTT任务变更通知，重新加载任务列表');
+          loadTasks();
+        },
+        onError: (error) {
+          print('❌ [Provider] MQTT任务变更监听错误: $error');
+        },
+      );
+      print('✓ [Provider] 已订阅MQTT任务变更通知');
+    } catch (e) {
+      print('❌ [Provider] 订阅MQTT任务变更失败: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _taskWatchSubscription?.cancel();
+    _mqttTaskChangeSubscription?.cancel();
+    super.dispose();
   }
 
   /// 加载任务
   Future<void> loadTasks() async {
+    print('📊 [Provider] loadTasks() 被调用');
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -124,8 +160,11 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
       // 应用排序
       tasks = _sortTasks(tasks, state.sortOrder);
 
+      print('✓ [Provider] 加载了 ${tasks.length} 个任务');
       state = state.copyWith(tasks: tasks, isLoading: false);
+      print('✓ [Provider] UI状态已更新');
     } catch (e) {
+      print('❌ [Provider] 加载任务失败: $e');
       state = state.copyWith(
         isLoading: false,
         error: '加载任务失败: $e',
@@ -235,8 +274,10 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
 }
 
 /// TaskListProvider实例
+/// 注意：不使用autoDispose，确保provider在应用生命周期内始终存在
 final taskListProvider =
     StateNotifierProvider<TaskListNotifier, TaskListState>((ref) {
+  print('🎯 [Provider] 创建 TaskListProvider');
   final taskService = ref.watch(taskServiceProvider);
   return TaskListNotifier(taskService);
 });
@@ -428,20 +469,32 @@ final taskFormProvider =
 // 辅助 Providers
 // ============================================
 
+/// 任务变化流Provider（用于触发其他Provider刷新）
+final taskChangesStreamProvider = StreamProvider<void>((ref) {
+  final taskService = ref.watch(taskServiceProvider);
+  return taskService.watchTasks();
+});
+
 /// 任务统计信息provider
 final taskStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  // 监听任务变化
+  ref.watch(taskChangesStreamProvider);
   final taskService = ref.watch(taskServiceProvider);
   return await taskService.getTaskStatistics();
 });
 
 /// 任务总数provider
 final taskCountProvider = FutureProvider<int>((ref) async {
+  // 监听任务变化
+  ref.watch(taskChangesStreamProvider);
   final taskService = ref.watch(taskServiceProvider);
   return await taskService.getTaskCount();
 });
 
 /// 未完成任务数量provider (用于角标)
 final incompleteTaskCountProvider = FutureProvider<int>((ref) async {
+  // 监听任务变化
+  ref.watch(taskChangesStreamProvider);
   final taskService = ref.watch(taskServiceProvider);
   return await taskService.getIncompleteTaskCount();
 });

@@ -175,6 +175,27 @@ class ConfigService {
     );
   }
 
+  /// 获取用户工号
+  String? get empNo {
+    return _prefs.getString(AppConstants.prefKeyEmpNo);
+  }
+
+  /// 设置用户工号
+  Future<void> setEmpNo(String empNo) async {
+    await _prefs.setString(AppConstants.prefKeyEmpNo, empNo.trim());
+  }
+
+  /// 检查是否已设置工号
+  bool get hasEmpNo {
+    final emp = empNo;
+    return emp != null && emp.isNotEmpty;
+  }
+
+  /// 清除工号
+  Future<void> clearEmpNo() async {
+    await _prefs.remove(AppConstants.prefKeyEmpNo);
+  }
+
   /// 清除所有配置（用于测试或重置）
   Future<void> clearAll() async {
     await _prefs.clear();

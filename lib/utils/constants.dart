@@ -49,6 +49,7 @@ class AppConstants {
   static const String prefKeyMiniWindowPosition = 'mini_window_position';
   static const String prefKeyLastSeenTaskTimestamp = 'last_seen_task_timestamp';
   static const String prefKeyDeviceId = 'device_id';
+  static const String prefKeyEmpNo = 'emp_no'; // 用户工号
 
   // 环境变量键名
   static const String envKeyOpenAIApiKey = 'OPENAI_API_KEY';
@@ -57,6 +58,10 @@ class AppConstants {
   static const String envKeyDeviceId = 'DEVICE_ID';
   static const String envKeyDifyApiUrl = 'DIFY_API_URL';
   static const String envKeyDifyApiKey = 'DIFY_API_KEY';
+
+  // MQTT配置
+  static const String mqttBrokerHost = 'localhost';
+  static const int mqttBrokerPort = 1883;
 
   // API端点
   static const String openAIEndpoint = 'https://api.openai.com/v1/chat/completions';

@@ -69,6 +69,28 @@ class TaskService {
     return task.id;
   }
 
+  /// 直接保存Task对象（用于MQTT等外部来源，保留完整信息包括UUID）
+  Future<int> createTaskDirect(Task task) async {
+    // 保存任务到数据库
+    await _isar.writeTxn(() async {
+      await _isar.tasks.put(task);
+    });
+
+    // 记录操作
+    await _recordAction(
+      TaskActionHelper.createTaskCreated(
+        taskId: task.id,
+        title: task.title,
+        performedBy: task.source == TaskSource.ai && task.createdByAgentId != null
+            ? task.createdByAgentId!
+            : 'mqtt',
+      ),
+    );
+
+    print('✓ 任务已创建: ${task.title} (ID: ${task.id}, UUID: ${task.uuid})');
+    return task.id;
+  }
+
   /// 根据ID获取任务
   Future<Task?> getTaskById(int id) async {
     return await _isar.tasks.get(id);

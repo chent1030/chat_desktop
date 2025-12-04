@@ -47,6 +47,9 @@ dependencies:
   flutter_markdown: ^0.6.18
   url_launcher: ^6.2.0
 
+  # MQTT
+  mqtt_client: ^10.2.0
+
   # 语音录制
   record: ^6.0.0
   path: ^1.8.3
@@ -54,7 +57,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0  # 降级以兼容Dart SDK 3.2+
+  flutter_lints: ^6.0.0
 
   # 代码生成
   build_runner: ^2.4.7

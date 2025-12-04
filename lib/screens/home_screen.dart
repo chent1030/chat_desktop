@@ -5,6 +5,10 @@ import '../providers/window_provider.dart';
 import '../widgets/tasks/task_list.dart';
 import '../widgets/tasks/task_form.dart';
 import '../widgets/chat/chat_view.dart';
+import '../widgets/common/emp_no_dialog.dart';
+import '../services/config_service.dart';
+import '../services/mqtt_service.dart';
+import '../utils/constants.dart';
 
 /// HomeScreen - 应用主界面
 class HomeScreen extends ConsumerStatefulWidget {
@@ -16,6 +20,45 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0; // 0: 任务列表, 1: AI助手
+  final _configService = ConfigService.instance;
+  final _mqttService = MqttService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    // 延迟检查工号，确保UI已构建
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 强制初始化TaskListProvider，确保它订阅了所有需要的流
+      print('🎯 [HomeScreen] 初始化 TaskListProvider');
+      ref.read(taskListProvider);
+
+      _checkAndInitializeMqtt();
+    });
+  }
+
+  /// 检查工号并初始化MQTT
+  Future<void> _checkAndInitializeMqtt() async {
+    if (!_configService.hasEmpNo) {
+      // 没有工号，显示弹窗（不可关闭）
+      final empNo = await EmpNoDialog.show(context, canDismiss: false);
+
+      if (empNo == null || empNo.isEmpty) {
+        // 用户未输入工号（理论上不应该到这里，因为弹窗不可关闭）
+        print('⚠️ [MQTT] 用户未输入工号');
+        return;
+      }
+    } else {
+      // 已有工号，直接连接MQTT
+      final empNo = _configService.empNo!;
+      print('📡 [MQTT] 使用已保存的工号连接: $empNo');
+
+      await _mqttService.connect(
+        broker: AppConstants.mqttBrokerHost,
+        port: AppConstants.mqttBrokerPort,
+        empNo: empNo,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
