@@ -136,6 +136,9 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // 判断是否是修改模式（已有工号且允许关闭）
+    final isEditMode = widget.canDismiss && _empNoController.text.isNotEmpty;
+
     return PopScope(
       canPop: widget.canDismiss,
       child: AlertDialog(
@@ -143,7 +146,7 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
           children: [
             const Icon(Icons.badge, color: Colors.blue),
             const SizedBox(width: 12),
-            const Text('输入工号'),
+            Text(isEditMode ? '修改工号' : '输入工号'),
             if (!widget.canDismiss) ...[
               const SizedBox(width: 8),
               Container(
@@ -172,9 +175,11 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '请输入您的工号以启用MQTT待办同步功能',
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                Text(
+                  isEditMode
+                      ? '修改工号后，将断开当前连接并使用新工号重新连接MQTT'
+                      : '请输入您的工号以启用MQTT待办同步功能',
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(

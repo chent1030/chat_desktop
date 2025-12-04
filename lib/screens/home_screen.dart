@@ -276,6 +276,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _showSearchDialog(context);
             } else if (value == 'clear_completed') {
               await _clearCompletedTasks();
+            } else if (value == 'change_emp_no') {
+              await _showChangeEmpNoDialog();
             }
           },
           itemBuilder: (context) => [
@@ -296,6 +298,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Icon(Icons.clear_all, size: 18),
                   SizedBox(width: 8),
                   Text('清除已完成任务'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'change_emp_no',
+              child: Row(
+                children: [
+                  const Icon(Icons.badge, size: 18),
+                  const SizedBox(width: 8),
+                  Text('修改工号 (${_configService.empNo ?? '未设置'})'),
                 ],
               ),
             ),
@@ -575,6 +588,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             content: Text('已清除所有已完成任务'),
             backgroundColor: Colors.green,
           ),
+        );
+      }
+    }
+  }
+
+  /// 显示修改工号对话框
+  Future<void> _showChangeEmpNoDialog() async {
+    final currentEmpNo = _configService.empNo;
+
+    // 先断开MQTT连接
+    await _mqttService.disconnect();
+    print('📡 [MQTT] 已断开连接，准备修改工号');
+
+    // 显示工号输入弹窗（允许取消）
+    final newEmpNo = await EmpNoDialog.show(context, canDismiss: true);
+
+    if (newEmpNo != null && newEmpNo.isNotEmpty) {
+      // 用户输入了新工号
+      if (newEmpNo != currentEmpNo) {
+        print('✓ 工号已从 $currentEmpNo 修改为 $newEmpNo');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('工号已修改为: $newEmpNo'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        print('ℹ️ 工号未变化: $newEmpNo');
+      }
+    } else {
+      // 用户取消了，使用原来的工号重新连接
+      if (currentEmpNo != null && currentEmpNo.isNotEmpty) {
+        print('ℹ️ 用户取消修改，使用原工号重新连接: $currentEmpNo');
+        await _mqttService.connect(
+          broker: AppConstants.mqttBrokerHost,
+          port: AppConstants.mqttBrokerPort,
+          empNo: currentEmpNo,
         );
       }
     }
