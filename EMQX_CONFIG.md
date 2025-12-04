@@ -76,13 +76,21 @@ _client!.logging(on: true);  // 开启日志，查看详细连接过程
 
 ## 修改Broker地址
 
-如果你的EMQX不在localhost，修改 `lib/utils/constants.dart`：
+MQTT Broker配置现在通过环境变量管理，修改 `.env` 文件：
 
-```dart
-// MQTT配置
-static const String mqttBrokerHost = '10.133.29.112';  // 你的EMQX地址
-static const int mqttBrokerPort = 1883;
+```env
+# MQTT配置
+MQTT_BROKER_HOST=10.133.29.112  # 你的EMQX地址
+MQTT_BROKER_PORT=1883
 ```
+
+如果你的EMQX在本地，保持默认配置即可：
+```env
+MQTT_BROKER_HOST=localhost
+MQTT_BROKER_PORT=1883
+```
+
+**注意：** 修改.env文件后需要重新启动应用才能生效。
 
 ## 测试连接
 

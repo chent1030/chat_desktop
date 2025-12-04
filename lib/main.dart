@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
 import 'services/config_service.dart';
 import 'services/storage_service.dart';
@@ -12,6 +13,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // 加载环境变量
+    await dotenv.load(fileName: '.env');
+    print('✓ 环境变量加载成功');
+
     // 初始化配置服务
     await ConfigService.instance.initialize();
     print('✓ ConfigService初始化成功');

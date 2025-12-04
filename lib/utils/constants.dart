@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// 应用程序通用常量定义
 class AppConstants {
   // 应用信息
@@ -59,9 +61,11 @@ class AppConstants {
   static const String envKeyDifyApiUrl = 'DIFY_API_URL';
   static const String envKeyDifyApiKey = 'DIFY_API_KEY';
 
-  // MQTT配置
-  static const String mqttBrokerHost = 'localhost';
-  static const int mqttBrokerPort = 1883;
+  // MQTT配置 (从环境变量读取)
+  static String get mqttBrokerHost =>
+      dotenv.env['MQTT_BROKER_HOST'] ?? 'localhost';
+  static int get mqttBrokerPort =>
+      int.tryParse(dotenv.env['MQTT_BROKER_PORT'] ?? '1883') ?? 1883;
 
   // API端点
   static const String openAIEndpoint = 'https://api.openai.com/v1/chat/completions';

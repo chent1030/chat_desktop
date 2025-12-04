@@ -310,13 +310,15 @@ client.on('connect', () => {
 
 ### 修改MQTT Broker地址
 
-编辑 `lib/utils/constants.dart`:
+MQTT Broker配置现在通过环境变量管理，编辑 `.env` 文件：
 
-```dart
-// MQTT配置
-static const String mqttBrokerHost = 'your-broker.com';  // 修改为实际地址
-static const int mqttBrokerPort = 1883;
+```env
+# MQTT配置
+MQTT_BROKER_HOST=your-broker.com  # 修改为实际地址
+MQTT_BROKER_PORT=1883
 ```
+
+**注意：** 修改.env文件后需要重新启动应用才能生效。
 
 ### 添加认证
 
