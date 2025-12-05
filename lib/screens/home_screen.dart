@@ -597,9 +597,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _showChangeEmpNoDialog() async {
     final currentEmpNo = _configService.empNo;
 
-    // 先断开MQTT连接
-    await _mqttService.disconnect();
-    print('📡 [MQTT] 已断开连接，准备修改工号');
+    // 先断开MQTT连接并销毁客户端（因为clientId包含工号）
+    await _mqttService.disconnect(destroyClient: true);
+    print('📡 [MQTT] 已断开连接并销毁客户端，准备修改工号');
 
     // 显示工号输入弹窗（允许取消）
     final newEmpNo = await EmpNoDialog.show(context, canDismiss: true);

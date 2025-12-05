@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:mqtt5_client/mqtt5_client.dart';
+import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as notifications;
 import '../models/task.dart';
 import 'task_service.dart';
@@ -15,7 +15,7 @@ enum MqttServiceState {
   error,
 }
 
-/// MQTT服务类 - 负责待办事项的MQTT同步
+/// MQTT服务类 - 负责待办事项的MQTT同步（使用MQTT 5.0）
 class MqttService {
   static MqttService? _instance;
   MqttServerClient? _client;
@@ -25,6 +25,15 @@ class MqttService {
 
   /// 当前工号
   String? _empNo;
+
+  /// 连接配置（用于重连）
+  String? _broker;
+  int? _port;
+  String? _username;
+  String? _password;
+
+  /// 消息监听订阅
+  StreamSubscription<List<MqttReceivedMessage>>? _messageSubscription;
 
   /// 任务变更通知流（用于通知UI刷新）
   final _taskChangeController = StreamController<void>.broadcast();
@@ -46,6 +55,9 @@ class MqttService {
   /// 重连定时器
   Timer? _reconnectTimer;
 
+  /// 通知是否已初始化
+  bool _notificationsInitialized = false;
+
   MqttService._();
 
   static MqttService get instance {
@@ -55,6 +67,11 @@ class MqttService {
 
   /// 初始化通知
   Future<void> _initNotifications() async {
+    if (_notificationsInitialized) {
+      print('ℹ️ [MQTT] 通知已初始化，跳过');
+      return;
+    }
+
     const androidSettings = notifications.AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = notifications.DarwinInitializationSettings();
     const initSettings = notifications.InitializationSettings(
@@ -64,6 +81,8 @@ class MqttService {
     );
 
     await _notificationsPlugin.initialize(initSettings);
+    _notificationsInitialized = true;
+    print('✓ [MQTT] 通知初始化成功');
   }
 
   /// 显示通知
@@ -110,44 +129,73 @@ class MqttService {
     String? username,
     String? password,
   }) async {
-    if (_connectionState == MqttServiceState.connected) {
+    if (_connectionState == MqttServiceState.connected && _client != null) {
       print('⚠️ [MQTT] 已经连接，无需重复连接');
       return true;
     }
 
     try {
       _empNo = empNo;
+      // 保存连接配置（用于重连）
+      _broker = broker;
+      _port = port;
+      _username = username;
+      _password = password;
+
       _updateConnectionState(MqttServiceState.connecting);
 
-      // 初始化通知
+      // 初始化通知（只初始化一次）
       await _initNotifications();
 
-      // 创建客户端 (clientId使用工号)
-      _client = MqttServerClient(broker, 'chat_desktop_$empNo');
+      // 判断是首次连接还是重连
+      final bool isFirstConnection = _client == null;
+
+      // ⚠️ 关键：每次连接都创建新的客户端实例，避免sessionTakenOver问题
+      if (_client != null) {
+        print('🧹 [MQTT] 清理旧客户端实例以避免sessionTakenOver...');
+        // 取消旧的消息订阅
+        await _messageSubscription?.cancel();
+        _messageSubscription = null;
+        _client = null;
+      }
+
+      print('🆕 [MQTT] 创建新的MQTT 5.0客户端实例...');
+
+      // ⚠️ 关键：使用时间戳确保Client ID唯一，避免sessionTakenOver
+      final String clientId = 'chat_desktop_${empNo}_${DateTime.now().millisecondsSinceEpoch}';
+
+      // 创建MQTT 5.0客户端
+      _client = MqttServerClient(broker, clientId);
       _client!.port = port;
-      _client!.logging(on: true); // 开启日志以便调试
+      _client!.logging(on: false); // 关闭详细日志
       _client!.keepAlivePeriod = 60;
-      _client!.autoReconnect = false; // 手动控制重连
+      _client!.autoReconnect = false; // 我们自己处理重连
+
+      print('🔧 [MQTT] 使用协议: MQTT 5.0');
+      print('🔧 [MQTT] Client ID: $clientId');
+      print('🔧 [MQTT] 客户端配置: keepAlive=${_client!.keepAlivePeriod}s');
+
+      // 设置回调
       _client!.onConnected = _onConnected;
       _client!.onDisconnected = _onDisconnected;
       _client!.onSubscribed = _onSubscribed;
 
-      // 设置连接消息（参考Java示例）
-      final connMessage = MqttConnectMessage()
-          .withClientIdentifier('chat_desktop_$empNo')
-          .startClean() // 对应 cleanSession(true)
-          .keepAliveFor(60); // 设置keepAlive
+      // 设置连接消息
+      final connectionMessage = MqttConnectMessage()
+          .withClientIdentifier(clientId) // 使用与client相同的ID
+          .startClean() // ⚠️ 始终Clean Start=true，匹配MQTTX行为
+          .keepAliveFor(60);
 
-      // 如果有用户名密码
-      if (username != null && password != null) {
-        connMessage.authenticateAs(username, password);
+      print('🔧 [MQTT] Clean Start = true');
+
+      // 认证
+      if (username != null && username.isNotEmpty) {
+        connectionMessage.authenticateAs(username, password ?? '');
       } else {
-        // 即使不需要密码认证，也使用工号作为username（方便在EMQX中识别）
-        // 注意：不要只设置withWillTopic而不设置payload，会导致空指针
-        connMessage.authenticateAs(empNo, ''); // 使用工号作为用户名，密码为空
+        connectionMessage.authenticateAs(empNo, '');
       }
 
-      _client!.connectionMessage = connMessage;
+      _client!.connectionMessage = connectionMessage;
 
       // 连接
       print('📡 [MQTT] 正在连接到 $broker:$port...');
@@ -157,11 +205,24 @@ class MqttService {
         print('✓ [MQTT] 连接成功');
         _updateConnectionState(MqttServiceState.connected);
 
+        // ⚠️ 关键：每次连接成功后都需要订阅消息流（因为每次都是新client）
+        if (_client!.updates != null) {
+          print('📡 [MQTT] 设置消息监听...');
+          _messageSubscription = _client!.updates!.listen(
+            _onMessage,
+            onDone: () {
+              print('⚠️ [MQTT] 消息流结束 (onDone)');
+            },
+            onError: (error) {
+              print('❌ [MQTT] 消息流错误: $error');
+            },
+            cancelOnError: false,
+          );
+          print('✓ [MQTT] 消息监听已设置');
+        }
+
         // 订阅Topic
         _subscribeToTopics(empNo);
-
-        // 监听消息
-        _client!.updates!.listen(_onMessage);
 
         return true;
       } else {
@@ -169,8 +230,9 @@ class MqttService {
         _updateConnectionState(MqttServiceState.error);
         return false;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ [MQTT] 连接异常: $e');
+      print('Stack trace: $stackTrace');
       _updateConnectionState(MqttServiceState.error);
       _scheduleReconnect();
       return false;
@@ -198,15 +260,15 @@ class MqttService {
     print('⚠️ [MQTT] onDisconnected 回调触发');
     _updateConnectionState(MqttServiceState.disconnected);
 
-    // 尝试重连
+    // 尝试重连（复用现有client实例）
     if (!_isReconnecting) {
       _scheduleReconnect();
     }
   }
 
   /// 订阅成功回调
-  void _onSubscribed(String topic) {
-    print('✓ [MQTT] 订阅成功: $topic');
+  void _onSubscribed(MqttSubscription subscription) {
+    print('✓ [MQTT] 订阅成功: ${subscription.topic}');
   }
 
   /// 计划重连
@@ -217,12 +279,14 @@ class MqttService {
     print('🔄 [MQTT] 将在5秒后尝试重连...');
 
     _reconnectTimer = Timer(const Duration(seconds: 5), () async {
-      if (_empNo != null) {
+      if (_empNo != null && _broker != null && _port != null) {
         print('🔄 [MQTT] 正在重连...');
         final success = await connect(
-          broker: 'localhost',
-          port: 1883,
+          broker: _broker!,
+          port: _port!,
           empNo: _empNo!,
+          username: _username,
+          password: _password,
         );
 
         if (!success) {
@@ -234,12 +298,11 @@ class MqttService {
   }
 
   /// 处理接收到的消息
-  void _onMessage(List<MqttReceivedMessage<MqttMessage>> messages) {
+  void _onMessage(List<MqttReceivedMessage> messages) {
     for (final message in messages) {
-      final topic = message.topic;
+      final topic = message.topic ?? '';
       final payload = message.payload as MqttPublishMessage;
-      final messageStr =
-          MqttPublishPayload.bytesToStringAsString(payload.payload.message);
+      final messageStr = String.fromCharCodes(payload.payload.message!);
 
       print('📨 [MQTT] 收到消息');
       print('   Topic: $topic');
@@ -289,7 +352,7 @@ class MqttService {
       final taskData = json['task'] as Map<String, dynamic>;
       final task = Task.fromJson(taskData);
 
-      // UUID去重：检查是否已存在相同UUID的任务
+      // UUID去重
       final existingTasks = await _taskService.getAllTasks();
       final isDuplicate = existingTasks.any((t) => t.uuid == task.uuid);
 
@@ -298,17 +361,11 @@ class MqttService {
         return;
       }
 
-      // 直接保存完整的Task对象（包括uuid）
       await _taskService.createTaskDirect(task);
-
       print('✓ [MQTT] 待办已创建: ${task.title} (UUID: ${task.uuid})');
 
-      // 通知UI刷新 - 使用广播流
-      print('📊 [MQTT] 准备发送任务变更通知...');
       _taskChangeController.add(null);
-      print('📊 [MQTT] 已发送任务变更通知 (监听器数量: ${_taskChangeController.hasListener})');
 
-      // 显示通知
       await _showNotification(
         title: '新待办事项',
         body: task.title,
@@ -330,7 +387,6 @@ class MqttService {
         return;
       }
 
-      // 优先使用UUID查找，否则使用taskId
       Task? task;
       if (uuid != null) {
         final tasks = await _taskService.getAllTasks();
@@ -347,7 +403,6 @@ class MqttService {
         return;
       }
 
-      // 应用更改
       final updatedTask = task.copyWith(
         title: changes['title'] as String? ?? task.title,
         description: changes['description'] as String?,
@@ -363,7 +418,6 @@ class MqttService {
       await _taskService.updateTask(updatedTask);
       print('✓ [MQTT] 待办已更新: ${updatedTask.title}');
 
-      // 通知UI刷新
       _taskChangeController.add(null);
 
       await _showNotification(
@@ -400,7 +454,6 @@ class MqttService {
       await _taskService.deleteTask(task.id);
       print('✓ [MQTT] 待办已删除');
 
-      // 通知UI刷新
       _taskChangeController.add(null);
 
       await _showNotification(
@@ -439,7 +492,6 @@ class MqttService {
         await _taskService.markTaskAsCompleted(task.id);
         print('✓ [MQTT] 待办已完成: ${task.title}');
 
-        // 通知UI刷新
         _taskChangeController.add(null);
 
         await _showNotification(
@@ -450,7 +502,6 @@ class MqttService {
         await _taskService.markTaskAsIncomplete(task.id);
         print('✓ [MQTT] 待办标记为未完成: ${task.title}');
 
-        // 通知UI刷新
         _taskChangeController.add(null);
       }
     } catch (e) {
@@ -474,7 +525,7 @@ class MqttService {
       final topic = 'mqtt_app/tasks/$targetEmpNo/$action';
       final message = jsonEncode(payload);
 
-      final builder = MqttClientPayloadBuilder();
+      final builder = MqttPayloadBuilder();
       builder.addString(message);
 
       _client!.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
@@ -571,20 +622,33 @@ class MqttService {
   }
 
   /// 断开连接
-  Future<void> disconnect() async {
+  Future<void> disconnect({bool destroyClient = false}) async {
     _reconnectTimer?.cancel();
     _isReconnecting = false;
+
+    // 取消消息订阅
+    if (destroyClient) {
+      await _messageSubscription?.cancel();
+      _messageSubscription = null;
+    }
 
     if (_client != null) {
       _updateConnectionState(MqttServiceState.disconnecting);
       _client!.disconnect();
       print('✓ [MQTT] 已断开连接');
+
+      // 如果需要销毁client（比如修改工号时）
+      if (destroyClient) {
+        _client = null;
+        print('🗑️  [MQTT] 已销毁客户端实例');
+      }
     }
   }
 
   /// 释放资源
   void dispose() {
     disconnect();
+    _messageSubscription?.cancel();
     _connectionStateController.close();
     _taskChangeController.close();
   }

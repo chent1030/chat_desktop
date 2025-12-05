@@ -47,8 +47,8 @@ dependencies:
   flutter_markdown: ^0.6.18
   url_launcher: ^6.2.0
 
-  # MQTT
-  mqtt_client: ^10.2.0
+  # MQTT 5.0
+  mqtt5_client: ^4.2.6
 
   # 语音录制
   record: ^6.0.0
