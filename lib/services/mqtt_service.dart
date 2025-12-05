@@ -302,7 +302,8 @@ class MqttService {
     for (final message in messages) {
       final topic = message.topic ?? '';
       final payload = message.payload as MqttPublishMessage;
-      final messageStr = String.fromCharCodes(payload.payload.message!);
+      // ⚠️ 使用utf8.decode正确解码中文字符，而不是String.fromCharCodes
+      final messageStr = utf8.decode(payload.payload.message!);
 
       print('📨 [MQTT] 收到消息');
       print('   Topic: $topic');
