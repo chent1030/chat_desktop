@@ -19,8 +19,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-  // 设置 AppUserModelID 以支持 Windows 通知
-  // 这对于通知系统识别应用非常重要
+  // Set AppUserModelID for Windows notification support
+  // This is important for the notification system to recognize the app
   SetCurrentProcessExplicitAppUserModelID(L"com.chatdesktop.ChatDesktop");
 
   flutter::DartProject project(L"data");
