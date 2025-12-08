@@ -78,11 +78,17 @@ class MqttService {
     const linuxSettings = notifications.LinuxInitializationSettings(
       defaultActionName: 'Open notification',
     );
+    // Windows notification settings
+    const windowsSettings = notifications.WindowsInitializationSettings(
+      appName: 'Chat Desktop',
+      appUserModelId: 'com.chatdesktop.ChatDesktop',
+    );
     const initSettings = notifications.InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
       linux: linuxSettings,
+      windows: windowsSettings,
     );
 
     await _notificationsPlugin.initialize(initSettings);
@@ -107,11 +113,17 @@ class MqttService {
 
     const linuxDetails = notifications.LinuxNotificationDetails();
 
+    // Windows notification details
+    const windowsDetails = notifications.WindowsNotificationDetails(
+      appName: 'Chat Desktop',
+    );
+
     const notificationDetails = notifications.NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
       linux: linuxDetails,
+      windows: windowsDetails,
     );
 
     await _notificationsPlugin.show(
