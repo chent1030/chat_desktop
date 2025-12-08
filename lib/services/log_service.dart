@@ -281,8 +281,8 @@ $stackTrace
       // 同时输出到控制台
       print('💥 [CRASH] 崩溃已记录到文件: ${_crashLogFile!.path}');
 
-      // 也记录到普通日志文件
-      await error('$context - $error', tag: 'CRASH');
+      // 也记录到普通日志文件（使用 log 方法避免与参数名冲突）
+      await log('$context - $error', level: LogLevel.error, tag: 'CRASH');
     } catch (e) {
       print('❌ [LOG] 写入崩溃日志失败: $e');
     }
