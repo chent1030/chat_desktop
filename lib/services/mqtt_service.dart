@@ -78,7 +78,7 @@ class MqttService {
     const linuxSettings = notifications.LinuxInitializationSettings(
       defaultActionName: 'Open notification',
     );
-    // Windows notification settings
+    // Windows notification settings (flutter_local_notifications 18.0+ supports Windows)
     const windowsSettings = notifications.WindowsInitializationSettings(
       appName: 'Chat Desktop',
       appUserModelId: 'com.chatdesktop.ChatDesktop',
@@ -113,7 +113,7 @@ class MqttService {
 
     const linuxDetails = notifications.LinuxNotificationDetails();
 
-    // Windows notification details
+    // Windows notification details (flutter_local_notifications 18.0+ supports Windows)
     const windowsDetails = notifications.WindowsNotificationDetails(
       appName: 'Chat Desktop',
     );

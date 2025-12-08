@@ -81,11 +81,8 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
   /// 切换到正常窗口模式
   Future<void> switchToNormalMode() async {
     try {
-      // Windows平台需要额外处理：恢复窗口边框和背景色
+      // Windows平台需要额外处理：恢复背景色
       if (Platform.isWindows) {
-        // 恢复窗口边框
-        await windowManager.setAsFrameless(false);
-
         // 恢复白色背景
         await windowManager.setBackgroundColor(const Color(0xFFFFFFFF));
       }

@@ -33,7 +33,7 @@ dependencies:
   window_manager: ^0.3.7
 
   # 系统通知
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^18.0.0
 
   # HTTP客户端
   dio: ^5.4.0
