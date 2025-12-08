@@ -75,10 +75,14 @@ class MqttService {
 
     const androidSettings = notifications.AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = notifications.DarwinInitializationSettings();
+    const linuxSettings = notifications.LinuxInitializationSettings(
+      defaultActionName: 'Open notification',
+    );
     const initSettings = notifications.InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
+      linux: linuxSettings,
     );
 
     await _notificationsPlugin.initialize(initSettings);
@@ -101,10 +105,13 @@ class MqttService {
 
     const darwinDetails = notifications.DarwinNotificationDetails();
 
+    const linuxDetails = notifications.LinuxNotificationDetails();
+
     const notificationDetails = notifications.NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
+      linux: linuxDetails,
     );
 
     await _notificationsPlugin.show(

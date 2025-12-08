@@ -1,6 +1,8 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <propkey.h>
+#include <shobjidl.h>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -16,6 +18,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+  // 设置 AppUserModelID 以支持 Windows 通知
+  // 这对于通知系统识别应用非常重要
+  SetCurrentProcessExplicitAppUserModelID(L"com.chatdesktop.ChatDesktop");
 
   flutter::DartProject project(L"data");
 

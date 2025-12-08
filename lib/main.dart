@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -70,18 +71,18 @@ Future<void> _initializeApp() async {
     // 初始化窗口管理器
     await windowManager.ensureInitialized();
 
-    // 配置窗口选项
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(
+    // 配置窗口选项（Windows平台使用白色背景，避免透明层问题）
+    WindowOptions windowOptions = WindowOptions(
+      size: const Size(
         AppConstants.defaultWindowWidth,
         AppConstants.defaultWindowHeight,
       ),
       center: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Platform.isWindows ? Colors.white : Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
       title: AppConstants.appName,
-      minimumSize: Size(
+      minimumSize: const Size(
         AppConstants.minWindowWidth,
         AppConstants.minWindowHeight,
       ),
