@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import '../../services/log_service.dart';
 
 /// 语音输入按钮组件
 /// 支持录音并返回音频文件路径
@@ -53,26 +54,61 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   /// 开始录音
   Future<void> _startRecording() async {
     try {
+      await LogService.instance.info('开始语音录制', tag: 'VOICE');
+
       // 检查是否有麦克风权限
       if (!await _audioRecorder.hasPermission()) {
+        await LogService.instance.warning('麦克风权限被拒绝', tag: 'VOICE');
         _showError('没有麦克风权限，请在系统设置中允许应用访问麦克风');
         return;
       }
 
-      // 生成音频文件路径
+      await LogService.instance.info('麦克风权限检查通过', tag: 'VOICE');
+
+      // 生成音频文件路径 - 根据平台选择合适的格式
       final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      // Windows平台使用WAV格式（最兼容），其他平台使用MP3
+      final String fileExtension;
+      final AudioEncoder encoder;
+      final int sampleRate;
+      final int bitRate;
+
+      if (Platform.isWindows) {
+        // Windows平台：使用WAV格式（无损、兼容性最好）
+        fileExtension = 'wav';
+        encoder = AudioEncoder.wav;
+        sampleRate = 44100; // 44.1kHz
+        bitRate = 0; // WAV不需要比特率设置（无损格式）
+        await LogService.instance.info('Windows平台: 使用WAV格式', tag: 'VOICE');
+      } else {
+        // 其他平台：使用MP3格式（AAC编码）
+        fileExtension = 'mp3';
+        encoder = AudioEncoder.aacLc;
+        sampleRate = 44100;
+        bitRate = 128000; // 128kbps
+        await LogService.instance.info('非Windows平台: 使用MP3格式 (AAC编码)', tag: 'VOICE');
+      }
+
       _currentRecordPath = path.join(
         directory.path,
-        'voice_$timestamp.mp3',
+        'voice_$timestamp.$fileExtension',
       );
 
+      await LogService.instance.info('录音文件路径: $_currentRecordPath', tag: 'VOICE');
+
       // 配置录音参数
-      const config = RecordConfig(
-        encoder: AudioEncoder.aacLc, // MP3格式（AAC编码）
-        sampleRate: 44100, // 44.1kHz 采样率
-        bitRate: 128000, // 128kbps 比特率
+      final config = RecordConfig(
+        encoder: encoder,
+        sampleRate: sampleRate,
+        bitRate: bitRate,
         numChannels: 1, // 单声道
+      );
+
+      await LogService.instance.debug(
+        '录音配置: encoder=$encoder, sampleRate=$sampleRate, bitRate=$bitRate',
+        tag: 'VOICE',
       );
 
       // 开始录音
@@ -96,8 +132,11 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       });
 
       print('✓ 开始录音: $_currentRecordPath');
-    } catch (e) {
+      await LogService.instance.info('录音已开始', tag: 'VOICE');
+    } catch (e, stackTrace) {
       print('✗ 开始录音失败: $e');
+      await LogService.instance.error('开始录音失败: $e', tag: 'VOICE');
+      await LogService.instance.debug('错误堆栈: $stackTrace', tag: 'VOICE');
       _showError('录音失败: $e');
     }
   }
@@ -105,6 +144,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   /// 停止录音
   Future<void> _stopRecording() async {
     try {
+      await LogService.instance.info('停止语音录制', tag: 'VOICE');
       _timer?.cancel();
 
       final path = await _audioRecorder.stop();
@@ -117,18 +157,24 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
       if (path != null && path.isNotEmpty) {
         final file = File(path);
         if (await file.exists()) {
-          print('✓ 录音完成: $path (${await file.length()} bytes)');
+          final fileSize = await file.length();
+          print('✓ 录音完成: $path ($fileSize bytes)');
+          await LogService.instance.info('录音完成 - 文件: $path, 大小: $fileSize bytes', tag: 'VOICE');
           widget.onRecordComplete(path);
         } else {
           print('✗ 录音文件不存在: $path');
+          await LogService.instance.error('录音文件不存在: $path', tag: 'VOICE');
           _showError('录音文件不存在');
         }
       } else {
         print('✗ 录音路径为空');
+        await LogService.instance.error('录音路径为空', tag: 'VOICE');
         _showError('录音失败');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('✗ 停止录音失败: $e');
+      await LogService.instance.error('停止录音失败: $e', tag: 'VOICE');
+      await LogService.instance.debug('错误堆栈: $stackTrace', tag: 'VOICE');
       _showError('停止录音失败: $e');
       setState(() {
         _isRecording = false;
@@ -140,6 +186,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
   /// 取消录音
   Future<void> _cancelRecording() async {
     try {
+      await LogService.instance.info('取消语音录制', tag: 'VOICE');
       _timer?.cancel();
       await _audioRecorder.stop();
 
@@ -148,6 +195,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
         final file = File(_currentRecordPath!);
         if (await file.exists()) {
           await file.delete();
+          await LogService.instance.info('已删除录音文件: $_currentRecordPath', tag: 'VOICE');
         }
       }
 
@@ -159,8 +207,11 @@ class _VoiceInputButtonState extends State<VoiceInputButton> {
 
       widget.onRecordCancel?.call();
       print('✓ 录音已取消');
-    } catch (e) {
+      await LogService.instance.info('录音已取消', tag: 'VOICE');
+    } catch (e, stackTrace) {
       print('✗ 取消录音失败: $e');
+      await LogService.instance.error('取消录音失败: $e', tag: 'VOICE');
+      await LogService.instance.debug('错误堆栈: $stackTrace', tag: 'VOICE');
       setState(() {
         _isRecording = false;
         _recordDuration = 0;

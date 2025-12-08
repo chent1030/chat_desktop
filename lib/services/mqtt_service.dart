@@ -78,11 +78,20 @@ class MqttService {
     const linuxSettings = notifications.LinuxInitializationSettings(
       defaultActionName: 'Open notification',
     );
+
+    // Windows通知初始化设置（flutter_local_notifications 19.5.0+）
+    const windowsSettings = notifications.WindowsInitializationSettings(
+      appName: 'Chat Desktop',
+      appUserModelId: 'com.chatdesktop.ChatDesktop',
+      guid: 'a8c02f51-cbf1-4f3d-a8c7-3f3e8e8e8e8e', // 应用的唯一GUID
+    );
+
     const initSettings = notifications.InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
       linux: linuxSettings,
+      windows: windowsSettings, // 添加Windows配置
     );
 
     await _notificationsPlugin.initialize(initSettings);
@@ -107,11 +116,17 @@ class MqttService {
 
     const linuxDetails = notifications.LinuxNotificationDetails();
 
+    // Windows通知详情（flutter_local_notifications 19.5.0+）
+    const windowsDetails = notifications.WindowsNotificationDetails(
+      subtitle: 'MQTT待办通知',
+    );
+
     const notificationDetails = notifications.NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
       linux: linuxDetails,
+      windows: windowsDetails, // 添加Windows配置
     );
 
     await _notificationsPlugin.show(
