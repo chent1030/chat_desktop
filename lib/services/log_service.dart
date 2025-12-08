@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -71,12 +72,15 @@ class LogService {
     final logFileName = 'app_$today.log';
     _currentLogFile = File('${_logDir!.path}/$logFileName');
 
-    // 如果文件不存在，创建并写入头部信息
+    // 如果文件不存在，创建并写入头部信息（带 UTF-8 BOM）
     if (!await _currentLogFile!.exists()) {
       await _currentLogFile!.create();
+      // 添加 UTF-8 BOM + 头部信息
+      final content = '\uFEFF=== Chat Desktop 日志 - $today ===\n';
       await _currentLogFile!.writeAsString(
-        '=== Chat Desktop 日志 - $today ===\n',
+        content,
         mode: FileMode.append,
+        encoding: utf8,
       );
     }
   }
@@ -87,12 +91,15 @@ class LogService {
     final crashLogFileName = 'crash_$today.log';
     _crashLogFile = File('${_logDir!.path}/$crashLogFileName');
 
-    // 如果文件不存在，创建并写入头部信息
+    // 如果文件不存在，创建并写入头部信息（带 UTF-8 BOM）
     if (!await _crashLogFile!.exists()) {
       await _crashLogFile!.create();
+      // 添加 UTF-8 BOM + 头部信息
+      final content = '\uFEFF=== Chat Desktop 崩溃日志 - $today ===\n';
       await _crashLogFile!.writeAsString(
-        '=== Chat Desktop 崩溃日志 - $today ===\n',
+        content,
         mode: FileMode.append,
+        encoding: utf8,
       );
     }
   }
@@ -153,10 +160,11 @@ class LogService {
       final tagStr = tag != null ? '[$tag] ' : '';
       final logLine = '[$timestamp] [$levelStr] $tagStr$message\n';
 
-      // 写入文件
+      // 写入文件（使用UTF-8编码）
       await _currentLogFile!.writeAsString(
         logLine,
         mode: FileMode.append,
+        encoding: utf8,
       );
 
       // 同时输出到控制台（可选）
@@ -272,10 +280,11 @@ $stackTrace
 
 ''';
 
-      // 写入崩溃日志文件
+      // 写入崩溃日志文件（使用UTF-8编码）
       await _crashLogFile!.writeAsString(
         crashLog,
         mode: FileMode.append,
+        encoding: utf8,
       );
 
       // 同时输出到控制台

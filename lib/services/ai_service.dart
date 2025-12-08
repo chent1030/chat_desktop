@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/message.dart';
 import 'sse_client.dart';
+import 'log_service.dart';
 
 /// AI响应流数据
 class AIStreamResponse {
@@ -64,6 +65,8 @@ class AIService {
     String? conversationId,
   }) async* {
     try {
+      await LogService.instance.info('开始AI消息请求', tag: 'AI');
+
       // 2. 准备请求数据
       final requestData = {
         'query': messages,
@@ -84,6 +87,11 @@ class AIService {
       print('📤 [AI] 查询内容: $messages');
       print('📤 [AI] conversation_id: ${conversationId ?? "null (首次对话)"}');
 
+      await LogService.instance.info('发送AI请求 - URL: $apiUrl', tag: 'AI');
+      await LogService.instance.info('查询内容: $messages', tag: 'AI');
+      await LogService.instance.info('会话ID: ${conversationId ?? "null (首次对话)"}', tag: 'AI');
+      await LogService.instance.debug('请求数据: ${jsonEncode(requestData)}', tag: 'AI');
+
       // 4. 发送POST请求（响应本身就是SSE流）
       final response = await _dio.post<ResponseBody>(
         apiUrl,
@@ -93,7 +101,10 @@ class AIService {
         ),
       );
 
+      await LogService.instance.info('HTTP响应状态码: ${response.statusCode}', tag: 'AI');
+
       if (response.statusCode != 200) {
+        await LogService.instance.error('HTTP请求失败: ${response.statusCode}', tag: 'AI');
         throw AIServiceException(
           '请求失败: HTTP ${response.statusCode}',
           statusCode: response.statusCode,
@@ -101,6 +112,7 @@ class AIService {
       }
 
       print('✓ [AI] 开始接收SSE流');
+      await LogService.instance.info('开始接收SSE流', tag: 'AI');
 
       // 5. 直接从POST响应的stream中解析SSE数据
       final stream = response.data!.stream;
@@ -119,6 +131,11 @@ class AIService {
 
           for (var i = 0; i < lines.length; i++) {
             final line = lines[i].trim();
+
+            // 记录接收到的原始SSE行（仅DEBUG级别，避免日志过多）
+            if (line.isNotEmpty && line.startsWith('data:')) {
+              await LogService.instance.debug('SSE接收: $line', tag: 'AI');
+            }
 
             // 保留未完成的行
             if (i == lines.length - 1 && line.isNotEmpty && !line.startsWith('data:')) {
@@ -140,9 +157,13 @@ class AIService {
                   final eventType = data['event'] as String?;
                   final responseConversationId = data['conversation_id'];
 
+                  // 记录事件类型
+                  await LogService.instance.debug('收到AI事件: $eventType', tag: 'AI');
+
                   // 记录conversation_id
                   if (responseConversationId != null) {
                     print('📝 [AI] 收到 conversation_id: $responseConversationId');
+                    await LogService.instance.info('收到会话ID: $responseConversationId', tag: 'AI');
                   }
 
                   // 根据不同的event类型处理
@@ -151,6 +172,9 @@ class AIService {
                     final answer = data['answer'] as String?;
 
                     if (answer != null && answer.isNotEmpty) {
+                      await LogService.instance.info('收到AI回复内容 (长度: ${answer.length})', tag: 'AI');
+                      await LogService.instance.debug('回复内容: $answer', tag: 'AI');
+
                       yield AIStreamResponse(
                         content: answer,
                         conversationId: responseConversationId?.toString(),
@@ -160,6 +184,7 @@ class AIService {
                   } else if (eventType == 'message_end') {
                     // 消息结束事件
                     print('✓ [AI] 收到message_end，流式接收完成');
+                    await LogService.instance.info('AI流式响应完成 (message_end)', tag: 'AI');
 
                     yield AIStreamResponse(
                       conversationId: responseConversationId?.toString(),
@@ -170,25 +195,32 @@ class AIService {
                     // 错误事件
                     final errorMessage = data['message'] ?? '未知错误';
                     print('❌ [AI] 收到error事件: $errorMessage');
+                    await LogService.instance.error('AI返回错误: $errorMessage', tag: 'AI');
                     throw AIServiceException('Dify API错误: $errorMessage');
                   } else if (eventType == 'ping') {
                     // ping事件，保持连接
                     print('💓 [AI] 收到ping保活事件');
+                    await LogService.instance.debug('收到ping保活事件', tag: 'AI');
                   } else if (eventType == 'workflow_started' ||
                             eventType == 'node_started' ||
                             eventType == 'node_finished' ||
                             eventType == 'workflow_finished') {
                     // 工作流相关事件
                     print('🔄 [AI] 收到工作流事件: $eventType');
+                    await LogService.instance.debug('工作流事件: $eventType', tag: 'AI');
                   } else if (eventType == 'message_file') {
                     // 文件事件
                     print('📎 [AI] 收到文件事件');
+                    await LogService.instance.info('收到文件事件', tag: 'AI');
                   } else if (eventType == 'message_replace') {
                     // 内容替换事件（审查相关）
                     final answer = data['answer'] as String?;
                     print('🔄 [AI] 收到message_replace事件');
+                    await LogService.instance.info('收到内容替换事件', tag: 'AI');
 
                     if (answer != null && answer.isNotEmpty) {
+                      await LogService.instance.debug('替换后内容: $answer', tag: 'AI');
+
                       yield AIStreamResponse(
                         content: answer,
                         conversationId: responseConversationId?.toString(),
@@ -199,6 +231,8 @@ class AIService {
                 }
               } catch (e) {
                 print('⚠️ [AI] 解析SSE数据失败: $e, 原始数据: $eventData');
+                await LogService.instance.warning('解析SSE数据失败: $e', tag: 'AI');
+                await LogService.instance.debug('原始SSE数据: $eventData', tag: 'AI');
               }
 
               eventData = null;
@@ -208,11 +242,19 @@ class AIService {
       }
 
       print('✓ [AI] SSE流接收结束');
+      await LogService.instance.info('SSE流接收结束', tag: 'AI');
     } on DioException catch (e) {
       print('❌ [AI] HTTP请求失败: $e');
+      await LogService.instance.error('HTTP请求异常: ${e.type} - ${e.message}', tag: 'AI');
+      if (e.response != null) {
+        await LogService.instance.error('响应状态码: ${e.response?.statusCode}', tag: 'AI');
+        await LogService.instance.debug('响应数据: ${e.response?.data}', tag: 'AI');
+      }
       throw _handleDioError(e);
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ [AI] 发送消息失败: $e');
+      await LogService.instance.error('AI消息发送失败: $e', tag: 'AI');
+      await LogService.instance.debug('错误堆栈: $stackTrace', tag: 'AI');
       throw AIServiceException('发送消息失败: $e');
     }
   }
@@ -222,6 +264,8 @@ class AIService {
 
   /// 处理Dio错误
   AIServiceException _handleDioError(DioException error) {
+    LogService.instance.error('处理Dio错误: ${error.type}', tag: 'AI');
+
     if (error.response != null) {
       final statusCode = error.response!.statusCode;
       final data = error.response!.data;
@@ -233,6 +277,8 @@ class AIService {
         message = data;
       }
 
+      LogService.instance.error('HTTP错误 [$statusCode]: $message', tag: 'AI');
+
       return AIServiceException(
         message,
         statusCode: statusCode,
@@ -242,6 +288,7 @@ class AIService {
 
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
+      LogService.instance.error('请求超时: ${error.type}', tag: 'AI');
       return AIServiceException(
         '请求超时，请检查网络连接',
         originalError: error,
@@ -249,12 +296,14 @@ class AIService {
     }
 
     if (error.type == DioExceptionType.connectionError) {
+      LogService.instance.error('连接错误: 无法连接到服务器', tag: 'AI');
       return AIServiceException(
         '无法连接到服务器，请检查网络设置',
         originalError: error,
       );
     }
 
+    LogService.instance.error('未知Dio错误: ${error.message}', tag: 'AI');
     return AIServiceException(
       '未知错误: ${error.message}',
       originalError: error,
