@@ -78,19 +78,11 @@ class MqttService {
     const linuxSettings = notifications.LinuxInitializationSettings(
       defaultActionName: 'Open notification',
     );
-    // Windows notification settings (flutter_local_notifications 19.5+ supports Windows)
-    // guid must match the AUMID set in main.cpp
-    const windowsSettings = notifications.WindowsInitializationSettings(
-      appName: 'Chat Desktop',
-      appUserModelId: 'com.chatdesktop.ChatDesktop',
-      guid: 'e1b8e9a0-1b2c-3d4e-5f6a-7b8c9d0e1f2a',
-    );
     const initSettings = notifications.InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
       linux: linuxSettings,
-      windows: windowsSettings,
     );
 
     await _notificationsPlugin.initialize(initSettings);
@@ -115,15 +107,11 @@ class MqttService {
 
     const linuxDetails = notifications.LinuxNotificationDetails();
 
-    // Windows notification details
-    const windowsDetails = notifications.WindowsNotificationDetails();
-
     const notificationDetails = notifications.NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
       linux: linuxDetails,
-      windows: windowsDetails,
     );
 
     await _notificationsPlugin.show(
