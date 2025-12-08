@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:window_manager/window_manager.dart';
 
 /// 小窗口Widget - 显示圆形图标和未读角标
 class MiniWindow extends ConsumerStatefulWidget {
@@ -22,17 +23,19 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Center(
-        child: GestureDetector(
-          onDoubleTap: widget.onDoubleTap,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // 主圆形图标
-              _buildMainIcon(),
+        child: DragToMoveArea(
+          child: GestureDetector(
+            onDoubleTap: widget.onDoubleTap,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 主圆形图标
+                _buildMainIcon(),
 
-              // 未读角标
-              if (widget.unreadCount > 0) _buildBadge(),
-            ],
+                // 未读角标
+                if (widget.unreadCount > 0) _buildBadge(),
+              ],
+            ),
           ),
         ),
       ),
