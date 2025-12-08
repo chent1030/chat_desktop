@@ -73,7 +73,10 @@ class AIService {
         'conversation_id': conversationId,
         'authorization': 'Bearer $apiKey',
         'inputs': {
-          
+          'empName': '测试用户',
+          'empNo': '61016968',
+          'empLevel': '8',
+          'ansType': ''
         }
       };
 
@@ -81,34 +84,12 @@ class AIService {
       print('📤 [AI] 查询内容: $messages');
       print('📤 [AI] conversation_id: ${conversationId ?? "null (首次对话)"}');
 
-      // 3. 获取认证token（您的网关需要）
-      tokenResponse = await _dio.post(
-        'https://ipaas.catl.com/gateway/outside/ipaas/ipaas/ipaas_getJwtToken',
-        data: {
-          "appKey": "TIMES-YL31AR20",
-          "appSecret": "585331fc-cca7-4184-97e3-82315993a67d",
-          "time": "60"
-        },
-        options: Options(
-          headers: {
-            'deipaaskeyauth': 'Wc3X579QXQw99925W214iZ38B8w2sr7H',
-          },
-        ),
-      );
-      token = tokenResponse!.data['accessToken'];
-      print('✓ [AI] 获取Token成功');
-
       // 4. 发送POST请求（响应本身就是SSE流）
       final response = await _dio.post<ResponseBody>(
         apiUrl,
         data: requestData,
         options: Options(
-          headers: {
-            'deipaaskeyauth': 'Wc3X579QXQw99925W214iZ38B8w2sr7H',
-            'deipaasjwt': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-          responseType: ResponseType.stream, // 关键：设置为stream模式
+          responseType: ResponseType.stream,
         ),
       );
 

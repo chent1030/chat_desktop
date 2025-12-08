@@ -5,6 +5,7 @@ import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as notifications;
 import '../models/task.dart';
 import 'task_service.dart';
+import 'log_service.dart';
 
 /// MQTT服务连接状态枚举
 enum MqttServiceState {
@@ -119,6 +120,7 @@ class MqttService {
     _connectionState = state;
     _connectionStateController.add(state);
     print('📡 [MQTT] 连接状态变更: $state');
+    LogService.instance.info('MQTT连接状态变更: $state', tag: 'MQTT');
   }
 
   /// 连接到MQTT Broker
@@ -199,10 +201,12 @@ class MqttService {
 
       // 连接
       print('📡 [MQTT] 正在连接到 $broker:$port...');
+      await LogService.instance.info('正在连接到MQTT Broker: $broker:$port', tag: 'MQTT');
       await _client!.connect();
 
       if (_client!.connectionStatus!.state == MqttConnectionState.connected) {
         print('✓ [MQTT] 连接成功');
+        await LogService.instance.info('MQTT连接成功', tag: 'MQTT');
         _updateConnectionState(MqttServiceState.connected);
 
         // ⚠️ 关键：每次连接成功后都需要订阅消息流（因为每次都是新client）
@@ -227,12 +231,14 @@ class MqttService {
         return true;
       } else {
         print('✗ [MQTT] 连接失败: ${_client!.connectionStatus}');
+        await LogService.instance.error('MQTT连接失败: ${_client!.connectionStatus}', tag: 'MQTT');
         _updateConnectionState(MqttServiceState.error);
         return false;
       }
     } catch (e, stackTrace) {
       print('❌ [MQTT] 连接异常: $e');
       print('Stack trace: $stackTrace');
+      await LogService.instance.error('MQTT连接异常: $e', tag: 'MQTT');
       _updateConnectionState(MqttServiceState.error);
       _scheduleReconnect();
       return false;
@@ -258,6 +264,7 @@ class MqttService {
   /// 断开连接回调
   void _onDisconnected() {
     print('⚠️ [MQTT] onDisconnected 回调触发');
+    LogService.instance.warning('MQTT连接已断开', tag: 'MQTT');
     _updateConnectionState(MqttServiceState.disconnected);
 
     // 尝试重连（复用现有client实例）
@@ -309,11 +316,14 @@ class MqttService {
       print('   Topic: $topic');
       print('   Payload: $messageStr');
 
+      LogService.instance.info('收到MQTT消息 - Topic: $topic', tag: 'MQTT');
+
       try {
         final json = jsonDecode(messageStr) as Map<String, dynamic>;
         _handleMessage(topic, json);
       } catch (e) {
         print('❌ [MQTT] 消息解析失败: $e');
+        LogService.instance.error('MQTT消息解析失败: $e', tag: 'MQTT');
       }
     }
   }
@@ -364,6 +374,7 @@ class MqttService {
 
       await _taskService.createTaskDirect(task);
       print('✓ [MQTT] 待办已创建: ${task.title} (UUID: ${task.uuid})');
+      await LogService.instance.info('MQTT创建待办: ${task.title}', tag: 'MQTT');
 
       _taskChangeController.add(null);
 
@@ -418,6 +429,7 @@ class MqttService {
 
       await _taskService.updateTask(updatedTask);
       print('✓ [MQTT] 待办已更新: ${updatedTask.title}');
+      await LogService.instance.info('MQTT更新待办: ${updatedTask.title}', tag: 'MQTT');
 
       _taskChangeController.add(null);
 
