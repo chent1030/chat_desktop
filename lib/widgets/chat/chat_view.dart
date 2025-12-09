@@ -37,6 +37,26 @@ class _ChatViewState extends ConsumerState<ChatView> {
   }
 
   @override
+  void didUpdateWidget(ChatView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 当conversationId变化时，重新加载该会话的消息
+    if (widget.conversationId != oldWidget.conversationId) {
+      // 使用addPostFrameCallback在widget构建完成后再修改provider
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (widget.conversationId != null) {
+          ref.read(chatProvider.notifier).loadConversation(widget.conversationId!);
+          // 滚动到底部
+          _scrollToBottom();
+        } else {
+          // 如果conversationId变为null，清空当前会话
+          ref.read(chatProvider.notifier).clearConversation();
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();

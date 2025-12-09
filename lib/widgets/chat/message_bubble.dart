@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// 消息气泡 Widget
 /// 显示单条对话消息,支持用户消息和AI助手消息的不同样式
-class MessageBubble extends StatelessWidget {
+class MessageBubble extends StatefulWidget {
   final Message message;
   final VoidCallback? onRetry;
 
@@ -17,10 +17,17 @@ class MessageBubble extends StatelessWidget {
   });
 
   @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  bool _isThinkingExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final isUser = message.role == MessageRole.user;
-    final isAssistant = message.role == MessageRole.assistant;
-    final isSystem = message.role == MessageRole.system;
+    final isUser = widget.message.role == MessageRole.user;
+    final isAssistant = widget.message.role == MessageRole.assistant;
+    final isSystem = widget.message.role == MessageRole.system;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -74,7 +81,7 @@ class MessageBubble extends StatelessWidget {
 
   /// 构建头像
   Widget _buildAvatar(BuildContext context) {
-    final isUser = message.role == MessageRole.user;
+    final isUser = widget.message.role == MessageRole.user;
 
     return Container(
       width: 36,
@@ -97,7 +104,7 @@ class MessageBubble extends StatelessWidget {
 
   /// 获取头像图标
   IconData _getAvatarIcon() {
-    switch (message.role) {
+    switch (widget.message.role) {
       case MessageRole.user:
         return Icons.person;
       case MessageRole.assistant:
@@ -109,8 +116,8 @@ class MessageBubble extends StatelessWidget {
 
   /// 获取气泡背景色
   Color _getBubbleColor(BuildContext context) {
-    final isUser = message.role == MessageRole.user;
-    final isFailed = message.status == MessageStatus.failed;
+    final isUser = widget.message.role == MessageRole.user;
+    final isFailed = widget.message.status == MessageStatus.failed;
 
     if (isFailed) {
       return Theme.of(context).colorScheme.errorContainer;
@@ -125,7 +132,7 @@ class MessageBubble extends StatelessWidget {
 
   /// 获取边框颜色
   Color _getBorderColor(BuildContext context) {
-    final isFailed = message.status == MessageStatus.failed;
+    final isFailed = widget.message.status == MessageStatus.failed;
 
     if (isFailed) {
       return Theme.of(context).colorScheme.error;
@@ -134,14 +141,34 @@ class MessageBubble extends StatelessWidget {
     return Theme.of(context).colorScheme.outline.withOpacity(0.2);
   }
 
+  /// 解析消息内容，分离思维链和正文
+  ({String? thinking, String content}) _parseMessageContent(String rawContent) {
+    // 匹配 <thinking>...</thinking> 或 <think>...</think> 标签
+    final thinkingRegex = RegExp(
+      r'<think(?:ing)?>(.*?)</think(?:ing)?>',
+      multiLine: true,
+      dotAll: true,
+    );
+
+    final match = thinkingRegex.firstMatch(rawContent);
+
+    if (match != null) {
+      final thinking = match.group(1)?.trim();
+      final content = rawContent.replaceAll(thinkingRegex, '').trim();
+      return (thinking: thinking, content: content);
+    }
+
+    return (thinking: null, content: rawContent);
+  }
+
   /// 构建消息内容
   Widget _buildMessageContent(BuildContext context) {
-    final isUser = message.role == MessageRole.user;
-    final isFailed = message.status == MessageStatus.failed;
-    final isStreaming = message.status == MessageStatus.streaming;
+    final isUser = widget.message.role == MessageRole.user;
+    final isFailed = widget.message.status == MessageStatus.failed;
+    final isStreaming = widget.message.status == MessageStatus.streaming;
 
     // 如果内容为空且正在流式传输，显示加载指示器
-    if (message.content.isEmpty && isStreaming) {
+    if (widget.message.content.isEmpty && isStreaming) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -170,42 +197,112 @@ class MessageBubble extends StatelessWidget {
       );
     }
 
+    // 解析思维链和正文
+    final parsed = _parseMessageContent(widget.message.content);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 思维链展示（如果有）
+        if (parsed.thinking != null && parsed.thinking!.isNotEmpty) ...[
+          _buildThinkingSection(context, parsed.thinking!),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+        ],
+
         // 用户消息使用纯文本，AI消息使用Markdown渲染
         if (isUser)
           SelectableText(
-            message.content,
+            parsed.content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
           )
         else
           MarkdownBody(
-            data: message.content,
+            data: parsed.content,
             selectable: true,
             onTapLink: (text, href, title) {
               if (href != null) {
                 _launchURL(href);
               }
             },
-            styleSheet: MarkdownStyleSheet(
-              p: Theme.of(context).textTheme.bodyMedium,
+            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+              // 段落样式
+              p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.6,
+                  ) ?? const TextStyle(height: 1.6),
+              // 标题样式
+              h1: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    height: 1.4,
+                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 32),
+              h2: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    height: 1.4,
+                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 24),
+              h3: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    height: 1.4,
+                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 20),
+              // 代码样式
               code: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
+                    fontFamily: 'Monaco, Menlo, Consolas, monospace',
+                    fontSize: 13,
                     backgroundColor:
                         Theme.of(context).colorScheme.surfaceVariant,
+                  ) ?? const TextStyle(
+                    fontFamily: 'Monaco, Menlo, Consolas, monospace',
+                    fontSize: 13,
                   ),
+              codeblockPadding: const EdgeInsets.all(12),
               codeblockDecoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceVariant,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                ),
               ),
+              // 引用样式
+              blockquote: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
+                  ) ?? const TextStyle(fontStyle: FontStyle.italic),
+              blockquoteDecoration: BoxDecoration(
+                color:
+                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                border: Border(
+                  left: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 4,
+                  ),
+                ),
+              ),
+              blockquotePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              // 表格样式
+              tableBorder: TableBorder.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              ),
+              // 链接样式
+              a: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ) ?? TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ),
             ),
           ),
 
         // 失败消息显示错误信息和重试按钮
-        if (isFailed && message.error != null) ...[
+        if (isFailed && widget.message.error != null) ...[
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
@@ -224,7 +321,7 @@ class MessageBubble extends StatelessWidget {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    message.error!,
+                    widget.message.error!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -233,10 +330,10 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
           ),
-          if (onRetry != null) ...[
+          if (widget.onRetry != null) ...[
             const SizedBox(height: 8),
             TextButton.icon(
-              onPressed: onRetry,
+              onPressed: widget.onRetry,
               icon: const Icon(Icons.refresh, size: 16),
               label: const Text('重试'),
               style: TextButton.styleFrom(
@@ -248,7 +345,7 @@ class MessageBubble extends StatelessWidget {
         ],
 
         // 流式传输中显示指示器
-        if (isStreaming && message.content.isNotEmpty) ...[
+        if (isStreaming && widget.message.content.isNotEmpty) ...[
           const SizedBox(height: 4),
           SizedBox(
             width: 12,
@@ -265,15 +362,97 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
+  /// 构建思维链展示区域
+  Widget _buildThinkingSection(BuildContext context, String thinking) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题栏
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isThinkingExpanded = !_isThinkingExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.psychology_outlined,
+                    size: 16,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSecondaryContainer
+                        .withOpacity(0.7),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '思维链',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer
+                              .withOpacity(0.7),
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    _isThinkingExpanded
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 20,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSecondaryContainer
+                        .withOpacity(0.7),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 思维链内容（可折叠）
+          if (_isThinkingExpanded) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: SelectableText(
+                thinking,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSecondaryContainer
+                          .withOpacity(0.8),
+                      fontStyle: FontStyle.italic,
+                      height: 1.5,
+                    ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   /// 构建消息元数据（状态、时间等）
   Widget _buildMessageMeta(BuildContext context) {
-    final formattedTime = _formatTime(message.createdAt);
+    final formattedTime = _formatTime(widget.message.createdAt);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         // 状态指示器
-        if (message.status == MessageStatus.sending) ...[
+        if (widget.message.status == MessageStatus.sending) ...[
           SizedBox(
             width: 12,
             height: 12,
@@ -296,7 +475,7 @@ class MessageBubble extends StatelessWidget {
         ),
 
         // Token数量（如果有）
-        if (message.tokenCount != null) ...[
+        if (widget.message.tokenCount != null) ...[
           const SizedBox(width: 8),
           Icon(
             Icons.data_usage,
@@ -305,7 +484,7 @@ class MessageBubble extends StatelessWidget {
           ),
           const SizedBox(width: 2),
           Text(
-            '${message.tokenCount}',
+            '${widget.message.tokenCount}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color:
                       Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
@@ -347,7 +526,7 @@ class MessageBubble extends StatelessWidget {
 
   /// 复制消息内容到剪贴板
   void _copyToClipboard(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: message.content));
+    Clipboard.setData(ClipboardData(text: widget.message.content));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('已复制到剪贴板'),

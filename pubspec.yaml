@@ -37,6 +37,7 @@ dependencies:
 
   # HTTP客户端
   dio: ^5.4.0
+  flutter_client_sse: ^2.0.3
 
   # 工具
   shared_preferences: ^2.2.2
