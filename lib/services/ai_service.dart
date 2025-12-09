@@ -122,13 +122,14 @@ class AIService {
             }
 
             // 根据不同的event类型处理
-            if (eventType == 'message') {
-              // LLM返回文本块事件
+            if (eventType == 'message' || eventType == 'agent_message') {
+              // LLM返回文本块事件 (支持 message 和 agent_message)
               final answer = data['answer'] as String?;
 
               if (answer != null && answer.isNotEmpty) {
                 await LogService.instance.info('收到AI回复内容 (长度: ${answer.length})', tag: 'AI');
                 await LogService.instance.debug('回复内容: $answer', tag: 'AI');
+                print('✅ [AI] 准备yield内容: "${answer.substring(0, answer.length > 20 ? 20 : answer.length)}..."');
 
                 yield AIStreamResponse(
                   content: answer,

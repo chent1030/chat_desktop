@@ -135,6 +135,21 @@ class ChatNotifier extends StateNotifier<ChatState> {
         status: MessageStatus.streaming,
       );
 
+      // 刷新消息列表，确保空消息已显示
+      await _refreshMessages();
+      print('📋 [Chat] 刷新后消息列表长度: ${state.messages.length}');
+      print('📋 [Chat] 新创建的assistantMessageId: $assistantMessageId');
+
+      // 验证消息是否存在于列表中
+      final foundMessage = state.messages.firstWhere(
+        (msg) => msg.id == assistantMessageId,
+        orElse: () {
+          print('⚠️ [Chat] 警告: 在state.messages中找不到assistantMessageId=$assistantMessageId');
+          return state.messages.first;
+        },
+      );
+      print('✓ [Chat] 找到助手消息: ID=${foundMessage.id}, Content="${foundMessage.content}"');
+
       // 开始流式响应
       await _streamAIResponse(assistantMessageId);
     } catch (e) {
@@ -185,35 +200,51 @@ class ChatNotifier extends StateNotifier<ChatState> {
       String accumulatedContent = '';
 
       _streamSubscription = stream.listen(
-        (response) async {
+        (response) {
+          print('🔵 [Chat] Stream事件触发');
+
           // 如果收到conversation_id，保存它
           if (response.conversationId != null) {
             _backendConversationId = response.conversationId;
             print('✓ [Chat] 保存 conversation_id: $_backendConversationId');
           }
 
-          // 如果有文本内容，累积并更新
+          // 如果有文本内容，累积并实时更新UI
           if (response.content != null && response.content!.isNotEmpty) {
             accumulatedContent += response.content!;
+            print('📝 [Chat] 累积内容长度: ${accumulatedContent.length}, 新内容: "${response.content}"');
 
-            // 更新数据库中的消息
-            final message =
-                await _conversationService.getMessageById(assistantMessageId);
-            if (message != null) {
-              message.content = accumulatedContent;
-              message.markAsStreaming();
-              await _conversationService.updateMessage(message);
-            }
+            // 直接更新state中的消息列表，实现实时显示
+            final updatedMessages = state.messages.map((msg) {
+              if (msg.id == assistantMessageId) {
+                print('🔄 [Chat] 更新消息ID: $assistantMessageId, 内容长度: ${accumulatedContent.length}');
+                // 创建新的消息对象with updated content
+                return Message(
+                  id: msg.id,
+                  conversationId: msg.conversationId,
+                  agentId: msg.agentId,
+                  role: msg.role,
+                  content: accumulatedContent,
+                  status: MessageStatus.streaming,
+                  createdAt: msg.createdAt,
+                  updatedAt: DateTime.now(),
+                );
+              }
+              return msg;
+            }).toList();
 
-            // 刷新UI
-            await _refreshMessages();
+            print('✅ [Chat] State更新完成，消息列表长度: ${updatedMessages.length}');
+            // 立即更新state触发UI刷新
+            state = state.copyWith(messages: updatedMessages);
+            print('✅ [Chat] UI刷新触发完成');
           }
         },
         onDone: () async {
-          // 流式传输完成，标记消息为已发送
+          // 流式传输完成，更新数据库并标记消息为已发送
           final message =
               await _conversationService.getMessageById(assistantMessageId);
           if (message != null) {
+            message.content = accumulatedContent;
             message.markAsSent();
             await _conversationService.updateMessage(message);
           }
@@ -239,6 +270,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           final message =
               await _conversationService.getMessageById(assistantMessageId);
           if (message != null) {
+            message.content = accumulatedContent;
             message.markAsFailed(error.toString());
             await _conversationService.updateMessage(message);
           }
