@@ -72,10 +72,10 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
         }
 
         try {
-          await LogService.instance.info('Windows平台：设置窗口大小为100x100', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：设置窗口大小为100x100');
-          // 设置稍大一点的尺寸以容纳圆形图标和边距
-          await windowManager.setSize(const Size(100, 100));
+          await LogService.instance.info('Windows平台：设置窗口大小为80x80', tag: 'WINDOW');
+          print('🪟 [WINDOW] Windows平台：设置窗口大小为80x80');
+          // 设置为图标大小80x80
+          await windowManager.setSize(const Size(80, 80));
           await LogService.instance.info('Windows平台：窗口大小设置完成', tag: 'WINDOW');
           print('✓ [WINDOW] Windows平台：窗口大小设置完成');
         } catch (e) {
