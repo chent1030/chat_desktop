@@ -42,6 +42,10 @@ class Task {
   @Index()
   late bool isCompleted;
 
+  /// 是否已读
+  @Index()
+  late bool isRead;
+
   /// 截止日期 (可选)
   DateTime? dueDate;
 
@@ -72,6 +76,18 @@ class Task {
   /// 最后同步时间
   DateTime? lastSyncedAt;
 
+  /// 分配给谁 (用户ID或团队ID)
+  String? assignedTo;
+
+  /// 分配类型 (user 或 team)
+  String? assignedToType;
+
+  /// 分配者
+  String? assignedBy;
+
+  /// 分配时间
+  DateTime? assignedAt;
+
   /// 构造函数
   Task({
     this.id = Isar.autoIncrement,
@@ -80,6 +96,7 @@ class Task {
     this.description,
     this.priority = Priority.medium,
     this.isCompleted = false,
+    this.isRead = false,
     this.dueDate,
     required this.createdAt,
     required this.updatedAt,
@@ -89,6 +106,10 @@ class Task {
     this.tags,
     this.isSynced = false,
     this.lastSyncedAt,
+    this.assignedTo,
+    this.assignedToType,
+    this.assignedBy,
+    this.assignedAt,
   }) {
     // 如果uuid为null，生成一个新的
     uuid ??= const Uuid().v4();
@@ -102,6 +123,7 @@ class Task {
     String? description,
     Priority? priority,
     bool? isCompleted,
+    bool? isRead,
     DateTime? dueDate,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -111,6 +133,10 @@ class Task {
     String? tags,
     bool? isSynced,
     DateTime? lastSyncedAt,
+    String? assignedTo,
+    String? assignedToType,
+    String? assignedBy,
+    DateTime? assignedAt,
   }) {
     return Task(
       id: id ?? this.id,
@@ -119,6 +145,7 @@ class Task {
       description: description ?? this.description,
       priority: priority ?? this.priority,
       isCompleted: isCompleted ?? this.isCompleted,
+      isRead: isRead ?? this.isRead,
       dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -128,6 +155,10 @@ class Task {
       tags: tags ?? this.tags,
       isSynced: isSynced ?? this.isSynced,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      assignedTo: assignedTo ?? this.assignedTo,
+      assignedToType: assignedToType ?? this.assignedToType,
+      assignedBy: assignedBy ?? this.assignedBy,
+      assignedAt: assignedAt ?? this.assignedAt,
     );
   }
 
@@ -163,6 +194,18 @@ class Task {
     updatedAt = DateTime.now();
   }
 
+  /// 标记为已读
+  void markAsRead() {
+    isRead = true;
+    updatedAt = DateTime.now();
+  }
+
+  /// 标记为未读
+  void markAsUnread() {
+    isRead = false;
+    updatedAt = DateTime.now();
+  }
+
   /// 更新时间戳
   void touch() {
     updatedAt = DateTime.now();
@@ -189,6 +232,7 @@ class Task {
       'description': description,
       'priority': priority.index,
       'isCompleted': isCompleted,
+      'isRead': isRead,
       'dueDate': formatDateTime(dueDate),
       'createdAt': formatDateTime(createdAt),
       'updatedAt': formatDateTime(updatedAt),
@@ -198,6 +242,10 @@ class Task {
       'tags': tags,
       'isSynced': isSynced,
       'lastSyncedAt': formatDateTime(lastSyncedAt),
+      'assignedTo': assignedTo,
+      'assignedToType': assignedToType,
+      'assignedBy': assignedBy,
+      'assignedAt': formatDateTime(assignedAt),
     };
   }
 
@@ -236,6 +284,7 @@ class Task {
       description: json['description'] as String?,
       priority: Priority.values[json['priority'] as int? ?? 1],
       isCompleted: json['isCompleted'] as bool? ?? false,
+      isRead: json['isRead'] as bool? ?? false,
       dueDate: parseDateTime(json['dueDate'] as String?),
       createdAt: parseDateTime(json['createdAt'] as String?) ?? DateTime.now(),
       updatedAt: parseDateTime(json['updatedAt'] as String?) ?? DateTime.now(),
@@ -245,6 +294,10 @@ class Task {
       tags: json['tags'] as String?,
       isSynced: json['isSynced'] as bool? ?? false,
       lastSyncedAt: parseDateTime(json['lastSyncedAt'] as String?),
+      assignedTo: json['assignedTo'] as String?,
+      assignedToType: json['assignedToType'] as String?,
+      assignedBy: json['assignedBy'] as String?,
+      assignedAt: parseDateTime(json['assignedAt'] as String?),
     );
   }
 

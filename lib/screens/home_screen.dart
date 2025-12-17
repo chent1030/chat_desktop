@@ -259,15 +259,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )
           : null,
       actions: [
-        // 缩小到小窗口按钮
-        IconButton(
-          icon: const Icon(Icons.picture_in_picture_alt, size: 20),
-          onPressed: () {
-            ref.read(windowStateProvider.notifier).switchToMiniMode();
-          },
-          tooltip: '小窗口模式',
-        ),
-
         // 更多菜单（合并搜索和清除功能）
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 20),

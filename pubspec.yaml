@@ -31,6 +31,7 @@ dependencies:
 
   # 桌面窗口管理
   window_manager: ^0.3.7
+  tray_manager: ^0.2.0
 
   # 系统通知
   flutter_local_notifications: ^19.5.0
@@ -55,6 +56,9 @@ dependencies:
   record: ^6.0.0
   path: ^1.8.3
 
+  # 视频播放
+  video_player: ^2.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -73,6 +77,9 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - static_logo.jpg
+    - dynamic_logo.mp4
+    - assets/app_icon.ico
 
   # To add assets to your application, add an assets section, like this:
   # assets:

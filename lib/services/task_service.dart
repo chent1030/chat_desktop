@@ -224,6 +224,100 @@ class TaskService {
     }
   }
 
+  /// 标记任务为已读
+  Future<void> markTaskAsRead(int taskId) async {
+    final task = await getTaskById(taskId);
+    if (task == null) {
+      print('✗ 任务不存在: $taskId');
+      return;
+    }
+
+    // 如果已经是已读状态，不需要重复操作
+    if (task.isRead) {
+      return;
+    }
+
+    task.markAsRead();
+    task.isSynced = false;
+
+    await _isar.writeTxn(() async {
+      await _isar.tasks.put(task);
+    });
+
+    print('✓ 任务已标记为已读: ${task.title}');
+  }
+
+  /// 标记任务为未读
+  Future<void> markTaskAsUnread(int taskId) async {
+    final task = await getTaskById(taskId);
+    if (task == null) {
+      print('✗ 任务不存在: $taskId');
+      return;
+    }
+
+    task.markAsUnread();
+    task.isSynced = false;
+
+    await _isar.writeTxn(() async {
+      await _isar.tasks.put(task);
+    });
+
+    print('✓ 任务标记为未读: ${task.title}');
+  }
+
+  /// 分发任务给用户或团队
+  Future<void> assignTask({
+    required int taskId,
+    required String assignedTo,
+    required String assignedToType, // 'user' 或 'team'
+    required String assignedBy,
+  }) async {
+    final task = await getTaskById(taskId);
+    if (task == null) {
+      print('✗ 任务不存在: $taskId');
+      return;
+    }
+
+    final updatedTask = task.copyWith(
+      assignedTo: assignedTo,
+      assignedToType: assignedToType,
+      assignedBy: assignedBy,
+      assignedAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isSynced: false,
+    );
+
+    await _isar.writeTxn(() async {
+      await _isar.tasks.put(updatedTask);
+    });
+
+    print('✓ 任务已分发: ${task.title} -> $assignedTo ($assignedToType)');
+  }
+
+  /// 取消任务分发
+  Future<void> unassignTask(int taskId) async {
+    final task = await getTaskById(taskId);
+    if (task == null) {
+      print('✗ 任务不存在: $taskId');
+      return;
+    }
+
+    final updatedTask = task.copyWith(
+      assignedTo: null,
+      assignedToType: null,
+      assignedBy: null,
+      assignedAt: null,
+      updatedAt: DateTime.now(),
+      isSynced: false,
+    );
+
+    await _isar.writeTxn(() async {
+      await _isar.tasks.put(updatedTask);
+    });
+
+    print('✓ 任务分发已取消: ${task.title}');
+  }
+
   // ============================================
   // 查询操作
   // ============================================

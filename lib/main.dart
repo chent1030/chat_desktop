@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
 import 'services/config_service.dart';
@@ -94,6 +95,33 @@ Future<void> _initializeApp() async {
     });
 
     print('✓ WindowManager初始化成功');
+
+    // 初始化系统托盘（仅Windows平台）
+    if (Platform.isWindows) {
+      // 设置托盘图标
+      await trayManager.setIcon('assets/app_icon.ico');
+
+      // 设置托盘提示文字
+      await trayManager.setToolTip('芯服务 - 点击恢复窗口');
+
+      // 设置托盘菜单
+      Menu menu = Menu(
+        items: [
+          MenuItem(
+            key: 'show_window',
+            label: '显示窗口',
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            key: 'exit_app',
+            label: '退出',
+          ),
+        ],
+      );
+      await trayManager.setContextMenu(menu);
+
+      print('✓ 系统托盘初始化成功');
+    }
 
     // 启动应用
     runApp(

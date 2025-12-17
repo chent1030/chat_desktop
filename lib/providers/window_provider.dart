@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'task_provider.dart';
 import '../services/log_service.dart';
+import '../models/task.dart';
 
 /// 窗口模式枚举
 enum WindowMode {
@@ -124,6 +125,21 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       }
 
       try {
+        // 隐藏工具栏图标（Windows平台）
+        if (Platform.isWindows) {
+          await LogService.instance.info('Windows平台：隐藏工具栏图标', tag: 'WINDOW');
+          print('🪟 [WINDOW] Windows平台：隐藏工具栏图标');
+          await windowManager.setSkipTaskbar(true);
+          await LogService.instance.info('Windows平台：工具栏图标已隐藏', tag: 'WINDOW');
+          print('✓ [WINDOW] Windows平台：工具栏图标已隐藏');
+        }
+      } catch (e) {
+        await LogService.instance.error('隐藏工具栏图标失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 隐藏工具栏图标失败: $e');
+        rethrow;
+      }
+
+      try {
         await LogService.instance.info('居中显示窗口', tag: 'WINDOW');
         print('🪟 [WINDOW] 居中显示窗口');
         // 居中显示
@@ -214,6 +230,21 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       }
 
       try {
+        // 显示工具栏图标（Windows平台）
+        if (Platform.isWindows) {
+          await LogService.instance.info('Windows平台：显示工具栏图标', tag: 'WINDOW');
+          print('🪟 [WINDOW] Windows平台：显示工具栏图标');
+          await windowManager.setSkipTaskbar(false);
+          await LogService.instance.info('Windows平台：工具栏图标已显示', tag: 'WINDOW');
+          print('✓ [WINDOW] Windows平台：工具栏图标已显示');
+        }
+      } catch (e) {
+        await LogService.instance.error('显示工具栏图标失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 显示工具栏图标失败: $e');
+        rethrow;
+      }
+
+      try {
         await LogService.instance.info('居中显示窗口', tag: 'WINDOW');
         print('🪟 [WINDOW] 居中显示窗口');
         // 居中显示
@@ -268,9 +299,16 @@ final windowStateProvider =
   return WindowStateNotifier();
 });
 
-/// 未读角标计数Provider - 显示未完成任务数
+/// 未读角标计数Provider - 显示未读且未完成任务数
 final unreadBadgeCountProvider = Provider<int>((ref) {
   final taskListState = ref.watch(taskListProvider);
-  // 返回未完成任务的数量
-  return taskListState.tasks.where((task) => !task.isCompleted).length;
+  // 返回未读且未完成任务的数量
+  return taskListState.tasks.where((task) => !task.isRead && !task.isCompleted).length;
+});
+
+/// 未读任务列表Provider - 返回未读且未完成的任务
+final unreadTasksProvider = Provider<List<Task>>((ref) {
+  final taskListState = ref.watch(taskListProvider);
+  // 返回未读且未完成的任务列表
+  return taskListState.tasks.where((task) => !task.isRead && !task.isCompleted).toList();
 });
