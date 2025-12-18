@@ -182,7 +182,9 @@ bool Win32Window::IsSubWindow() {
   bool is_sub_window = false;
   for (int i = 0; i < argc; i++) {
     std::wstring arg(argv[i]);
-    if (arg.find(L"multi_window") != std::wstring::npos) {
+    // Detect both desktop_multi_window markers and our custom entry flag
+    if (arg.find(L"multi_window") != std::wstring::npos ||
+        arg.find(L"mini_window") != std::wstring::npos) {
       is_sub_window = true;
       break;
     }

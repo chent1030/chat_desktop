@@ -41,8 +41,10 @@ bool FlutterWindow::OnCreate() {
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
-    // Set transparency
-    SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 255, LWA_ALPHA);
+    // Make pure black fully transparent using color key to achieve a
+    // cutout-style floating window (Flutter clears to black by default).
+    // Note: Avoid LWA_ALPHA constant alpha here so per-pixel content remains visible.
+    SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
 
     OutputDebugStringA("[FlutterWindow] Floating window style reconfigured - WS_POPUP applied\n");
   }
