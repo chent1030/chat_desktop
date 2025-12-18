@@ -43,29 +43,20 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
   }
 
   Future<void> _initializeVideo() async {
-    // 如果有未读消息,播放视频;否则显示静态图片
-    if (widget.unreadCount > 0) {
-      // 先释放旧的控制器
-      await _videoController?.dispose();
+    // 先释放旧的控制器
+    await _videoController?.dispose();
 
-      // 创建新的视频控制器
-      _videoController = VideoPlayerController.asset('dynamic_logo.mp4');
-      await _videoController!.initialize();
-      await _videoController!.setLooping(true);
-      await _videoController!.play();
+    // 根据是否有未读消息选择不同的视频
+    final videoPath = widget.unreadCount > 0 ? 'dynamic_logo.mp4' : 'unread_logo.mp4';
 
-      if (mounted) {
-        setState(() {});
-      }
-    } else {
-      // 没有未读消息时停止并释放视频
-      await _videoController?.pause();
-      await _videoController?.dispose();
-      _videoController = null;
+    // 创建新的视频控制器
+    _videoController = VideoPlayerController.asset(videoPath);
+    await _videoController!.initialize();
+    await _videoController!.setLooping(true);
+    await _videoController!.play();
 
-      if (mounted) {
-        setState(() {});
-      }
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -229,13 +220,13 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
         ],
       ),
       child: ClipOval(
-        child: widget.unreadCount > 0 && _videoController != null && _videoController!.value.isInitialized
+        child: _videoController != null && _videoController!.value.isInitialized
             ? AspectRatio(
                 aspectRatio: _videoController!.value.aspectRatio,
                 child: VideoPlayer(_videoController!),
               )
             : Image.asset(
-                'static_logo.jpg',
+                'static_logo.jpg', // 加载中的占位图
                 fit: BoxFit.cover,
               ),
       ),
