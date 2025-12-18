@@ -118,23 +118,19 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        width: 80,
-        height: 80,
+        width: 120,
+        height: 120,
         color: Colors.transparent,
         child: GestureDetector(
           onDoubleTap: _onDoubleTap,
           child: Center(
-            child: SizedBox(
-              width: 80,
-              height: 80,
-              child: Lottie.asset(
-                lottieAsset,
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-                repeat: true,
-                animate: true,
-              ),
+            child: Lottie.asset(
+              lottieAsset,
+              width: 120,
+              height: 120,
+              fit: BoxFit.contain,
+              repeat: true,
+              animate: true,
             ),
           ),
         ),

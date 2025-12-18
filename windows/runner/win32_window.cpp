@@ -259,6 +259,18 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
+
+    case WM_NCHITTEST: {
+      // For floating windows, make the entire client area draggable
+      if (IsSubWindow()) {
+        LRESULT hit = DefWindowProc(hwnd, message, wparam, lparam);
+        if (hit == HTCLIENT) {
+          return HTCAPTION;  // Treat client area clicks as title bar clicks
+        }
+        return hit;
+      }
+      break;
+    }
   }
 
   return DefWindowProc(window_handle_, message, wparam, lparam);

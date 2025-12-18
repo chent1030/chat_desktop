@@ -24,12 +24,12 @@ class AppWindowListener extends WindowListener {
     print('🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗');
 
     try {
-      // 创建独立的悬浮窗（80x80，透明，置顶）
+      // 创建独立的悬浮窗（120x120，透明，置顶）
       // 传递 'mini_window' 作为第一个参数，子窗口的 main() 会接收到这个参数
       final window = await DesktopMultiWindow.createWindow('mini_window');
 
       // 设置悬浮窗属性
-      await window.setFrame(const Offset(100, 100) & const Size(80, 80));
+      await window.setFrame(const Offset(100, 100) & const Size(120, 120));
       await window.setTitle('');  // 空标题
       await window.center();
 
