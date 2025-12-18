@@ -29,14 +29,37 @@ class AppWindowListener extends WindowListener {
       final window = await DesktopMultiWindow.createWindow('mini_window');
 
       // 设置悬浮窗属性
-      window
-        ..setFrame(const Offset(100, 100) & const Size(80, 80))
-        ..setTitle('悬浮窗')
-        ..center()
-        ..show();
+      await window.setFrame(const Offset(100, 100) & const Size(80, 80));
+      await window.setTitle('');  // 空标题
+      await window.center();
+
+      // 关键设置：移除标题栏和边框
+      // 注意：desktop_multi_window 的 API 有限，某些属性可能无法直接设置
+      // 需要在子窗口内部通过 UI 层面实现无边框效果
+
+      await window.show();
 
       await LogService.instance.info('独立悬浮窗创建成功', tag: 'WINDOW');
       print('✓ [WINDOW] 独立悬浮窗创建成功');
+
+      // 获取当前未读任务数并发送给悬浮窗
+      try {
+        final unreadCount = ref.read(unreadBadgeCountProvider);
+        print('📤 [WINDOW] 发送未读任务数给悬浮窗: $unreadCount, 窗口ID: ${window.windowId}');
+
+        // 等待一小段时间确保悬浮窗已经初始化
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // 使用正确的 API 发送消息给子窗口
+        await DesktopMultiWindow.invokeMethod(
+          window.windowId,
+          'update_unread_count',
+          unreadCount,
+        );
+        print('✓ [WINDOW] 未读任务数已发送');
+      } catch (e) {
+        print('✗ [WINDOW] 发送未读任务数失败: $e');
+      }
 
       // 隐藏主窗口
       await windowManager.hide();

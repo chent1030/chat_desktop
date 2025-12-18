@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:lottie/lottie.dart';
@@ -11,9 +12,19 @@ Future<void> miniWindowMain(List<String> args) async {
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
 
-    // 注意：子窗口不应该初始化任何需要平台通道的服务（如 path_provider）
-    // 因为在 desktop_multi_window 的子窗口环境中，这些插件无法正常工作
-    // 数据应该通过窗口间通信从主窗口获取，或者使用内存共享机制
+    // 设置消息处理器，接收来自主窗口的消息
+    DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
+      print('🔔 [MINI] 收到消息: ${call.method}, 来自窗口: $fromWindowId');
+
+      if (call.method == 'update_unread_count') {
+        // 接收未读任务数更新
+        final count = call.arguments as int;
+        print('✓ [MINI] 更新未读任务数: $count');
+        // 通过全局状态或其他方式更新UI
+        // 暂时通过 EventBus 或 StreamController 实现
+        unreadCountController.add(count);
+      }
+    });
 
     print('✓ [MINI] 子窗口初始化完成（跳过服务初始化）');
 
@@ -25,6 +36,9 @@ Future<void> miniWindowMain(List<String> args) async {
     print('Stack trace: $stackTrace');
   }
 }
+
+// 用于跨Widget通信的 Stream Controller
+final unreadCountController = StreamController<int>.broadcast();
 
 /// 悬浮窗应用
 class MiniWindowApp extends StatelessWidget {
@@ -61,8 +75,26 @@ class MiniWindowHome extends StatefulWidget {
 }
 
 class _MiniWindowHomeState extends State<MiniWindowHome> {
-  // 暂时使用固定的未读数量，未来可以通过窗口间通信从主窗口获取
   int _unreadCount = 0;
+  StreamSubscription? _unreadCountSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // 监听未读任务数变化
+    _unreadCountSubscription = unreadCountController.stream.listen((count) {
+      setState(() {
+        _unreadCount = count;
+      });
+      print('✓ [MINI UI] 未读任务数更新为: $count');
+    });
+  }
+
+  @override
+  void dispose() {
+    _unreadCountSubscription?.cancel();
+    super.dispose();
+  }
 
   /// 双击恢复主窗口
   Future<void> _onDoubleTap() async {
@@ -79,30 +111,29 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
   @override
   Widget build(BuildContext context) {
     // 根据是否有未读消息选择不同的 Lottie 动画
-    // 暂时使用固定值，未来可以通过窗口间通信更新
     final lottieAsset = _unreadCount > 0 ? 'dynamic_logo.json' : 'unread_logo.json';
+
+    print('🎨 [MINI UI] 当前未读数: $_unreadCount, 使用动画: $lottieAsset');
 
     return Material(
       type: MaterialType.transparency,
       child: Container(
+        width: 80,
+        height: 80,
         color: Colors.transparent,
-        child: Center(
-          child: GestureDetector(
-            onDoubleTap: _onDoubleTap,
+        child: GestureDetector(
+          onDoubleTap: _onDoubleTap,
+          child: Center(
             child: SizedBox(
               width: 80,
               height: 80,
-              child: ClipOval(
-                child: Center(
-                  child: Lottie.asset(
-                    lottieAsset,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.contain,
-                    repeat: true,
-                    animate: true,
-                  ),
-                ),
+              child: Lottie.asset(
+                lottieAsset,
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
+                repeat: true,
+                animate: true,
               ),
             ),
           ),

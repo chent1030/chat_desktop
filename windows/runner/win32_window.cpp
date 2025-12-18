@@ -134,8 +134,21 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
-  HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
+  // 检查是否是子窗口（悬浮窗）
+  bool is_sub_window = IsSubWindow();
+
+  // 根据窗口类型选择样式
+  DWORD window_style = is_sub_window
+      ? WS_POPUP  // 无边框弹出窗口
+      : WS_OVERLAPPEDWINDOW;  // 标准窗口
+
+  DWORD ex_style = is_sub_window
+      ? (WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED)  // 置顶 + 不显示任务栏 + 透明支持
+      : 0;
+
+  HWND window = CreateWindowEx(
+      ex_style,
+      window_class, title.c_str(), window_style,
       Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
       Scale(size.width, scale_factor), Scale(size.height, scale_factor),
       nullptr, nullptr, GetModuleHandle(nullptr), this);
@@ -144,9 +157,39 @@ bool Win32Window::Create(const std::wstring& title,
     return false;
   }
 
+  // 如果是悬浮窗，设置透明度
+  if (is_sub_window) {
+    // 设置窗口透明（255 = 完全不透明，0 = 完全透明）
+    // 这里设置为 255，实际透明度由 Flutter UI 层控制
+    SetLayeredWindowAttributes(window, RGB(0, 0, 0), 255, LWA_ALPHA);
+
+    // 日志输出
+    OutputDebugStringA("🪟 [Windows Native] 配置悬浮窗模式\n");
+    OutputDebugStringA("✓ [Windows Native] 悬浮窗配置完成\n");
+  }
+
   UpdateTheme(window);
 
   return OnCreate();
+}
+
+// 检查是否是子窗口的辅助函数
+bool Win32Window::IsSubWindow() {
+  // 检查命令行参数
+  int argc;
+  LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+  bool is_sub_window = false;
+  for (int i = 0; i < argc; i++) {
+    std::wstring arg(argv[i]);
+    if (arg.find(L"multi_window") != std::wstring::npos) {
+      is_sub_window = true;
+      break;
+    }
+  }
+
+  LocalFree(argv);
+  return is_sub_window;
 }
 
 bool Win32Window::Show() {

@@ -90,6 +90,9 @@ class Win32Window {
   // Update the window frame's theme to match the system theme.
   static void UpdateTheme(HWND const window);
 
+  // Check if this is a sub-window (floating window) based on command line arguments.
+  bool IsSubWindow();
+
   bool quit_on_close_ = false;
 
   // window handle for top level window.
