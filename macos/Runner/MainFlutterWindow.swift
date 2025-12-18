@@ -36,9 +36,7 @@ class MainFlutterWindow: NSWindow {
 
     // 1. 移除标题栏和边框
     self.styleMask = [
-      .borderless,           // 无边框
-      .closable,             // 保留关闭功能（但不显示按钮）
-      .resizable             // 允许调整大小（用于拖拽）
+      .borderless           // 无边框（不显示最小化/最大化/关闭）
     ]
 
     // 2. 设置窗口置顶
@@ -56,7 +54,7 @@ class MainFlutterWindow: NSWindow {
     self.titlebarAppearsTransparent = true
 
     // 6. 移除阴影（可选，让窗口更"轻量"）
-    // self.hasShadow = false
+    self.hasShadow = false
 
     // 7. 设置窗口始终可见（不受"隐藏所有窗口"影响）
     self.collectionBehavior = [
@@ -64,6 +62,9 @@ class MainFlutterWindow: NSWindow {
       .stationary,           // 不参与 Exposé
       .ignoresCycle          // 不在窗口循环中
     ]
+
+    // 8. 固定悬浮窗尺寸（与 Flutter 端 120x120 一致）
+    self.setContentSize(NSSize(width: 120, height: 120))
 
     print("✓ [macOS Native] 悬浮窗配置完成")
   }

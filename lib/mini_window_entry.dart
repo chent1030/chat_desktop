@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -11,10 +12,7 @@ import 'package:lottie/lottie.dart';
 /// 应该通过窗口间通信或共享内存从主窗口获取数据
 Future<void> miniWindowMain(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  // 确保二次入口注册插件（Flutter 3.10+）
-  try {
-    DartPluginRegistrant.ensureInitialized();
-  } catch (_) {}
+  // 子窗口不依赖平台通道插件，省略 DartPluginRegistrant 确保注册
 
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
@@ -173,109 +171,98 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
                 Positioned(
                   left: 130,
                   top: 0,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      maxWidth: 300,
-                      maxHeight: 400,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          maxWidth: 300,
+                          maxHeight: 400,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 标题
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade600,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.notifications_active,
-                                  color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                '未读待办 ($_unreadCount)',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        color: Colors.white.withOpacity(0.06), // 低不透明度，视觉上“无背景/无边框”
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 标题（轻量样式，无背景条，无边框）
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.notifications_active, color: Colors.white, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '未读待办 ($_unreadCount)',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        // 任务列表
-                        Flexible(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.all(8),
-                            itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
-                            separatorBuilder: (context, index) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final task = _unreadTasks[index];
-                              return ListTile(
-                                dense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                leading: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
+                            ),
+                            const Divider(height: 1, color: Color.fromARGB(60, 255, 255, 255)),
+                            // 任务列表
+                            Flexible(
+                              child: ListView.separated(
+                                shrinkWrap: true,
+                                padding: const EdgeInsets.all(8),
+                                itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
+                                separatorBuilder: (context, index) => const Divider(height: 1, color: Color.fromARGB(40, 255, 255, 255)),
+                                itemBuilder: (context, index) {
+                                  final task = _unreadTasks[index];
+                                  return ListTile(
+                                    dense: true,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    leading: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      task['title'] ?? '无标题',
+                                      style: const TextStyle(fontSize: 13, color: Colors.white),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: task['description'] != null
+                                        ? Text(
+                                            task['description'],
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.white70,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          )
+                                        : null,
+                                  );
+                                },
+                              ),
+                            ),
+                            // 底部提示（轻量样式）
+                            if (_unreadTasks.length > 5)
+                              Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Center(
+                                  child: Text(
+                                    '还有 ${_unreadTasks.length - 5} 条...',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                 ),
-                                title: Text(
-                                  task['title'] ?? '无标题',
-                                  style: const TextStyle(fontSize: 13),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: task['description'] != null
-                                    ? Text(
-                                        task['description'],
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      )
-                                    : null,
-                              );
-                            },
-                          ),
-                        ),
-                        // 底部提示
-                        if (_unreadTasks.length > 5)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            child: Center(
-                              child: Text(
-                                '还有 ${_unreadTasks.length - 5} 条...',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
