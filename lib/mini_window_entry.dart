@@ -2,8 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
-import 'package:window_manager/window_manager.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:lottie/lottie.dart';
 import 'models/task.dart';
 import 'services/task_service.dart';
@@ -12,6 +10,7 @@ import 'services/log_service.dart';
 import 'providers/task_provider.dart';
 
 /// 悬浮窗入口点 - 独立的窗口实例
+/// 注意：这是一个子窗口，不能使用 window_manager，应使用 WindowController
 Future<void> miniWindowMain(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -27,36 +26,9 @@ Future<void> miniWindowMain(List<String> args) async {
     // TaskService 使用单例模式，会自动使用已初始化的 StorageService
     print('✓ [MINI] TaskService 已就绪');
 
-    // 初始化 window_manager
-    await windowManager.ensureInitialized();
-
-    // 初始化 flutter_acrylic（用于透明窗口效果）
-    await Window.initialize();
-
-    // 配置悬浮窗属性：80x80，透明，无边框，置顶
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(80, 80),
-      minimumSize: Size(80, 80),
-      maximumSize: Size(80, 80),
-      center: true,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: true, // 隐藏任务栏图标
-      titleBarStyle: TitleBarStyle.hidden,
-      alwaysOnTop: true, // 始终置顶
-    );
-
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      // 设置完全透明效果
-      await Window.setEffect(
-        effect: WindowEffect.transparent,
-        dark: false,
-      );
-
-      // 设置为无边框窗口
-      await windowManager.setAsFrameless();
-      await windowManager.show();
-      print('✓ [MINI] 悬浮窗显示成功');
-    });
+    // 注意：子窗口不需要初始化 window_manager
+    // 窗口属性已在创建时由主窗口通过 DesktopMultiWindow.createWindow() 配置
+    print('✓ [MINI] 子窗口初始化完成');
 
     runApp(
       const ProviderScope(
@@ -79,8 +51,18 @@ class MiniWindowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.transparent,
+        // 确保所有颜色都是透明的
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          surface: Colors.transparent,
+          background: Colors.transparent,
+        ),
       ),
-      home: const MiniWindowHome(),
+      home: const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: MiniWindowHome(),
+      ),
     );
   }
 }
