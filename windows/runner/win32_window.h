@@ -71,6 +71,9 @@ class Win32Window {
   // Called when Destroy is called.
   virtual void OnDestroy();
 
+  // Check if this is a sub-window (floating window) based on command line arguments.
+  bool IsSubWindow();
+
  private:
   friend class WindowClassRegistrar;
 
@@ -89,9 +92,6 @@ class Win32Window {
 
   // Update the window frame's theme to match the system theme.
   static void UpdateTheme(HWND const window);
-
-  // Check if this is a sub-window (floating window) based on command line arguments.
-  bool IsSubWindow();
 
   bool quit_on_close_ = false;
 

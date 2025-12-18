@@ -27,6 +27,30 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // If this is a sub-window (floating window), reconfigure window style
+  if (IsSubWindow()) {
+    HWND hwnd = GetHandle();
+
+    // Remove window decorations (title bar, minimize/maximize buttons, borders)
+    LONG style = GetWindowLong(hwnd, GWL_STYLE);
+    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+    SetWindowLong(hwnd, GWL_STYLE, style);
+
+    // Set extended style for topmost, no taskbar, and layered
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    exStyle |= (WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED);
+    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+
+    // Apply the changes
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+
+    // Set transparency
+    SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 255, LWA_ALPHA);
+
+    OutputDebugStringA("[FlutterWindow] Floating window style reconfigured\n");
+  }
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -51,6 +75,15 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // Handle drag for floating window BEFORE Flutter processes the message
+  if (message == WM_NCHITTEST && IsSubWindow()) {
+    LRESULT hit = DefWindowProc(hwnd, message, wparam, lparam);
+    if (hit == HTCLIENT) {
+      return HTCAPTION;  // Make entire client area draggable
+    }
+    return hit;
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =
