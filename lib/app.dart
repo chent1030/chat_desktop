@@ -45,6 +45,7 @@ class AppWindowListener extends WindowListener {
       // 获取当前未读任务数并发送给悬浮窗
       try {
         final unreadCount = ref.read(unreadBadgeCountProvider);
+        final unreadTasks = ref.read(unreadTasksProvider);
         print('📤 [WINDOW] 发送未读任务数给悬浮窗: $unreadCount, 窗口ID: ${window.windowId}');
 
         // 等待一小段时间确保悬浮窗已经初始化
@@ -57,8 +58,24 @@ class AppWindowListener extends WindowListener {
           unreadCount,
         );
         print('✓ [WINDOW] 未读任务数已发送');
+
+        // 发送未读任务列表（转换为 Map 列表）
+        final taskMaps = unreadTasks.map((task) => {
+          'id': task.id,
+          'title': task.title,
+          'description': task.description,
+          'isCompleted': task.isCompleted,
+          'isRead': task.isRead,
+        }).toList();
+
+        await DesktopMultiWindow.invokeMethod(
+          window.windowId,
+          'update_unread_tasks',
+          taskMaps,
+        );
+        print('✓ [WINDOW] 未读任务列表已发送，数量: ${taskMaps.length}');
       } catch (e) {
-        print('✗ [WINDOW] 发送未读任务数失败: $e');
+        print('✗ [WINDOW] 发送数据失败: $e');
       }
 
       // 隐藏主窗口

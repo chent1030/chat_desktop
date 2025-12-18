@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:lottie/lottie.dart';
+import 'package:window_manager/window_manager.dart';
 
 /// 悬浮窗入口点 - 独立的窗口实例
 /// 注意：这是一个子窗口，不能使用需要平台通道的插件
@@ -12,6 +13,22 @@ Future<void> miniWindowMain(List<String> args) async {
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
 
+    // 尝试初始化 window_manager 来设置窗口属性
+    try {
+      await windowManager.ensureInitialized();
+
+      // 设置窗口为无标题栏样式
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.setAsFrameless();
+      await windowManager.setAlwaysOnTop(true);
+      await windowManager.setSkipTaskbar(true);
+
+      print('✓ [MINI] 窗口样式设置成功');
+    } catch (e) {
+      print('⚠ [MINI] 窗口样式设置失败（可能不支持）: $e');
+      // 忽略错误，继续执行
+    }
+
     // 设置消息处理器，接收来自主窗口的消息
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
       print('🔔 [MINI] 收到消息: ${call.method}, 来自窗口: $fromWindowId');
@@ -20,9 +37,12 @@ Future<void> miniWindowMain(List<String> args) async {
         // 接收未读任务数更新
         final count = call.arguments as int;
         print('✓ [MINI] 更新未读任务数: $count');
-        // 通过全局状态或其他方式更新UI
-        // 暂时通过 EventBus 或 StreamController 实现
         unreadCountController.add(count);
+      } else if (call.method == 'update_unread_tasks') {
+        // 接收未读任务列表更新
+        final tasks = List<Map<String, dynamic>>.from(call.arguments as List);
+        print('✓ [MINI] 更新未读任务列表，数量: ${tasks.length}');
+        unreadTasksController.add(tasks);
       }
     });
 
@@ -39,6 +59,7 @@ Future<void> miniWindowMain(List<String> args) async {
 
 // 用于跨Widget通信的 Stream Controller
 final unreadCountController = StreamController<int>.broadcast();
+final unreadTasksController = StreamController<List<Map<String, dynamic>>>.broadcast();
 
 /// 悬浮窗应用
 class MiniWindowApp extends StatelessWidget {
@@ -76,7 +97,10 @@ class MiniWindowHome extends StatefulWidget {
 
 class _MiniWindowHomeState extends State<MiniWindowHome> {
   int _unreadCount = 0;
+  bool _isHovering = false;
+  List<Map<String, dynamic>> _unreadTasks = [];
   StreamSubscription? _unreadCountSubscription;
+  StreamSubscription? _unreadTasksSubscription;
 
   @override
   void initState() {
@@ -88,11 +112,20 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
       });
       print('✓ [MINI UI] 未读任务数更新为: $count');
     });
+
+    // 监听未读任务列表变化
+    _unreadTasksSubscription = unreadTasksController.stream.listen((tasks) {
+      setState(() {
+        _unreadTasks = tasks;
+      });
+      print('✓ [MINI UI] 未读任务列表更新，数量: ${tasks.length}');
+    });
   }
 
   @override
   void dispose() {
     _unreadCountSubscription?.cancel();
+    _unreadTasksSubscription?.cancel();
     super.dispose();
   }
 
@@ -117,22 +150,156 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
 
     return Material(
       type: MaterialType.transparency,
-      child: Container(
-        width: 120,
-        height: 120,
-        color: Colors.transparent,
-        child: GestureDetector(
-          onDoubleTap: _onDoubleTap,
-          child: Center(
-            child: Lottie.asset(
-              lottieAsset,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // 主动画容器
+            Container(
               width: 120,
               height: 120,
-              fit: BoxFit.contain,
-              repeat: true,
-              animate: true,
+              color: Colors.transparent,
+              child: GestureDetector(
+                onDoubleTap: _onDoubleTap,
+                child: Center(
+                  child: ClipRect(
+                    child: SizedBox(
+                      width: 120,
+                      height: 120,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: Lottie.asset(
+                            lottieAsset,
+                            fit: BoxFit.contain,
+                            repeat: true,
+                            animate: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            // 悬停时显示未读任务列表
+            if (_isHovering && _unreadTasks.isNotEmpty)
+              Positioned(
+                left: 130,
+                top: 0,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    maxWidth: 300,
+                    maxHeight: 400,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 标题
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade600,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.notifications_active,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              '未读待办 ($_unreadCount)',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // 任务列表
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(8),
+                          itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final task = _unreadTasks[index];
+                            return ListTile(
+                              dense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              leading: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              title: Text(
+                                task['title'] ?? '无标题',
+                                style: const TextStyle(fontSize: 13),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: task['description'] != null
+                                  ? Text(
+                                      task['description'],
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                                  : null,
+                            );
+                          },
+                        ),
+                      ),
+                      // 底部提示
+                      if (_unreadTasks.length > 5)
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Center(
+                            child: Text(
+                              '还有 ${_unreadTasks.length - 5} 条...',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
