@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
-import 'package:lottie/lottie.dart';
-import 'package:window_manager/window_manager.dart' show DragToMoveArea, windowManager;
+import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:window_manager/window_manager.dart' show DragToMoveArea, windowManager, TitleBarStyle;
 
 // 悬浮窗入口
 Future<void> miniWindowMain(List<String> args) async {
@@ -22,6 +22,22 @@ Future<void> miniWindowMain(List<String> args) async {
   });
 
   runApp(const MiniWindowApp());
+
+  // Windows 子窗口：尽量设置为无边框、透明、置顶并隐藏任务栏
+  if (Platform.isWindows) {
+    try {
+      await Window.initialize();
+      await Window.setEffect(effect: WindowEffect.transparent);
+    } catch (_) {}
+    try {
+      await windowManager.setAsFrameless();
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.setAlwaysOnTop(true);
+      await windowManager.setSkipTaskbar(true);
+      await windowManager.setResizable(false);
+      await windowManager.setHasShadow(false);
+    } catch (_) {}
+  }
 }
 
 // 跨 Widget 的数据流
@@ -110,7 +126,7 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
 
   @override
   Widget build(BuildContext context) {
-    final lottieAsset = _unreadCount > 0 ? 'dynamic_logo.json' : 'unread_logo.json';
+    final lottieAsset = _unreadCount > 0 ? 'dynamic_logo.gif' : 'unread_logo.gif';
     return Material(
       type: MaterialType.transparency,
       child: MouseRegion(
@@ -147,13 +163,12 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
         behavior: HitTestBehavior.translucent,
         onDoubleTap: _onDoubleTap,
         child: Center(
-          child: Lottie.asset(
+          child: Image.asset(
             lottieAsset,
             width: 120,
             height: 120,
             fit: BoxFit.contain,
-            repeat: true,
-            animate: true,
+            gaplessPlayback: true,
           ),
         ),
       ),

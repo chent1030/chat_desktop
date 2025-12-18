@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:lottie/lottie.dart';
+import 'package:flutter/widgets.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 
@@ -190,21 +190,20 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
   Widget _buildLogoWidget() {
     // 根据是否有未读消息选择不同的 Lottie 动画
     final lottieAsset = widget.unreadCount > 0
-        ? 'dynamic_logo.json'
-        : 'unread_logo.json';
+        ? 'dynamic_logo.gif'
+        : 'unread_logo.gif';
 
     return SizedBox(
       width: 80,
       height: 80,
       child: ClipOval(
         child: Center(
-          child: Lottie.asset(
+          child: Image.asset(
             lottieAsset,
             width: 80,
             height: 80,
             fit: BoxFit.contain,
-            repeat: true,
-            animate: true,
+            gaplessPlayback: true,
           ),
         ),
       ),

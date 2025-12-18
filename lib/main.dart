@@ -197,10 +197,10 @@ Future<void> _initializeApp() async {
     try {
       // 设置托盘图标
       final iconPath = Platform.isWindows
-          ? 'app_icon.ico'
+          ? 'assets/static_logo.ico'
           : Platform.isMacOS
               ? 'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png'
-              : 'assets/app_icon.ico';
+              : 'assets/static_logo.ico';
 
       await trayManager.setIcon(iconPath);
 

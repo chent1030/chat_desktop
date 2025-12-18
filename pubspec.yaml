@@ -81,7 +81,9 @@ flutter:
     - .env
     - dynamic_logo.json
     - unread_logo.json
-    - assets/app_icon.ico
+    - dynamic_logo.gif
+    - unread_logo.gif
+    - assets/static_logo.ico
 
   # To add assets to your application, add an assets section, like this:
   # assets:
