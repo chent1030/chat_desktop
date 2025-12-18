@@ -17,20 +17,12 @@ class AppWindowListener extends WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    // 在Windows平台上,关闭按钮进入小窗模式而不是退出
-    if (Platform.isWindows) {
-      await LogService.instance.info('Windows平台：关闭按钮被点击，切换到小窗模式', tag: 'WINDOW');
-      print('🪟 [WINDOW] Windows平台：关闭按钮被点击，切换到小窗模式');
+    // 所有平台：关闭按钮进入小窗模式而不是退出
+    await LogService.instance.info('关闭按钮被点击，切换到小窗模式', tag: 'WINDOW');
+    print('🪟 [WINDOW] 关闭按钮被点击，切换到小窗模式');
 
-      // 切换到小窗模式
-      await ref.read(windowStateProvider.notifier).switchToMiniMode();
-
-      // 阻止窗口关闭
-      return;
-    } else {
-      // 其他平台正常退出
-      await windowManager.destroy();
-    }
+    // 切换到小窗模式
+    await ref.read(windowStateProvider.notifier).switchToMiniMode();
   }
 }
 
@@ -84,12 +76,10 @@ class _MyAppState extends ConsumerState<MyApp> {
     windowManager.addListener(_windowListener);
     print('✓ 窗口监听器已注册');
 
-    // 创建并注册托盘监听器（仅Windows平台）
-    if (Platform.isWindows) {
-      _trayListener = AppTrayListener(ref);
-      trayManager.addListener(_trayListener);
-      print('✓ 托盘监听器已注册');
-    }
+    // 创建并注册托盘监听器（所有平台）
+    _trayListener = AppTrayListener(ref);
+    trayManager.addListener(_trayListener);
+    print('✓ 托盘监听器已注册');
   }
 
   @override
@@ -98,9 +88,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     windowManager.removeListener(_windowListener);
 
     // 移除托盘监听器
-    if (Platform.isWindows) {
-      trayManager.removeListener(_trayListener);
-    }
+    trayManager.removeListener(_trayListener);
 
     super.dispose();
   }

@@ -43,59 +43,46 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       await LogService.instance.info('开始切换到小窗口模式', tag: 'WINDOW');
       print('🪟 [WINDOW] 开始切换到小窗口模式');
 
-      // Windows平台需要额外处理：设置无边框窗口和透明背景
-      if (Platform.isWindows) {
-        try {
-          await LogService.instance.info('Windows平台：设置透���背景', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：设置透明背景');
-          // 设置背景色为透明（移除白色背景）
-          await windowManager.setBackgroundColor(const Color(0x00000000));
-          await LogService.instance.info('Windows平台：透明背景设置完成', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：透明背景设置完成');
-        } catch (e) {
-          await LogService.instance.error('Windows平台：设置透明背景失败 - $e', tag: 'WINDOW');
-          print('✗ [WINDOW] Windows平台：设置透明背景失败: $e');
-          rethrow;
-        }
+      // 所有平台：设置透明背景
+      try {
+        await LogService.instance.info('设置透明背景', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置透明背景');
+        // 设置背景色为透明（移除白色背景）
+        await windowManager.setBackgroundColor(const Color(0x00000000));
+        await LogService.instance.info('透明背景设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 透明背景设置完成');
+      } catch (e) {
+        await LogService.instance.error('设置透明背景失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置透明背景失败: $e');
+        rethrow;
+      }
 
-        try {
-          await LogService.instance.info('Windows平台：设置为无边框窗口', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：设置为无边框窗口');
-          // 设置为无边框窗口（移除系统边框和阴影）
-          await windowManager.setAsFrameless();
-          await LogService.instance.info('Windows平台：无边框窗口设置完成', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：无边框窗口设置完成');
-        } catch (e) {
-          await LogService.instance.error('Windows平台：设置无边框窗口失败 - $e', tag: 'WINDOW');
-          print('✗ [WINDOW] Windows平台：设置无边框窗口失败: $e');
-          rethrow;
-        }
+      // 所有平台：设置为无边框窗口
+      try {
+        await LogService.instance.info('设置为无边框窗口', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置为无边框窗口');
+        // 设置为无边框窗口（移除系统边框和阴影）
+        await windowManager.setAsFrameless();
+        await LogService.instance.info('无边框窗口设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 无边框窗口设置完成');
+      } catch (e) {
+        await LogService.instance.error('设置无边框窗口失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置无边框窗口失败: $e');
+        rethrow;
+      }
 
-        try {
-          await LogService.instance.info('Windows平台：设置窗口大小为80x80', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：设置窗口大小为80x80');
-          // 设置为图标大小80x80
-          await windowManager.setSize(const Size(80, 80));
-          await LogService.instance.info('Windows平台：窗口大小设置完成', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：窗口大小设置完成');
-        } catch (e) {
-          await LogService.instance.error('Windows平台：设置窗口大小失败 - $e', tag: 'WINDOW');
-          print('✗ [WINDOW] Windows平台：设置窗口大小失败: $e');
-          rethrow;
-        }
-      } else {
-        try {
-          await LogService.instance.info('非Windows平台：设置窗口大小为80x80', tag: 'WINDOW');
-          print('🪟 [WINDOW] 非Windows平台：设置窗口大小为80x80');
-          // 其他平台保持原有尺寸
-          await windowManager.setSize(const Size(80, 80));
-          await LogService.instance.info('非Windows平台：窗口大小设置完成', tag: 'WINDOW');
-          print('✓ [WINDOW] 非Windows平台：窗口大小设置完成');
-        } catch (e) {
-          await LogService.instance.error('非Windows平台：设置窗口大小失败 - $e', tag: 'WINDOW');
-          print('✗ [WINDOW] 非Windows平台：设置窗口大小失败: $e');
-          rethrow;
-        }
+      // 所有平台：设置窗口大小为80x80
+      try {
+        await LogService.instance.info('设置窗口大小为80x80', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置窗口大小为80x80');
+        // 设置为图标大小80x80
+        await windowManager.setSize(const Size(80, 80));
+        await LogService.instance.info('窗口大小设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 窗口大小设置完成');
+      } catch (e) {
+        await LogService.instance.error('设置窗口大小失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置窗口大小失败: $e');
+        rethrow;
       }
 
       try {
@@ -125,14 +112,12 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       }
 
       try {
-        // 隐藏工具栏图标（Windows平台）
-        if (Platform.isWindows) {
-          await LogService.instance.info('Windows平台：隐藏工具栏图标', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：隐藏工具栏图标');
-          await windowManager.setSkipTaskbar(true);
-          await LogService.instance.info('Windows平台：工具栏图标已隐藏', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：工具栏图标已隐藏');
-        }
+        // 隐藏工具栏图标（所有平台）
+        await LogService.instance.info('隐藏工具栏图标', tag: 'WINDOW');
+        print('🪟 [WINDOW] 隐藏工具栏图标');
+        await windowManager.setSkipTaskbar(true);
+        await LogService.instance.info('工具栏图标已隐藏', tag: 'WINDOW');
+        print('✓ [WINDOW] 工具栏图标已隐藏');
       } catch (e) {
         await LogService.instance.error('隐藏工具栏图标失败 - $e', tag: 'WINDOW');
         print('✗ [WINDOW] 隐藏工具栏图标失败: $e');
@@ -174,20 +159,18 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       await LogService.instance.info('开始切换到正常窗口模式', tag: 'WINDOW');
       print('🪟 [WINDOW] 开始切换到正常窗口模式');
 
-      // Windows平台需要额外处理：恢复背景色
-      if (Platform.isWindows) {
-        try {
-          await LogService.instance.info('Windows平台：恢复白色背景', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：恢复白色背景');
-          // 恢复白色背景
-          await windowManager.setBackgroundColor(const Color(0xFFFFFFFF));
-          await LogService.instance.info('Windows平台：白色背景恢复完成', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：白色背景恢复完成');
-        } catch (e) {
-          await LogService.instance.error('Windows平台：恢复白色背景失败 - $e', tag: 'WINDOW');
-          print('✗ [WINDOW] Windows平台：恢复白色背景失败: $e');
-          rethrow;
-        }
+      // 所有平台：恢复白色背景
+      try {
+        await LogService.instance.info('恢复白色背景', tag: 'WINDOW');
+        print('🪟 [WINDOW] 恢复白色背景');
+        // 恢复白色背景
+        await windowManager.setBackgroundColor(const Color(0xFFFFFFFF));
+        await LogService.instance.info('白色背景恢复完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 白色背景恢复完成');
+      } catch (e) {
+        await LogService.instance.error('恢复白色背景失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 恢复白色背景失败: $e');
+        rethrow;
       }
 
       try {
@@ -230,14 +213,12 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       }
 
       try {
-        // 显示工具栏图标（Windows平台）
-        if (Platform.isWindows) {
-          await LogService.instance.info('Windows平台：显示工具栏图标', tag: 'WINDOW');
-          print('🪟 [WINDOW] Windows平台：显示工具栏图标');
-          await windowManager.setSkipTaskbar(false);
-          await LogService.instance.info('Windows平台：工具栏图标已显示', tag: 'WINDOW');
-          print('✓ [WINDOW] Windows平台：工具栏图标已显示');
-        }
+        // 显示工具栏图标（所有平台）
+        await LogService.instance.info('显示工具栏图标', tag: 'WINDOW');
+        print('🪟 [WINDOW] 显示工具栏图标');
+        await windowManager.setSkipTaskbar(false);
+        await LogService.instance.info('工具栏图标已显示', tag: 'WINDOW');
+        print('✓ [WINDOW] 工具栏图标已显示');
       } catch (e) {
         await LogService.instance.error('显示工具栏图标失败 - $e', tag: 'WINDOW');
         print('✗ [WINDOW] 显示工具栏图标失败: $e');

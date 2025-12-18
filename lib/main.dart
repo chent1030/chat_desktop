@@ -94,18 +94,22 @@ Future<void> _initializeApp() async {
       await windowManager.focus();
     });
 
-    // 在Windows平台上，阻止默认的关闭行为，改为切换到小窗模式
-    if (Platform.isWindows) {
-      await windowManager.setPreventClose(true);
-      print('✓ Windows平台：已设置阻止默认关闭行为');
-    }
+    // 阻止默认的关闭行为，改为切换到小窗模式（所有平台）
+    await windowManager.setPreventClose(true);
+    print('✓ 已设置阻止默认关闭行为');
 
     print('✓ WindowManager初始化成功');
 
-    // 初始化系统托盘（仅Windows平台）
-    if (Platform.isWindows) {
+    // 初始化系统托盘（所有平台）
+    try {
       // 设置托盘图标
-      await trayManager.setIcon('assets/app_icon.ico');
+      final iconPath = Platform.isWindows
+          ? 'app_icon.ico'
+          : Platform.isMacOS
+              ? 'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png'
+              : 'assets/app_icon.ico';
+
+      await trayManager.setIcon(iconPath);
 
       // 设置托盘提示文字
       await trayManager.setToolTip('芯服务 - 点击恢复窗口');
@@ -127,6 +131,8 @@ Future<void> _initializeApp() async {
       await trayManager.setContextMenu(menu);
 
       print('✓ 系统托盘初始化成功');
+    } catch (e) {
+      print('✗ 系统托盘初始化失败: $e');
     }
 
     // 启动应用

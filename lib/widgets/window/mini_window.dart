@@ -179,24 +179,27 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Center(
-        child: DragToMoveArea(
-          child: MouseRegion(
-            onEnter: (_) {
-              setState(() => _isHovering = true);
-              if (widget.unreadTasks.isNotEmpty) {
-                _showOverlay();
-              }
-            },
-            onExit: (_) {
-              setState(() => _isHovering = false);
-              _removeOverlay();
-            },
-            child: GestureDetector(
-              onDoubleTap: widget.onDoubleTap,
-              child: _buildLogoWidget(),
+    return Material(
+      type: MaterialType.transparency, // 完全透明的Material
+      child: Container(
+        color: Colors.transparent, // 确保容器透明
+        child: Center(
+          child: DragToMoveArea(
+            child: MouseRegion(
+              onEnter: (_) {
+                setState(() => _isHovering = true);
+                if (widget.unreadTasks.isNotEmpty) {
+                  _showOverlay();
+                }
+              },
+              onExit: (_) {
+                setState(() => _isHovering = false);
+                _removeOverlay();
+              },
+              child: GestureDetector(
+                onDoubleTap: widget.onDoubleTap,
+                child: _buildLogoWidget(),
+              ),
             ),
           ),
         ),
@@ -204,13 +207,14 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
     );
   }
 
-  /// 构建Logo Widget（静态图片或动态视频）
+  /// 构建Logo Widget（动态视频）
   Widget _buildLogoWidget() {
     return Container(
       width: 80,
       height: 80,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
+        color: Colors.transparent, // 确保背景透明
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -221,13 +225,9 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
       ),
       child: ClipOval(
         child: _videoController != null && _videoController!.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: _videoController!.value.aspectRatio,
-                child: VideoPlayer(_videoController!),
-              )
-            : Image.asset(
-                'static_logo.jpg', // 加载中的占位图
-                fit: BoxFit.cover,
+            ? VideoPlayer(_videoController!)
+            : Container(
+                color: Colors.transparent, // 加载中显示透明
               ),
       ),
     );
