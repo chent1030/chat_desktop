@@ -46,17 +46,37 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
     // 先释放旧的控制器
     await _videoController?.dispose();
 
-    // 根据是否有未读消息选择不同的视频
-    final videoPath = widget.unreadCount > 0 ? 'dynamic_logo.mp4' : 'unread_logo.mp4';
+    try {
+      // 根据是否有未读消息选择不同的视频
+      final videoPath = widget.unreadCount > 0 ? 'dynamic_logo.mp4' : 'unread_logo.mp4';
 
-    // 创建新的视频控制器
-    _videoController = VideoPlayerController.asset(videoPath);
-    await _videoController!.initialize();
-    await _videoController!.setLooping(true);
-    await _videoController!.play();
+      print('🎬 [VIDEO] 初始化视频: $videoPath');
 
-    if (mounted) {
-      setState(() {});
+      // 创建新的视频控制器（使用 asset）
+      _videoController = VideoPlayerController.asset(videoPath);
+
+      print('🎬 [VIDEO] 开始初始化视频控制器');
+      await _videoController!.initialize();
+
+      print('🎬 [VIDEO] 设置循环播放');
+      await _videoController!.setLooping(true);
+
+      print('🎬 [VIDEO] 开始播放');
+      await _videoController!.play();
+
+      print('✓ [VIDEO] 视频初始化成功');
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e, stackTrace) {
+      print('✗ [VIDEO] 视频初始化失败: $e');
+      print('Stack trace: $stackTrace');
+      // 即使视频加载失败，也继续运行（显示空白）
+      _videoController = null;
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -212,16 +232,10 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
     return Container(
       width: 80,
       height: 80,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.transparent, // 确保背景透明
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // 移除阴影，确保完全透明无边框
       ),
       child: ClipOval(
         child: _videoController != null && _videoController!.value.isInitialized
