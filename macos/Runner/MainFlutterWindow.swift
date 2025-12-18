@@ -63,8 +63,7 @@ class MainFlutterWindow: NSWindow {
       .ignoresCycle          // 不在窗口循环中
     ]
 
-    // 8. 固定悬浮窗尺寸（与 Flutter 端 120x120 一致）
-    self.setContentSize(NSSize(width: 120, height: 120))
+    // 悬浮窗尺寸由创建子窗口时在 Dart 侧设置，保持此处不强制固定
 
     print("✓ [macOS Native] 悬浮窗配置完成")
   }

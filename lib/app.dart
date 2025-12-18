@@ -29,7 +29,9 @@ class AppWindowListener extends WindowListener {
       final window = await DesktopMultiWindow.createWindow('mini_window');
 
       // 设置悬浮窗属性
-      await window.setFrame(const Offset(100, 100) & const Size(120, 120));
+      // 预留右侧气泡显示空间（避免被窗口边界裁剪）
+      const double bubbleWidth = 280; // 与子窗口 UI 中的 _bubbleWidth 保持一致
+      await window.setFrame(const Offset(100, 100) & const Size(120 + 10 + bubbleWidth, 120));
       await window.setTitle('');  // 空标题
       await window.center();
 

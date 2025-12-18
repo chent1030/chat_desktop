@@ -12,6 +12,7 @@ import 'mini_window_entry.dart';
 import 'services/config_service.dart';
 import 'services/storage_service.dart';
 import 'services/log_service.dart';
+import 'services/task_service.dart';
 import 'utils/constants.dart';
 
 /// 应用入口点
@@ -155,6 +156,37 @@ Future<void> _initializeApp() async {
           await WindowController.fromWindowId(fromWindowId).close();
           await LogService.instance.info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
           print('✓ [WINDOW] 已关闭悬浮窗 $fromWindowId');
+        }
+      } else if (call.method == 'open_task') {
+        try {
+          // 显示并聚焦主窗口
+          await windowManager.show();
+          await windowManager.focus();
+
+          // 解析任务ID并标记为已读
+          final Map args = Map.from(call.arguments as Map);
+          final dynamic rawId = args['id'];
+          int? taskIdInt;
+          if (rawId is int) {
+            taskIdInt = rawId;
+          } else if (rawId is String) {
+            taskIdInt = int.tryParse(rawId);
+          }
+          if (taskIdInt != null) {
+            await TaskService.instance.markTaskAsRead(taskIdInt);
+            print('✓ [WINDOW] 已标记任务已读: $taskIdInt');
+          } else {
+            print('✗ [WINDOW] 无法解析任务ID: $rawId');
+          }
+
+          // 关闭悬浮窗
+          if (fromWindowId != 0) {
+            await WindowController.fromWindowId(fromWindowId).close();
+            await LogService.instance.info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
+            print('✓ [WINDOW] 已关闭悬浮窗 $fromWindowId');
+          }
+        } catch (e) {
+          print('✗ [WINDOW] 处理 open_task 失败: $e');
         }
       }
     });

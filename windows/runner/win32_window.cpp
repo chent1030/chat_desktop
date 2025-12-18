@@ -261,13 +261,9 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
 
     case WM_NCHITTEST: {
-      // For floating windows, make the entire client area draggable
+      // 让 Flutter 侧通过 DragToMoveArea 控制可拖拽区域，避免整窗 HTCAPTION 影响悬停/点击
       if (IsSubWindow()) {
-        LRESULT hit = DefWindowProc(hwnd, message, wparam, lparam);
-        if (hit == HTCLIENT) {
-          return HTCAPTION;  // Treat client area clicks as title bar clicks
-        }
-        return hit;
+        return DefWindowProc(hwnd, message, wparam, lparam);
       }
       break;
     }

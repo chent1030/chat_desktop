@@ -71,13 +71,9 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  // Handle drag for floating window BEFORE Flutter processes the message
+  // 交由 Flutter 的 DragToMoveArea 控制拖拽区域，避免整窗 HTCAPTION 拦截悬停事件
   if (message == WM_NCHITTEST && IsSubWindow()) {
-    LRESULT hit = DefWindowProc(hwnd, message, wparam, lparam);
-    if (hit == HTCLIENT) {
-      return HTCAPTION;  // Make entire client area draggable
-    }
-    return hit;
+    return DefWindowProc(hwnd, message, wparam, lparam);
   }
 
   // Give Flutter, including plugins, an opportunity to handle window messages.
