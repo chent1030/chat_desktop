@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:lottie/lottie.dart';
+import 'package:window_manager/window_manager.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 
 /// 悬浮窗入口点 - 独立的窗口实例
 /// 注意：这是一个子窗口，不能使用需要平台通道的插件
@@ -11,6 +14,40 @@ Future<void> miniWindowMain(List<String> args) async {
 
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
+
+    // 初始化窗口管理与透明效果，使子窗口真正无边框+透明+置顶
+    try {
+      await windowManager.ensureInitialized();
+      await Window.initialize();
+
+      // 透明背景（无背景无边框效果的基础）
+      await Window.setEffect(effect: WindowEffect.transparent, dark: false);
+
+      // 无边框 + 隐藏标题栏 + 置顶 + 隐藏任务栏图标
+      await windowManager.setAsFrameless();
+      // TitleBarStyle 主要在 macOS 生效，Windows 以 frameless 为主
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.setAlwaysOnTop(true);
+      await windowManager.setSkipTaskbar(true);
+
+      // 小窗尺寸与不可调整大小
+      await windowManager.setSize(const Size(120, 120));
+      await windowManager.setResizable(false);
+
+      // 尝试去除阴影（部分平台支持）
+      try {
+        await windowManager.setHasShadow(false);
+      } catch (_) {}
+
+      // Windows 下取消最大化、最小化状态，确保为普通窗口
+      if (Platform.isWindows) {
+        await windowManager.unmaximize();
+      }
+
+      print('✓ [MINI] 子窗口窗口样式设置完成（透明/置顶/无边框）');
+    } catch (e) {
+      print('✗ [MINI] 子窗口窗口样式设置失败: $e');
+    }
 
     // 设置消息处理器，接收来自主窗口的消息
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
@@ -136,153 +173,142 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovering = true),
         onExit: (_) => setState(() => _isHovering = false),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // 主动画容器
-            Container(
-              width: 120,
-              height: 120,
-              color: Colors.transparent,
-              child: GestureDetector(
-                onDoubleTap: _onDoubleTap,
-                child: Center(
-                  child: ClipRect(
-                    child: SizedBox(
+        child: DragToMoveArea(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // 主动画容器（透明、无边框、可拖拽区域）
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onDoubleTap: _onDoubleTap,
+                  child: Center(
+                    child: Lottie.asset(
+                      lottieAsset,
                       width: 120,
                       height: 120,
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: SizedBox(
-                          width: 120,
-                          height: 120,
-                          child: Lottie.asset(
-                            lottieAsset,
-                            fit: BoxFit.contain,
-                            repeat: true,
-                            animate: true,
-                          ),
-                        ),
-                      ),
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
                     ),
                   ),
                 ),
               ),
-            ),
-            // 悬停时显示未读任务列表
-            if (_isHovering && _unreadTasks.isNotEmpty)
-              Positioned(
-                left: 130,
-                top: 0,
-                child: Container(
-                  constraints: const BoxConstraints(
-                    maxWidth: 300,
-                    maxHeight: 400,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 标题
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade600,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(12),
-                            topRight: Radius.circular(12),
-                          ),
+              // 悬停时显示未读任务列表（保持原样）
+              if (_isHovering && _unreadTasks.isNotEmpty)
+                Positioned(
+                  left: 130,
+                  top: 0,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      maxWidth: 300,
+                      maxHeight: 400,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.notifications_active,
-                                color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              '未读待办 ($_unreadCount)',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 标题
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade600,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
                             ),
-                          ],
-                        ),
-                      ),
-                      // 任务列表
-                      Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.all(8),
-                          itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
-                          separatorBuilder: (context, index) =>
-                              const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final task = _unreadTasks[index];
-                            return ListTile(
-                              dense: true,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              leading: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.notifications_active,
+                                  color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                '未读待办 ($_unreadCount)',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              title: Text(
-                                task['title'] ?? '无标题',
-                                style: const TextStyle(fontSize: 13),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: task['description'] != null
-                                  ? Text(
-                                      task['description'],
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : null,
-                            );
-                          },
+                            ],
+                          ),
                         ),
-                      ),
-                      // 底部提示
-                      if (_unreadTasks.length > 5)
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          child: Center(
-                            child: Text(
-                              '还有 ${_unreadTasks.length - 5} 条...',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade600,
+                        // 任务列表
+                        Flexible(
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(8),
+                            itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
+                            separatorBuilder: (context, index) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final task = _unreadTasks[index];
+                              return ListTile(
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                leading: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                title: Text(
+                                  task['title'] ?? '无标题',
+                                  style: const TextStyle(fontSize: 13),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: task['description'] != null
+                                    ? Text(
+                                        task['description'],
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : null,
+                              );
+                            },
+                          ),
+                        ),
+                        // 底部提示
+                        if (_unreadTasks.length > 5)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            child: Center(
+                              child: Text(
+                                '还有 ${_unreadTasks.length - 5} 条...',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
