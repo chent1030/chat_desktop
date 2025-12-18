@@ -16,12 +16,26 @@ import 'utils/constants.dart';
 
 /// 应用入口点
 Future<void> main(List<String> args) async {
+  // 调试：打印接收到的所有参数
+  print('🔍 [MAIN] 接收到的启动参数: $args');
+  print('🔍 [MAIN] 参数数量: ${args.length}');
+  if (args.isNotEmpty) {
+    print('🔍 [MAIN] 第一个参数: ${args.first}');
+  }
+
   // 检查是否是子窗口（悬浮窗）
-  if (args.isNotEmpty && args.first == 'mini_window') {
+  // desktop_multi_window 可能传递不同格式的参数，都检查一下
+  final isMiniWindow = args.isNotEmpty &&
+      (args.first == 'mini_window' || args.contains('mini_window'));
+
+  if (isMiniWindow) {
     // 悬浮窗入口
+    print('✓ [MAIN] 识别为悬浮窗，启动 miniWindowMain');
     await miniWindowMain(args);
     return;
   }
+
+  print('✓ [MAIN] 识别为主窗口，启动 _initializeApp');
 
   // 主窗口入口
   // 使用 runZonedGuarded 捕获所有未处理的异步异常

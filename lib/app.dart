@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
@@ -26,9 +25,8 @@ class AppWindowListener extends WindowListener {
 
     try {
       // 创建独立的悬浮窗（80x80，透明，置顶）
-      final window = await DesktopMultiWindow.createWindow(jsonEncode({
-        'args1': 'mini_window',
-      }));
+      // 传递 'mini_window' 作为第一个参数，子窗口的 main() 会接收到这个参数
+      final window = await DesktopMultiWindow.createWindow('mini_window');
 
       // 设置悬浮窗属性
       window
