@@ -4,7 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
-import 'package:window_manager/window_manager.dart' show DragToMoveArea, windowManager, TitleBarStyle;
+import 'package:window_manager/window_manager.dart' show windowManager, TitleBarStyle;
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 // 悬浮窗入口
 Future<void> miniWindowMain(List<String> args) async {
@@ -26,16 +27,30 @@ Future<void> miniWindowMain(List<String> args) async {
   // Windows 子窗口：尽量设置为无边框、透明、置顶并隐藏任务栏
   if (Platform.isWindows) {
     try {
+      await windowManager.ensureInitialized();
       await Window.initialize();
       await Window.setEffect(effect: WindowEffect.transparent);
     } catch (_) {}
     try {
+      // 延迟以确保子窗口句柄可用
+      await Future.delayed(const Duration(milliseconds: 80));
       await windowManager.setAsFrameless();
       await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
       await windowManager.setAlwaysOnTop(true);
       await windowManager.setSkipTaskbar(true);
       await windowManager.setResizable(false);
       await windowManager.setHasShadow(false);
+    } catch (_) {}
+
+    // 使用 bitsdojo_window 进一步确保无边框并配置初始尺寸/显示
+    try {
+      doWhenWindowReady(() {
+        const initialSize = Size(120, 120);
+        appWindow.minSize = initialSize;
+        appWindow.size = initialSize;
+        appWindow.alignment = Alignment.center;
+        appWindow.show();
+      });
     } catch (_) {}
   }
 }
@@ -149,7 +164,11 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
           });
         },
         child: Platform.isWindows
-            ? DragToMoveArea(child: Stack(clipBehavior: Clip.none, children: _stackChildren(lottieAsset)))
+            ? WindowTitleBarBox(
+                child: MoveWindow(
+                  child: Stack(clipBehavior: Clip.none, children: _stackChildren(lottieAsset)),
+                ),
+              )
             : Stack(clipBehavior: Clip.none, children: _stackChildren(lottieAsset)),
       ),
     );
@@ -169,6 +188,7 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
             height: 120,
             fit: BoxFit.contain,
             gaplessPlayback: true,
+            filterQuality: FilterQuality.high,
           ),
         ),
       ),

@@ -40,10 +40,11 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
 # Copy the app icon to the output directory for tray manager
+# Copy the app icon used by tray manager (keep target name as app_icon.ico)
 add_custom_command(
   TARGET ${BINARY_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/app_icon.ico"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../assets/static_logo.ico"
     "$<TARGET_FILE_DIR:${BINARY_NAME}>/app_icon.ico"
-  COMMENT "Copying app icon for tray manager"
+  COMMENT "Copying static_logo.ico for tray manager"
 )

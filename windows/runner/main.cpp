@@ -4,6 +4,8 @@
 #include <propkey.h>
 #include <shobjidl.h>
 
+#include <bitsdojo_window_windows/bitsdojo_window_plugin.h>
+
 #include "flutter_window.h"
 #include "utils.h"
 
@@ -24,6 +26,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   SetCurrentProcessExplicitAppUserModelID(L"com.chatdesktop.ChatDesktop");
 
   flutter::DartProject project(L"data");
+
+  // Configure Bitsdojo Window: custom frame + transparent + hide on startup
+  // so that Dart side (bitsdojo_window) can show and control the frame.
+  const auto bdw_flags = BDW_CUSTOM_FRAME | BDW_TRANSPARENT | BDW_HIDE_ON_STARTUP;
+  bitsdojo_window_configure(bdw_flags);
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
