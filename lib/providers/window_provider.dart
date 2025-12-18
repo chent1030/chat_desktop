@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'task_provider.dart';
 import '../services/log_service.dart';
 import '../models/task.dart';
@@ -47,13 +48,15 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       try {
         await LogService.instance.info('设置透明背景', tag: 'WINDOW');
         print('🪟 [WINDOW] 设置透明背景');
-        // 设置背景色为透明（移除白色背景）
-        await windowManager.setBackgroundColor(const Color(0x00000000));
-        await LogService.instance.info('透明背景设置完成', tag: 'WINDOW');
-        print('✓ [WINDOW] 透明背景设置完成');
+        // 使用 flutter_acrylic 设置完全透明效果
+        await Window.setEffect(
+          effect: WindowEffect.transparent,
+        );
+        await LogService.instance.info('透明效果设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 透明效果设置完成');
       } catch (e) {
-        await LogService.instance.error('设置透明背景失败 - $e', tag: 'WINDOW');
-        print('✗ [WINDOW] 设置透明背景失败: $e');
+        await LogService.instance.error('设置透明效果失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置透明效果失败: $e');
         rethrow;
       }
 
@@ -161,15 +164,18 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
 
       // 所有平台：恢复白色背景
       try {
-        await LogService.instance.info('恢复白色背景', tag: 'WINDOW');
-        print('🪟 [WINDOW] 恢复白色背景');
-        // 恢复白色背景
-        await windowManager.setBackgroundColor(const Color(0xFFFFFFFF));
-        await LogService.instance.info('白色背景恢复完成', tag: 'WINDOW');
-        print('✓ [WINDOW] 白色背景恢复完成');
+        await LogService.instance.info('恢复不透明白色背景', tag: 'WINDOW');
+        print('🪟 [WINDOW] 恢复不透明白色背景');
+        // 使用 flutter_acrylic 设置不透明白色效果
+        await Window.setEffect(
+          effect: WindowEffect.solid,
+          color: const Color(0xFFFFFFFF),
+        );
+        await LogService.instance.info('不透明白色背景恢复完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 不透明白色背景恢复完成');
       } catch (e) {
-        await LogService.instance.error('恢复白色背景失败 - $e', tag: 'WINDOW');
-        print('✗ [WINDOW] 恢复白色背景失败: $e');
+        await LogService.instance.error('恢复不透明背景失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 恢复不透明背景失败: $e');
         rethrow;
       }
 

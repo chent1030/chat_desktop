@@ -32,6 +32,7 @@ dependencies:
   # 桌面窗口管理
   window_manager: ^0.3.7
   tray_manager: ^0.2.0
+  flutter_acrylic: ^1.1.4
 
   # 系统通知
   flutter_local_notifications: ^19.5.0

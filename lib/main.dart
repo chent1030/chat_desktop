@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'app.dart';
 import 'services/config_service.dart';
 import 'services/storage_service.dart';
@@ -72,14 +73,19 @@ Future<void> _initializeApp() async {
     // 初始化窗口管理器
     await windowManager.ensureInitialized();
 
-    // 配置窗口选项（Windows平台使用白色背景，避免透明层问题）
+    // 初始化 flutter_acrylic（用于透明窗口效果）
+    await Window.initialize();
+    print('✓ flutter_acrylic 初始化成功');
+    await LogService.instance.info('flutter_acrylic 初始化成功');
+
+    // 配置窗口选项（所有平台使用透明背景以支持小窗模式）
     WindowOptions windowOptions = WindowOptions(
       size: const Size(
         AppConstants.defaultWindowWidth,
         AppConstants.defaultWindowHeight,
       ),
       center: true,
-      backgroundColor: Platform.isWindows ? Colors.white : Colors.transparent,
+      backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
       title: AppConstants.appName,
@@ -93,6 +99,13 @@ Future<void> _initializeApp() async {
       await windowManager.show();
       await windowManager.focus();
     });
+
+    // 设置初始窗口效果为不透明（正常模式）
+    await Window.setEffect(
+      effect: WindowEffect.solid,
+      color: Colors.white,
+    );
+    print('✓ 已设置初始窗口效果为不透明');
 
     // 阻止默认的关闭行为，改为切换到小窗模式（所有平台）
     await windowManager.setPreventClose(true);
