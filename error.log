@@ -1,12 +1,7 @@
-[2025-12-18 13:54:28.654] [INFO ] [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗
-🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗
-🔍 [MAIN] 接收到的启动参数: [multi_window, 1, mini_window]
-🔍 [MAIN] 参数数量: 3
-🔍 [MAIN] 第一个参数: multi_window
-√ [MAIN] 识别为悬浮窗，启动 miniWindowMain
-√ [MINI] 悬浮窗 Flutter 绑定初始化成功
-⚠ [MINI] 窗口样式设置失败（可能不支持）: MissingPluginException(No implementation found for method ensureInitialized on channel window_manager)
-√ [MINI] 子窗口初始化完成（跳过服务初始化）
-🎨 [MINI UI] 当前未读数: 0, 使用动画: unread_logo.json
-[2025-12-18 13:54:29.227] [INFO ] [WINDOW] 独立悬浮窗创建成功
-√ [WINDOW] 独立悬浮窗创建成功
+Launching lib\main.dart on Windows in debug mode...
+D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\win32_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\win32_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+Building Windows application...                                    10.9s
+Error: Build process failed.
