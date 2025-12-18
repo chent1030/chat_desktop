@@ -261,7 +261,8 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
 
     case WM_NCHITTEST: {
-      // 让 Flutter 侧通过 DragToMoveArea 控制可拖拽区域，避免整窗 HTCAPTION 影响悬停/点击
+      // Let Flutter's DragToMoveArea control draggable regions for sub-windows
+      // to keep hover/click events working in the bubble.
       if (IsSubWindow()) {
         return DefWindowProc(hwnd, message, wparam, lparam);
       }

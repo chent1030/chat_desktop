@@ -71,7 +71,8 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  // 交由 Flutter 的 DragToMoveArea 控制拖拽区域，避免整窗 HTCAPTION 拦截悬停事件
+  // Let Flutter's DragToMoveArea control the draggable area; avoid
+  // intercepting hover by marking the entire client area as HTCAPTION.
   if (message == WM_NCHITTEST && IsSubWindow()) {
     return DefWindowProc(hwnd, message, wparam, lparam);
   }
