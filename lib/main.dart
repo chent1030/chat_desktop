@@ -94,6 +94,12 @@ Future<void> _initializeApp() async {
       await windowManager.focus();
     });
 
+    // 在Windows平台上，阻止默认的关闭行为，改为切换到小窗模式
+    if (Platform.isWindows) {
+      await windowManager.setPreventClose(true);
+      print('✓ Windows平台：已设置阻止默认关闭行为');
+    }
+
     print('✓ WindowManager初始化成功');
 
     // 初始化系统托盘（仅Windows平台）
