@@ -3,51 +3,24 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:lottie/lottie.dart';
-import 'package:window_manager/window_manager.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart';
+// 注意：子窗口不依赖 window_manager / flutter_acrylic，
+// 平台侧已在 windows/runner 中配置无边框与可拖拽。
 
 /// 悬浮窗入口点 - 独立的窗口实例
 /// 注意：这是一个子窗口，不能使用需要平台通道的插件
 /// 应该通过窗口间通信或共享内存从主窗口获取数据
 Future<void> miniWindowMain(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 确保二次入口注册插件（Flutter 3.10+）
+  try {
+    DartPluginRegistrant.ensureInitialized();
+  } catch (_) {}
 
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
 
-    // 初始化窗口管理与透明效果，使子窗口真正无边框+透明+置顶
-    try {
-      await windowManager.ensureInitialized();
-      await Window.initialize();
-
-      // 透明背景（无背景无边框效果的基础）
-      await Window.setEffect(effect: WindowEffect.transparent, dark: false);
-
-      // 无边框 + 隐藏标题栏 + 置顶 + 隐藏任务栏图标
-      await windowManager.setAsFrameless();
-      // TitleBarStyle 主要在 macOS 生效，Windows 以 frameless 为主
-      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
-      await windowManager.setAlwaysOnTop(true);
-      await windowManager.setSkipTaskbar(true);
-
-      // 小窗尺寸与不可调整大小
-      await windowManager.setSize(const Size(120, 120));
-      await windowManager.setResizable(false);
-
-      // 尝试去除阴影（部分平台支持）
-      try {
-        await windowManager.setHasShadow(false);
-      } catch (_) {}
-
-      // Windows 下取消最大化、最小化状态，确保为普通窗口
-      if (Platform.isWindows) {
-        await windowManager.unmaximize();
-      }
-
-      print('✓ [MINI] 子窗口窗口样式设置完成（透明/置顶/无边框）');
-    } catch (e) {
-      print('✗ [MINI] 子窗口窗口样式设置失败: $e');
-    }
+    // 子窗口的无边框/置顶/拖拽等由原生层处理（见 windows/runner）。
+    // 这里保持 UI 完全透明以配合原生层实现“悬浮球”。
 
     // 设置消息处理器，接收来自主窗口的消息
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
@@ -173,8 +146,7 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovering = true),
         onExit: (_) => setState(() => _isHovering = false),
-        child: DragToMoveArea(
-          child: Stack(
+        child: Stack(
             clipBehavior: Clip.none,
             children: [
               // 主动画容器（透明、无边框、可拖拽区域）
@@ -309,7 +281,6 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
                 ),
             ],
           ),
-        ),
       ),
     );
   }
