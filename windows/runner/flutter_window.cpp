@@ -31,24 +31,20 @@ bool FlutterWindow::OnCreate() {
   if (IsSubWindow()) {
     HWND hwnd = GetHandle();
 
-    // Remove window decorations (title bar, minimize/maximize buttons, borders)
-    LONG style = GetWindowLong(hwnd, GWL_STYLE);
-    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
-    SetWindowLong(hwnd, GWL_STYLE, style);
+    // Completely replace window style with WS_POPUP (no caption, no borders)
+    SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
     // Set extended style for topmost, no taskbar, and layered
-    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    exStyle |= (WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED);
-    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+    SetWindowLong(hwnd, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED);
 
-    // Apply the changes
+    // Apply the changes - MUST use SWP_FRAMECHANGED to force redraw
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
     // Set transparency
     SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 255, LWA_ALPHA);
 
-    OutputDebugStringA("[FlutterWindow] Floating window style reconfigured\n");
+    OutputDebugStringA("[FlutterWindow] Floating window style reconfigured - WS_POPUP applied\n");
   }
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

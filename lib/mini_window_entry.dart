@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:lottie/lottie.dart';
-import 'package:window_manager/window_manager.dart';
 
 /// 悬浮窗入口点 - 独立的窗口实例
 /// 注意：这是一个子窗口，不能使用需要平台通道的插件
@@ -12,22 +11,6 @@ Future<void> miniWindowMain(List<String> args) async {
 
   try {
     print('✓ [MINI] 悬浮窗 Flutter 绑定初始化成功');
-
-    // 尝试初始化 window_manager 来设置窗口属性
-    try {
-      await windowManager.ensureInitialized();
-
-      // 设置窗口为无标题栏样式
-      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
-      await windowManager.setAsFrameless();
-      await windowManager.setAlwaysOnTop(true);
-      await windowManager.setSkipTaskbar(true);
-
-      print('✓ [MINI] 窗口样式设置成功');
-    } catch (e) {
-      print('⚠ [MINI] 窗口样式设置失败（可能不支持）: $e');
-      // 忽略错误，继续执行
-    }
 
     // 设置消息处理器，接收来自主窗口的消息
     DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
@@ -46,7 +29,7 @@ Future<void> miniWindowMain(List<String> args) async {
       }
     });
 
-    print('✓ [MINI] 子窗口初始化完成（跳过服务初始化）');
+    print('✓ [MINI] 子窗口初始化完成');
 
     runApp(
       const MiniWindowApp(),
