@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'screens/home_screen.dart';
 import 'widgets/window/mini_window.dart';
 import 'providers/window_provider.dart';
@@ -17,12 +20,35 @@ class AppWindowListener extends WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    // 所有平台：关闭按钮进入小窗模式而不是退出
-    await LogService.instance.info('关闭按钮被点击，切换到小窗模式', tag: 'WINDOW');
-    print('🪟 [WINDOW] 关闭按钮被点击，切换到小窗模式');
+    // 所有平台：关闭按钮创建独立悬浮窗而不是退出
+    await LogService.instance.info('关闭按钮被点击，准备创建独立悬浮窗', tag: 'WINDOW');
+    print('🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗');
 
-    // 切换到小窗模式
-    await ref.read(windowStateProvider.notifier).switchToMiniMode();
+    try {
+      // 创建独立的悬浮窗（80x80，透明，置顶）
+      final window = await DesktopMultiWindow.createWindow(jsonEncode({
+        'args1': 'mini_window',
+      }));
+
+      // 设置悬浮窗属性
+      window
+        ..setFrame(const Offset(100, 100) & const Size(80, 80))
+        ..setTitle('悬浮窗')
+        ..center()
+        ..show();
+
+      await LogService.instance.info('独立悬浮窗创建成功', tag: 'WINDOW');
+      print('✓ [WINDOW] 独立悬浮窗创建成功');
+
+      // 隐藏主窗口
+      await windowManager.hide();
+      await LogService.instance.info('主窗口已隐藏', tag: 'WINDOW');
+      print('✓ [WINDOW] 主窗口已隐藏');
+    } catch (e, stackTrace) {
+      await LogService.instance.error('创建悬浮窗失败 - $e', tag: 'WINDOW');
+      print('✗ [WINDOW] 创建悬浮窗失败: $e');
+      print('Stack trace: $stackTrace');
+    }
   }
 }
 
@@ -34,8 +60,9 @@ class AppTrayListener extends TrayListener {
 
   @override
   void onTrayIconMouseDown() {
-    // 点击托盘图标时恢复窗口
-    ref.read(windowStateProvider.notifier).switchToNormalMode();
+    // 点击托盘图标时恢复主窗口
+    windowManager.show();
+    windowManager.focus();
   }
 
   @override
@@ -48,10 +75,13 @@ class AppTrayListener extends TrayListener {
   void onTrayMenuItemClick(MenuItem menuItem) {
     // 处理托盘菜单点击
     if (menuItem.key == 'show_window') {
-      ref.read(windowStateProvider.notifier).switchToNormalMode();
+      windowManager.show();
+      windowManager.focus();
     } else if (menuItem.key == 'exit_app') {
-      // 退出应用
+      // 真正退出应用（不是进入小窗模式）
+      print('🔴 [APP] 用户从系统托盘选择退出，正在关闭程序...');
       windowManager.destroy();
+      exit(0); // 强制退出进程
     }
   }
 }
@@ -95,23 +125,11 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final windowState = ref.watch(windowStateProvider);
-    final unreadCount = ref.watch(unreadBadgeCountProvider);
-    final unreadTasks = ref.watch(unreadTasksProvider);
-
     return MaterialApp(
       title: '芯服务',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: windowState.mode == WindowMode.mini
-          ? MiniWindow(
-              unreadCount: unreadCount,
-              unreadTasks: unreadTasks,
-              onDoubleTap: () {
-                ref.read(windowStateProvider.notifier).switchToNormalMode();
-              },
-            )
-          : const HomeScreen(),
+      home: const HomeScreen(),
     );
   }
 }

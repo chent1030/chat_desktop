@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  desktop_multi_window
+  flutter_acrylic
   isar_flutter_libs
   record_windows
   screen_retriever

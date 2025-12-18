@@ -193,22 +193,19 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
         ? 'dynamic_logo.json'
         : 'unread_logo.json';
 
-    return Container(
+    return SizedBox(
       width: 80,
       height: 80,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.transparent, // 确保背景透明
-        // 移除阴影，确保完全透明无边框
-      ),
       child: ClipOval(
-        child: Lottie.asset(
-          lottieAsset,
-          width: 80,
-          height: 80,
-          fit: BoxFit.cover,
-          repeat: true,
-          animate: true,
+        child: Center(
+          child: Lottie.asset(
+            lottieAsset,
+            width: 80,
+            height: 80,
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+          ),
         ),
       ),
     );

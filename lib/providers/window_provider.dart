@@ -44,16 +44,18 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       await LogService.instance.info('开始切换到小窗口模式', tag: 'WINDOW');
       print('🪟 [WINDOW] 开始切换到小窗口模式');
 
-      // 第一步：设置窗口大小为80x80（在设置无边框之前）
+      // 第一步：设置窗口大小限制（最小和最大都是80x80，防止边框）
       try {
-        await LogService.instance.info('设置窗口大小为80x80', tag: 'WINDOW');
-        print('🪟 [WINDOW] 设置窗口大小为80x80');
+        await LogService.instance.info('设置窗口大小限制为80x80', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置窗口大小限制为80x80');
+        await windowManager.setMinimumSize(const Size(80, 80));
+        await windowManager.setMaximumSize(const Size(80, 80));
         await windowManager.setSize(const Size(80, 80));
-        await LogService.instance.info('窗口大小设置完成', tag: 'WINDOW');
-        print('✓ [WINDOW] 窗口大小设置完成');
+        await LogService.instance.info('窗口大小限制设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 窗口大小限制设置完成');
       } catch (e) {
-        await LogService.instance.error('设置窗口大小失败 - $e', tag: 'WINDOW');
-        print('✗ [WINDOW] 设置窗口大小失败: $e');
+        await LogService.instance.error('设置窗口大小限制失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置窗口大小限制失败: $e');
         rethrow;
       }
 
@@ -89,6 +91,7 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
         print('🪟 [WINDOW] 设置透明背景');
         await Window.setEffect(
           effect: WindowEffect.transparent,
+          dark: false,
         );
         await LogService.instance.info('透明效果设置完成', tag: 'WINDOW');
         print('✓ [WINDOW] 透明效果设置完成');
@@ -159,7 +162,21 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       await LogService.instance.info('开始切换到正常窗口模式', tag: 'WINDOW');
       print('🪟 [WINDOW] 开始切换到正常窗口模式');
 
-      // 所有平台：恢复白色背景
+      // 第一步：重置窗口大小限制
+      try {
+        await LogService.instance.info('重置窗口大小限制', tag: 'WINDOW');
+        print('🪟 [WINDOW] 重置窗口大小限制');
+        await windowManager.setMinimumSize(const Size(800, 600));
+        await windowManager.setMaximumSize(const Size(double.infinity, double.infinity));
+        await LogService.instance.info('窗口大小限制重置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 窗口大小限制重置完成');
+      } catch (e) {
+        await LogService.instance.error('重置窗口大小限制失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 重置窗口大小限制失败: $e');
+        rethrow;
+      }
+
+      // 第二步：恢复不透明白色背景
       try {
         await LogService.instance.info('恢复不透明白色背景', tag: 'WINDOW');
         print('🪟 [WINDOW] 恢复不透明白色背景');
@@ -167,6 +184,7 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
         await Window.setEffect(
           effect: WindowEffect.solid,
           color: const Color(0xFFFFFFFF),
+          dark: false,
         );
         await LogService.instance.info('不透明白色背景恢复完成', tag: 'WINDOW');
         print('✓ [WINDOW] 不透明白色背景恢复完成');

@@ -6,14 +6,24 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'app.dart';
+import 'mini_window_entry.dart';
 import 'services/config_service.dart';
 import 'services/storage_service.dart';
 import 'services/log_service.dart';
 import 'utils/constants.dart';
 
 /// 应用入口点
-Future<void> main() async {
+Future<void> main(List<String> args) async {
+  // 检查是否是子窗口（悬浮窗）
+  if (args.isNotEmpty && args.first == 'mini_window') {
+    // 悬浮窗入口
+    await miniWindowMain(args);
+    return;
+  }
+
+  // 主窗口入口
   // 使用 runZonedGuarded 捕获所有未处理的异步异常
   runZonedGuarded(() async {
     await _initializeApp();
@@ -110,6 +120,30 @@ Future<void> _initializeApp() async {
     // 阻止默认的关闭行为，改为切换到小窗模式（所有平台）
     await windowManager.setPreventClose(true);
     print('✓ 已设置阻止默认关闭行为');
+
+    // 设置窗口间通信处理器 - 用于接收悬浮窗发来的消息
+    DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
+      print('🔔 [WINDOW] 收到来自窗口 $fromWindowId 的消息: ${call.method}');
+
+      if (call.method == 'restore_main_window') {
+        // 恢复主窗口
+        await LogService.instance.info('收到恢复主窗口请求，准备显示主窗口', tag: 'WINDOW');
+        print('🪟 [WINDOW] 收到恢复主窗口请求，准备显示主窗口');
+
+        await windowManager.show();
+        await windowManager.focus();
+
+        await LogService.instance.info('主窗口已恢复并获得焦点', tag: 'WINDOW');
+        print('✓ [WINDOW] 主窗口已恢复并获得焦点');
+
+        // 关闭悬浮窗
+        if (fromWindowId != 0) {
+          await WindowController.fromWindowId(fromWindowId).close();
+          await LogService.instance.info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
+          print('✓ [WINDOW] 已关闭悬浮窗 $fromWindowId');
+        }
+      }
+    });
 
     print('✓ WindowManager初始化成功');
 

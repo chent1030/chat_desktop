@@ -64,12 +64,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final taskListState = ref.watch(taskListProvider);
-    final windowState = ref.watch(windowStateProvider);
-
-    // 小窗口模式：显示简化界面
-    if (windowState.mode == WindowMode.mini) {
-      return _buildMiniWindow(theme);
-    }
 
     // 检查屏幕宽度,决定是使用双栏布局还是标签页布局
     final isWideScreen = MediaQuery.of(context).size.width > 800;
@@ -85,61 +79,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: const Text('新建任务'),
             )
           : null,
-    );
-  }
-
-  /// 小窗口模式界面
-  Widget _buildMiniWindow(ThemeData theme) {
-    final unreadCount = ref.watch(unreadBadgeCountProvider);
-
-    return GestureDetector(
-      onTap: () {
-        // 点击小窗口恢复到正常窗口
-        ref.read(windowStateProvider.notifier).switchToNormalMode();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primaryContainer,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.chat_bubble_outline,
-                color: Colors.white,
-                size: 32,
-              ),
-              if (unreadCount > 0) ...[
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$unreadCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 
