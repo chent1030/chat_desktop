@@ -57,8 +57,8 @@ dependencies:
   record: ^6.0.0
   path: ^1.8.3
 
-  # 视频播放
-  video_player: ^2.8.0
+  # 动画
+  lottie: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -78,9 +78,8 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - static_logo.jpg
-    - dynamic_logo.mp4
-    - unread_logo.mp4
+    - dynamic_logo.json
+    - unread_logo.json
     - assets/app_icon.ico
 
   # To add assets to your application, add an assets section, like this:

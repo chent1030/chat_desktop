@@ -44,41 +44,10 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
       await LogService.instance.info('开始切换到小窗口模式', tag: 'WINDOW');
       print('🪟 [WINDOW] 开始切换到小窗口模式');
 
-      // 所有平台：设置透明背景
-      try {
-        await LogService.instance.info('设置透明背景', tag: 'WINDOW');
-        print('🪟 [WINDOW] 设置透明背景');
-        // 使用 flutter_acrylic 设置完全透明效果
-        await Window.setEffect(
-          effect: WindowEffect.transparent,
-        );
-        await LogService.instance.info('透明效果设置完成', tag: 'WINDOW');
-        print('✓ [WINDOW] 透明效果设置完成');
-      } catch (e) {
-        await LogService.instance.error('设置透明效果失败 - $e', tag: 'WINDOW');
-        print('✗ [WINDOW] 设置透明效果失败: $e');
-        rethrow;
-      }
-
-      // 所有平台：设置为无边框窗口
-      try {
-        await LogService.instance.info('设置为无边框窗口', tag: 'WINDOW');
-        print('🪟 [WINDOW] 设置为无边框窗口');
-        // 设置为无边框窗口（移除系统边框和阴影）
-        await windowManager.setAsFrameless();
-        await LogService.instance.info('无边框窗口设置完成', tag: 'WINDOW');
-        print('✓ [WINDOW] 无边框窗口设置完成');
-      } catch (e) {
-        await LogService.instance.error('设置无边框窗口失败 - $e', tag: 'WINDOW');
-        print('✗ [WINDOW] 设置无边框窗口失败: $e');
-        rethrow;
-      }
-
-      // 所有平台：设置窗口大小为80x80
+      // 第一步：设置窗口大小为80x80（在设置无边框之前）
       try {
         await LogService.instance.info('设置窗口大小为80x80', tag: 'WINDOW');
         print('🪟 [WINDOW] 设置窗口大小为80x80');
-        // 设置为图标大小80x80
         await windowManager.setSize(const Size(80, 80));
         await LogService.instance.info('窗口大小设置完成', tag: 'WINDOW');
         print('✓ [WINDOW] 窗口大小设置完成');
@@ -88,16 +57,44 @@ class WindowStateNotifier extends StateNotifier<WindowState> {
         rethrow;
       }
 
+      // 第二步：设置为无边框窗口（移除所有系统边框）
+      try {
+        await LogService.instance.info('设置为无边框窗口', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置为无边框窗口');
+        await windowManager.setAsFrameless();
+        await LogService.instance.info('无边框窗口设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 无边框窗口设置完成');
+      } catch (e) {
+        await LogService.instance.error('设置无边框窗口失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置无边框窗口失败: $e');
+        rethrow;
+      }
+
+      // 第三步：隐藏标题栏
       try {
         await LogService.instance.info('隐藏标题栏', tag: 'WINDOW');
         print('🪟 [WINDOW] 隐藏标题栏');
-        // 隐藏标题栏
         await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
         await LogService.instance.info('标题栏隐藏完成', tag: 'WINDOW');
         print('✓ [WINDOW] 标题栏隐藏完成');
       } catch (e) {
         await LogService.instance.error('隐藏标题栏失败 - $e', tag: 'WINDOW');
         print('✗ [WINDOW] 隐藏标题栏失败: $e');
+        rethrow;
+      }
+
+      // 第四步：使用 flutter_acrylic 设置完全透明效果
+      try {
+        await LogService.instance.info('设置透明背景', tag: 'WINDOW');
+        print('🪟 [WINDOW] 设置透明背景');
+        await Window.setEffect(
+          effect: WindowEffect.transparent,
+        );
+        await LogService.instance.info('透明效果设置完成', tag: 'WINDOW');
+        print('✓ [WINDOW] 透明效果设置完成');
+      } catch (e) {
+        await LogService.instance.error('设置透明效果失败 - $e', tag: 'WINDOW');
+        print('✗ [WINDOW] 设置透明效果失败: $e');
         rethrow;
       }
 

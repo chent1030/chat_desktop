@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:video_player/video_player.dart';
+import 'package:lottie/lottie.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 
@@ -23,66 +23,25 @@ class MiniWindow extends ConsumerStatefulWidget {
 }
 
 class _MiniWindowState extends ConsumerState<MiniWindow> {
-  VideoPlayerController? _videoController;
   bool _isHovering = false;
   OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
   }
 
   @override
   void didUpdateWidget(MiniWindow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 当未读数量变化时,重新初始化视频
+    // 当未读数量变化时，setState 触发重建
     if (oldWidget.unreadCount != widget.unreadCount) {
-      _initializeVideo();
-    }
-  }
-
-  Future<void> _initializeVideo() async {
-    // 先释放旧的控制器
-    await _videoController?.dispose();
-
-    try {
-      // 根据是否有未读消息选择不同的视频
-      final videoPath = widget.unreadCount > 0 ? 'dynamic_logo.mp4' : 'unread_logo.mp4';
-
-      print('🎬 [VIDEO] 初始化视频: $videoPath');
-
-      // 创建新的视频控制器（使用 asset）
-      _videoController = VideoPlayerController.asset(videoPath);
-
-      print('🎬 [VIDEO] 开始初始化视频控制器');
-      await _videoController!.initialize();
-
-      print('🎬 [VIDEO] 设置循环播放');
-      await _videoController!.setLooping(true);
-
-      print('🎬 [VIDEO] 开始播放');
-      await _videoController!.play();
-
-      print('✓ [VIDEO] 视频初始化成功');
-
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e, stackTrace) {
-      print('✗ [VIDEO] 视频初始化失败: $e');
-      print('Stack trace: $stackTrace');
-      // 即使视频加载失败，也继续运行（显示空白）
-      _videoController = null;
-      if (mounted) {
-        setState(() {});
-      }
+      setState(() {});
     }
   }
 
   @override
   void dispose() {
-    _videoController?.dispose();
     _removeOverlay();
     super.dispose();
   }
@@ -227,8 +186,13 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
     );
   }
 
-  /// 构建Logo Widget（动态视频）
+  /// 构建Logo Widget（Lottie 动画）
   Widget _buildLogoWidget() {
+    // 根据是否有未读消息选择不同的 Lottie 动画
+    final lottieAsset = widget.unreadCount > 0
+        ? 'dynamic_logo.json'
+        : 'unread_logo.json';
+
     return Container(
       width: 80,
       height: 80,
@@ -238,11 +202,14 @@ class _MiniWindowState extends ConsumerState<MiniWindow> {
         // 移除阴影，确保完全透明无边框
       ),
       child: ClipOval(
-        child: _videoController != null && _videoController!.value.isInitialized
-            ? VideoPlayer(_videoController!)
-            : Container(
-                color: Colors.transparent, // 加载中显示透明
-              ),
+        child: Lottie.asset(
+          lottieAsset,
+          width: 80,
+          height: 80,
+          fit: BoxFit.cover,
+          repeat: true,
+          animate: true,
+        ),
       ),
     );
   }
