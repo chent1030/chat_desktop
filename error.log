@@ -1,4 +1,194 @@
-Launching lib\main.dart on Windows in debug mode...
-D:\Develop\chat_desktop\windows\flutter\ephemeral\.plugin_symlinks\flutter_local_notifications_windows\src\plugin.cpp(5,10): error C1083: 无法打开包括文件: “atlbase.h”: No such file or directory [D:\Develop\chat_desktop\build\windows\x64\plugins\flutter_local_notifications_windows\shared\flutter_local_notifications_windows.vcxproj]
-Building Windows application...                                    12.6s
-Error: Build process failed.
+[2025-12-18 11:32:40.377] [INFO ] [WINDOW] 独立悬浮窗创建成功
+√ [WINDOW] 独立悬浮窗创建成功
+√ AI智能体已存在，跳过初始化
+√ StorageService初始化成功: C:\Users\陈涛\Documents
+√ StorageService初始化成功
+[2025-12-18 11:32:40.585] [INFO ] [WINDOW] 主窗口已隐藏
+√ [WINDOW] 主窗口已隐藏
+[2025-12-18 11:32:40.581] [INFO ] StorageService初始化成功
+X 应用初始化失败: MissingPluginException(No implementation found for method ensureInitialized on channel window_manager)
+堆栈追踪: #0      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:365:7)
+<asynchronous suspension>
+#1      WindowManager.ensureInitialized (package:window_manager/src/window_manager.dart:104:5)
+<asynchronous suspension>
+#2      _initializeApp (package:chat_desktop/main.dart:84:5)
+<asynchronous suspension>
+#3      main.<anonymous closure> (package:chat_desktop/main.dart:29:5)
+<asynchronous suspension>
+
+💥 [CRASH] 应用初始化失败: MissingPluginException(No implementation found for method ensureInitialized on channel window_manager)
+Stack trace: #0      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:365:7)
+<asynchronous suspension>
+#1      WindowManager.ensureInitialized (package:window_manager/src/window_manager.dart:104:5)
+<asynchronous suspension>
+#2      _initializeApp (package:chat_desktop/main.dart:84:5)
+<asynchronous suspension>
+#3      main.<anonymous closure> (package:chat_desktop/main.dart:29:5)
+<asynchronous suspension>
+
+💥 [CRASH] Flutter框架异常: A RenderFlex overflowed by 423 pixels on the bottom.
+Stack trace: #0      _initializeApp.<anonymous closure> (package:chat_desktop/main.dart:59:35)
+#1      FlutterError.reportError (package:flutter/src/foundation/assertions.dart:1203:14)
+#2      DebugOverflowIndicatorMixin._reportOverflow (package:flutter/src/rendering/debug_overflow_indicator.dart:259:18)
+#3      DebugOverflowIndicatorMixin.paintOverflowIndicator (package:flutter/src/rendering/debug_overflow_indicator.dart:329:7)
+#4      RenderFlex.paint.<anonymous closure> (package:flutter/src/rendering/flex.dart:1364:7)
+#5      RenderFlex.paint (package:flutter/src/rendering/flex.dart:1372:6)
+#6      RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#7      PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#8      RenderShiftedBox.paint (package:flutter/src/rendering/shifted_box.dart:81:15)
+#9      RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#10     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#11     RenderBoxContainerDefaultsMixin.defaultPaint (package:flutter/src/rendering/box.dart:3367:15)
+#12     RenderCustomMultiChildLayoutBox.paint (package:flutter/src/rendering/custom_layout.dart:425:5)
+#13     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#14     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#15     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#16     _RenderInkFeatures.paint (package:flutter/src/material/material.dart:634:11)
+#17     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#18     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#19     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#20     RenderPhysicalModel.paint.<anonymous closure> (package:flutter/src/rendering/proxy_box.dart:2184:15)
+#21     PaintingContext.pushClipRRect (package:flutter/src/rendering/object.dart:622:14)
+#22     RenderPhysicalModel.paint (package:flutter/src/rendering/proxy_box.dart:2171:21)
+#23     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#24     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#25     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#26     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#27     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#28     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#29     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#30     PaintingContext._repaintCompositedChild (package:flutter/src/rendering/object.dart:176:11)
+#31     PaintingContext.repaintCompositedChild (package:flutter/src/rendering/object.dart:121:5)
+#32     PaintingContext._compositeChild (package:flutter/src/rendering/object.dart:272:7)
+#33     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:253:7)
+#34     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#35     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#36     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#37     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#38     _ZoomExitTransitionPainter.paint (package:flutter/src/material/page_transitions_theme.dart:1414:21)
+#39     _RenderSnapshotWidget.paint (package:flutter/src/widgets/snapshot_widget.dart:337:15)
+#40     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#41     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#42     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#43     _ZoomEnterTransitionPainter.paint (package:flutter/src/material/page_transitions_theme.dart:1319:21)
+#44     _RenderSnapshotWidget.paint (package:flutter/src/widgets/snapshot_widget.dart:337:15)
+#45     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#46     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#47     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#48     _ZoomExitTransitionPainter.paint (package:flutter/src/material/page_transitions_theme.dart:1414:21)
+#49     _RenderSnapshotWidget.paint (package:flutter/src/widgets/snapshot_widget.dart:337:15)
+#50     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#51     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#52     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#53     _ZoomEnterTransitionPainter.paint (package:flutter/src/material/page_transitions_theme.dart:1319:21)
+#54     _RenderSnapshotWidget.paint (package:flutter/src/widgets/snapshot_widget.dart:337:15)
+#55     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#56     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#57     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#58     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#59     PaintingContext._repaintCompositedChild (package:flutter/src/rendering/object.dart:176:11)
+#60     PaintingContext.repaintCompositedChild (package:flutter/src/rendering/object.dart:121:5)
+#61     PaintingContext._compositeChild (package:flutter/src/rendering/object.dart:272:7)
+#62     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:253:7)
+#63     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#64     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#65     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#66     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#67     RenderOffstage.paint (package:flutter/src/rendering/proxy_box.dart:3868:11)
+#68     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#69     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#70     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#71     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#72     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#73     _RenderTheaterMixin.paint (package:flutter/src/widgets/overlay.dart:1119:15)
+#74     _RenderTheater.paint (package:flutter/src/widgets/overlay.dart:1476:13)
+#75     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#76     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#77     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#78     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#79     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#80     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#81     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#82     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#83     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#84     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#85     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#86     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#87     RenderCustomPaint.paint (package:flutter/src/rendering/custom_paint.dart:644:11)
+#88     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#89     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#90     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#91     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#92     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#93     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#94     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#95     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#96     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#97     RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#98     PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#99     RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#100    RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#101    PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#102    RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#103    RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#104    PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#105    RenderProxyBoxMixin.paint (package:flutter/src/rendering/proxy_box.dart:140:13)
+#106    RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#107    PaintingContext.paintChild (package:flutter/src/rendering/object.dart:261:13)
+#108    RenderView.paint (package:flutter/src/rendering/view.dart:322:15)
+#109    RenderObject._paintWithContext (package:flutter/src/rendering/object.dart:3436:7)
+#110    PaintingContext._repaintCompositedChild (package:flutter/src/rendering/object.dart:176:11)
+#111    PaintingContext.repaintCompositedChild (package:flutter/src/rendering/object.dart:121:5)
+#112    PipelineOwner.flushPaint (package:flutter/src/rendering/object.dart:1322:31)
+#113    PipelineOwner.flushPaint (package:flutter/src/rendering/object.dart:1332:15)
+#114    RendererBinding.drawFrame (package:flutter/src/rendering/binding.dart:631:23)
+#115    WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1264:13)
+#116    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#117    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
+#118    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1347:9)
+#119    SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1057:9)
+#120    PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:906:16)
+#121    _rootRun (dart:async/zone.dart:1517:47)
+#122    _CustomZone.run (dart:async/zone.dart:1422:19)
+#123    _CustomZone.runGuarded (dart:async/zone.dart:1321:7)
+#124    _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1362:23)
+#125    _rootRun (dart:async/zone.dart:1525:13)
+#126    _CustomZone.run (dart:async/zone.dart:1422:19)
+#127    _CustomZone.bindCallback.<anonymous closure> (dart:async/zone.dart:1345:23)
+#128    Timer._createTimer.<anonymous closure> (dart:async-patch/timer_patch.dart:18:15)
+#129    _Timer._runTimers (dart:isolate-patch/timer_impl.dart:423:19)
+#130    _Timer._handleMessage (dart:isolate-patch/timer_impl.dart:454:5)
+#131    _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
+
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 423 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column Column:file:///D:/Develop/chat_desktop/lib/main.dart:203:20
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#51c10 relayoutBoundary=up2 OVERFLOWING:
+  creator: Column ← Center ← KeyedSubtree-[GlobalKey#1961a] ← _BodyBuilder ← MediaQuery ←
+    LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ←
+    AnimatedBuilder ← DefaultTextStyle ← AnimatedDefaultTextStyle ← ⋯
+  parentData: offset=Offset(0.0, 0.0) (can use size)
+  constraints: BoxConstraints(0.0<=w<=120.0, 0.0<=h<=41.0)
+  size: Size(120.0, 41.0)
+  direction: vertical
+  mainAxisAlignment: center
+  mainAxisSize: max
+  crossAxisAlignment: center
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
