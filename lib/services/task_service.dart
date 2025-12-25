@@ -87,7 +87,7 @@ class TaskService {
       ),
     );
 
-    print('✓ 任务已创建: ${task.title} (ID: ${task.id}, UUID: ${task.uuid})');
+    print('✓ 任务已创建: ${task.title} (ID: ${task.id}, UID: ${task.taskUid})');
     return task.id;
   }
 

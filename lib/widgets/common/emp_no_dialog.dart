@@ -32,14 +32,11 @@ class EmpNoDialog extends StatefulWidget {
 class _EmpNoDialogState extends State<EmpNoDialog> {
   final _formKey = GlobalKey<FormState>();
   final _empNoController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _configService = ConfigService.instance;
   final _mqttService = MqttService.instance;
 
   bool _isLoading = false;
   String? _errorMessage;
-  bool _showAuth = false; // 是否显示认证字段
 
   @override
   void initState() {
@@ -54,8 +51,6 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
   @override
   void dispose() {
     _empNoController.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -106,12 +101,8 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
         broker: AppConstants.mqttBrokerHost,
         port: AppConstants.mqttBrokerPort,
         empNo: empNo,
-        username: _usernameController.text.trim().isEmpty
-            ? null
-            : _usernameController.text.trim(),
-        password: _passwordController.text.trim().isEmpty
-            ? null
-            : _passwordController.text.trim(),
+        username: AppConstants.mqttUsername,
+        password: AppConstants.mqttPassword,
       );
 
       if (!connected) {
@@ -196,45 +187,7 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
                   onFieldSubmitted: (_) => _submitEmpNo(),
                 ),
                 const SizedBox(height: 16),
-                // 认证选项
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _showAuth,
-                      onChanged: _isLoading ? null : (value) {
-                        setState(() {
-                          _showAuth = value ?? false;
-                        });
-                      },
-                    ),
-                    const Text('MQTT需要认证'),
-                  ],
-                ),
-                if (_showAuth) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _usernameController,
-                    enabled: !_isLoading,
-                    decoration: const InputDecoration(
-                      labelText: 'MQTT用户名（可选）',
-                      hintText: '例如: emqx_test',
-                      prefixIcon: Icon(Icons.account_circle),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _passwordController,
-                    enabled: !_isLoading,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'MQTT密码（可选）',
-                      hintText: '输入密码',
-                      prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
+                // 认证信息统一从环境变量读取（见 .env），此处不再展示输入项
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 12),
                   Container(

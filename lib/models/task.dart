@@ -23,8 +23,12 @@ class Task {
   Id id = Isar.autoIncrement;
 
   /// 全局唯一标识符 (用于MQTT同步去重)
+  /// 内部命名使用 taskUid 以避免与外部部分数据库保留/常用名冲突
   @Index(unique: true, replace: true)
-  String? uuid;
+  String? taskUid;
+  // 兼容已生成的 Isar 代码与既有调用：暴露 uuid 访问器
+  String? get uuid => taskUid;
+  set uuid(String? value) => taskUid = value;
 
   /// 任务标题
   @Index(type: IndexType.value)
@@ -91,7 +95,7 @@ class Task {
   /// 构造函数
   Task({
     this.id = Isar.autoIncrement,
-    this.uuid,
+    String? uuid,
     required this.title,
     this.description,
     this.priority = Priority.medium,
@@ -112,7 +116,7 @@ class Task {
     this.assignedAt,
   }) {
     // 如果uuid为null，生成一个新的
-    uuid ??= const Uuid().v4();
+    taskUid = uuid ?? const Uuid().v4();
   }
 
   /// 复制方法 (用于更新任务)
@@ -140,7 +144,7 @@ class Task {
   }) {
     return Task(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
+      uuid: uuid ?? taskUid,
       title: title ?? this.title,
       description: description ?? this.description,
       priority: priority ?? this.priority,
@@ -227,7 +231,7 @@ class Task {
 
     return {
       'id': id,
-      'uuid': uuid,
+      'uuid': taskUid,
       'title': title,
       'description': description,
       'priority': priority.index,
@@ -303,7 +307,7 @@ class Task {
 
   @override
   String toString() {
-    return 'Task(id: $id, uuid: $uuid, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate)';
+    return 'Task(id: $id, taskUid: $taskUid, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate)';
   }
 }
 

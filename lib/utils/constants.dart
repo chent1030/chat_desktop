@@ -66,6 +66,12 @@ class AppConstants {
       dotenv.env['MQTT_BROKER_HOST'] ?? 'localhost';
   static int get mqttBrokerPort =>
       int.tryParse(dotenv.env['MQTT_BROKER_PORT'] ?? '1883') ?? 1883;
+  static String? get mqttUsername => dotenv.env['MQTT_USERNAME'];
+  static String? get mqttPassword => dotenv.env['MQTT_PASSWORD'];
+
+  // External app paths (Windows overrides)
+  static String? get outlookPathWindows => dotenv.env['OUTLOOK_PATH_WINDOWS'];
+  static String? get dingTalkPathWindows => dotenv.env['DINGTALK_PATH_WINDOWS'];
 
   // API端点
   static const String openAIEndpoint = 'https://api.openai.com/v1/chat/completions';

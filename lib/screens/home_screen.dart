@@ -56,6 +56,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         broker: AppConstants.mqttBrokerHost,
         port: AppConstants.mqttBrokerPort,
         empNo: empNo,
+        username: AppConstants.mqttUsername,
+        password: AppConstants.mqttPassword,
       );
     }
   }
@@ -557,6 +559,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           broker: AppConstants.mqttBrokerHost,
           port: AppConstants.mqttBrokerPort,
           empNo: currentEmpNo,
+          username: AppConstants.mqttUsername,
+          password: AppConstants.mqttPassword,
         );
       }
     }

@@ -14,6 +14,7 @@ import 'services/storage_service.dart';
 import 'services/log_service.dart';
 import 'services/task_service.dart';
 import 'utils/constants.dart';
+import 'package:url_launcher/url_launcher.dart' as launcher;
 
 /// 应用入口点
 Future<void> main(List<String> args) async {
@@ -279,3 +280,5 @@ Future<void> _initializeApp() async {
     );
   }
 }
+
+// 任务联动移至 TaskDetailDialog 的“处理”按钮，点击任务仅标记为已读

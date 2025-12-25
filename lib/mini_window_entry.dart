@@ -194,7 +194,8 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
       ),
     );
 
-    final animDraggable = Platform.isWindows ? DragToMoveArea(child: anim) : anim;
+    // 拖拽由上层 WindowTitleBarBox/MoveWindow 控制，这里直接返回动画组件
+    final animDraggable = anim;
 
     final bubble = Positioned(
       left: 130,

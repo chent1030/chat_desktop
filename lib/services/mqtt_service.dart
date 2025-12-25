@@ -387,15 +387,15 @@ class MqttService {
 
       // UUID去重
       final existingTasks = await _taskService.getAllTasks();
-      final isDuplicate = existingTasks.any((t) => t.uuid == task.uuid);
+      final isDuplicate = existingTasks.any((t) => t.taskUid == task.taskUid);
 
       if (isDuplicate) {
-        print('⚠️ [MQTT] 任务已存在，跳过创建 (UUID: ${task.uuid})');
+        print('⚠️ [MQTT] 任务已存在，跳过创建 (UID: ${task.taskUid})');
         return;
       }
 
       await _taskService.createTaskDirect(task);
-      print('✓ [MQTT] 待办已创建: ${task.title} (UUID: ${task.uuid})');
+      print('✓ [MQTT] 待办已创建: ${task.title} (UID: ${task.taskUid})');
       await LogService.instance.info('MQTT创建待办: ${task.title}', tag: 'MQTT');
 
       _taskChangeController.add(null);
@@ -425,7 +425,7 @@ class MqttService {
       if (uuid != null) {
         final tasks = await _taskService.getAllTasks();
         task = tasks.firstWhere(
-          (t) => t.uuid == uuid,
+          (t) => t.taskUid == uuid,
           orElse: () => throw Exception('未找到UUID对应的任务'),
         );
       } else if (taskId != null) {
@@ -474,7 +474,7 @@ class MqttService {
       if (uuid != null) {
         final tasks = await _taskService.getAllTasks();
         task = tasks.firstWhere(
-          (t) => t.uuid == uuid,
+          (t) => t.taskUid == uuid,
           orElse: () => throw Exception('未找到UUID对应的任务'),
         );
       } else if (taskId != null) {
@@ -511,7 +511,7 @@ class MqttService {
       if (uuid != null) {
         final tasks = await _taskService.getAllTasks();
         task = tasks.firstWhere(
-          (t) => t.uuid == uuid,
+          (t) => t.taskUid == uuid,
           orElse: () => throw Exception('未找到UUID对应的任务'),
         );
       } else if (taskId != null) {

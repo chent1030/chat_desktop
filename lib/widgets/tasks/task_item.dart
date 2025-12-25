@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../models/task.dart';
 import '../../providers/task_provider.dart';
+import 'task_detail.dart';
+import '../../services/task_service.dart';
 
 /// TaskItem widget - 显示单个任务的卡片组件
 class TaskItem extends ConsumerWidget {
@@ -36,7 +38,7 @@ class TaskItem extends ConsumerWidget {
         ),
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap ?? () => _onTapDefault(context, ref),
         onLongPress: () => _showContextMenu(context, ref),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -73,8 +75,34 @@ class TaskItem extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // 优先级指示器
-                        _buildPriorityIndicator(),
+                        // 右上角小圆点（未读显示，已读淡出）
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, animation) => FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                              child: child,
+                            ),
+                          ),
+                          child: task.isRead
+                              ? const SizedBox(
+                                  key: ValueKey('read'),
+                                  width: 8,
+                                  height: 8,
+                                )
+                              : Container(
+                                  key: const ValueKey('unread'),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Color(task.priority.colorValue),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                        ),
                       ],
                     ),
 
@@ -106,6 +134,20 @@ class TaskItem extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _onTapDefault(BuildContext context, WidgetRef ref) async {
+    try {
+      await TaskService.instance.markTaskAsRead(task.id);
+      // 立即刷新列表以获得即时动画反馈
+      // Isar watch 也会触发，但这里主动刷新可更快反馈
+      // ignore: use_build_context_synchronously
+      await ref.read(taskListProvider.notifier).loadTasks();
+    } catch (_) {}
+
+    // 展示详情
+    if (!context.mounted) return;
+    await TaskDetailDialog.show(context, task);
   }
 
   /// 构建完成状态复选框
