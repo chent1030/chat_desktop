@@ -7,17 +7,34 @@ class WindowsFloatingHelper {
   /// Launch native floating window exe. Returns true if process started.
   static Future<bool> launchNativeFloating({String? exePath}) async {
     if (!Platform.isWindows) return false;
-    // Deterministic path: same directory as Runner.exe
+    // Search deterministic and fallback build paths
+    final candidates = <String>[];
     try {
       final exe = Platform.resolvedExecutable; // ...\Runner.exe
       final dir = File(exe).parent.path;
-      final p = exePath != null && exePath.isNotEmpty ? exePath : '$dir\\native_floating_ball.exe';
-      final file = File(p).absolute;
-      if (await file.exists()) {
-        await Process.start(file.path, const [], runInShell: true);
-        return true;
+      if (exePath != null && exePath.isNotEmpty) {
+        candidates.add(exePath);
       }
+      candidates.addAll([
+        '$dir\\native_floating_ball.exe',
+        // CMake subdir build outputs
+        '$dir\\..\\native_floating_folders\\Debug\\native_floating_ball.exe',
+        '$dir\\..\\native_floating_folders\\Release\\native_floating_ball.exe',
+        // Source tree build folder (if invoked separately)
+        '$dir\\..\\..\\native_floating_ball\\build\\Release\\native_floating_ball.exe',
+        '$dir\\..\\..\\native_floating_ball\\build\\Debug\\native_floating_ball.exe',
+      ]);
     } catch (_) {}
+
+    for (final p in candidates) {
+      try {
+        final file = File(p).absolute;
+        if (await file.exists()) {
+          await Process.start(file.path, const [], runInShell: true);
+          return true;
+        }
+      } catch (_) {}
+    }
     return false;
   }
 
