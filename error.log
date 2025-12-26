@@ -1,34 +1,6 @@
-D:\Develop\chat_desktop\windows\native_floating_ball\src\ball_wnd.cpp(240,49): warning C4100: 'wParam': 未引用的参数 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: 命令“setlocal [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtens
-ions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different D:/Develop/chat_desktop/build/windows/x64/runner/native_floating_folders/Debug/native_floating_ball.exe D:/Develop/chat_desktop/build/windows/x64/runner/Debug/native_floating_ball.exe [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmErrorLevel [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: exit /b %1 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :VCEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: setlocal [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtens
-ions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different D:/Develop/chat_desktop/windows/runner/../../assets/static_logo.ico D:/Develop/chat_desktop/build/windows/x64/runner/Debug/app_icon.ico [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmErrorLevel [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: exit /b %1 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :VCEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: setlocal [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtens
-ions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different D:/Develop/chat_desktop/windows/runner/../../dynamic_logo.gif D:/Develop/chat_desktop/windows/runner/../../unread_logo.gif D:/Develop/chat_desktop/build/windows/x64/runner/Debug/ [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmErrorLevel [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: exit /b %1 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :cmDone [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: if %errorlevel% neq 0 goto :VCEnd [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(166,5): error MSB3073: :VCEnd”已退出，代码为 1。 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-Building Windows application...                                    11.6s
-Error: Build process failed.
+CMake Error at runner/CMakeLists.txt:46 (add_custom_command):
+  TARGET 'native_floating_ball' was not created in this directory.
+
+
+Building Windows application...                                    104ms
+Error: Unable to generate build files
