@@ -11,6 +11,7 @@ import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
 import '../services/windows_ipc.dart';
 import 'dart:io' show Platform;
+import '../models/task.dart';
 
 /// HomeScreen - 应用主界面
 class HomeScreen extends ConsumerStatefulWidget {

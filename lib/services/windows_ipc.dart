@@ -24,12 +24,14 @@ class WindowsFloatingIpc {
       final lines = unread.map((t) => '${t.id} ${t.title}').join('\n');
       // UTF-16 payload including terminating NUL
       final payload = lines.toNativeUtf16(allocator: calloc);
-      final cds = calloc<win32.COPYDATASTRUCT>();
-      cds.ref.dwData = 1; // UPDATE_TASKS
+      // Define local COPYDATASTRUCT to avoid platform typedef issues
+      final cds = calloc<_COPYDATASTRUCT>();
+      cds.ref.dwData = ffi.sizeOf<ffi.IntPtr>() == 8 ? 1 : 1; // 1 = UPDATE_TASKS
       cds.ref.cbData = (lines.length + 1) * 2; // bytes
-      cds.ref.lpData = payload.cast<ffi.Void>();
+      cds.ref.lpData = payload.cast();
 
-      win32.SendMessage(hwnd, win32.WM_COPYDATA, 0, cds.cast());
+      // WM_COPYDATA = 0x004A
+      win32.SendMessage(hwnd, 0x004A, 0, cds.address);
 
       calloc.free(cds);
       calloc.free(payload);
@@ -40,3 +42,13 @@ class WindowsFloatingIpc {
   }
 }
 
+// Minimal struct mirror of Windows COPYDATASTRUCT
+base class _COPYDATASTRUCT extends ffi.Struct {
+  @ffi.UintPtr()
+  external int dwData;
+
+  @ffi.UintPtr()
+  external int cbData;
+
+  external ffi.Pointer<ffi.Void> lpData;
+}

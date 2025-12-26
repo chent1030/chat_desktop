@@ -11,6 +11,7 @@ import 'providers/window_provider.dart';
 import 'services/log_service.dart';
 import 'utils/theme.dart';
 import 'services/windows_ipc.dart';
+import 'services/windows_floating_helper.dart';
 
 /// 窗口监听器 - 处理窗口关闭事件
 class AppWindowListener extends WindowListener {
@@ -25,6 +26,20 @@ class AppWindowListener extends WindowListener {
     print('🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗');
 
     try {
+      // Windows: 优先使用原生悬浮窗
+      if (Platform.isWindows) {
+        final unreadTasks = ref.read(unreadTasksProvider);
+        final started = await WindowsFloatingHelper.launchFloatingAndSync(unreadTasks);
+        if (started) {
+          await windowManager.hide();
+          await LogService.instance.info('已启动原生悬浮窗并隐藏主窗口', tag: 'WINDOW');
+          print('✓ [WINDOW] 已启动原生悬浮窗并隐藏主窗口');
+          return;
+        } else {
+          print('✗ [WINDOW] 启动原生悬浮窗失败，回退到 Flutter 子窗');
+        }
+      }
+
       // 创建独立的悬浮窗（120x120，透明，置顶）
       // 传递 'mini_window' 作为第一个参数，子窗口的 main() 会接收到这个参数
       final window = await DesktopMultiWindow.createWindow('mini_window');
@@ -45,7 +60,7 @@ class AppWindowListener extends WindowListener {
       await LogService.instance.info('独立悬浮窗创建成功', tag: 'WINDOW');
       print('✓ [WINDOW] 独立悬浮窗创建成功');
 
-      // 获取当前未读任务数并发送给悬浮窗
+      // 获取当前未读任务数并发送给 Flutter 悬浮窗
       try {
         final unreadCount = ref.read(unreadBadgeCountProvider);
         final unreadTasks = ref.read(unreadTasksProvider);
