@@ -25,6 +25,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0; // 0: 任务列表, 1: AI助手
   final _configService = ConfigService.instance;
   final _mqttService = MqttService.instance;
+  bool _ipcListenerHooked = false;
+  bool _initialUnreadSynced = false;
 
   @override
   void initState() {
@@ -34,24 +36,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // 强制初始化TaskListProvider，确保它订阅了所有需要的流
       print('🎯 [HomeScreen] 初始化 TaskListProvider');
       ref.read(taskListProvider);
-
-      // 监听未读任务变化，Windows 下实时同步到原生悬浮窗（不做过滤逻辑，主程序仅发送未读）
-      ref.listen<List<Task>>(unreadTasksProvider, (previous, next) {
-        try {
-          if (Platform.isWindows) {
-            WindowsFloatingIpc.sendUnreadTasks(next);
-          }
-        } catch (_) {}
-      });
-
-      // 初始同步一次（若已存在任务）
-      try {
-        if (Platform.isWindows) {
-          final unread = ref.read(unreadTasksProvider);
-          WindowsFloatingIpc.sendUnreadTasks(unread);
-        }
-      } catch (_) {}
-
       _checkAndInitializeMqtt();
     });
   }
@@ -86,6 +70,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final taskListState = ref.watch(taskListProvider);
+
+    // 在 build 中注册 Riverpod 监听，符合 Riverpod 约束（避免 debugDoingBuild 断言）
+    if (!_ipcListenerHooked) {
+      _ipcListenerHooked = true;
+      ref.listen<List<Task>>(unreadTasksProvider, (previous, next) {
+        try {
+          if (Platform.isWindows) {
+            WindowsFloatingIpc.sendUnreadTasks(next);
+          }
+        } catch (_) {}
+      });
+    }
+
+    // 首次构建后，同步一次未读列表给原生悬浮窗
+    if (Platform.isWindows && !_initialUnreadSynced) {
+      _initialUnreadSynced = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          final unread = ref.read(unreadTasksProvider);
+          WindowsFloatingIpc.sendUnreadTasks(unread);
+        } catch (_) {}
+      });
+    }
 
     // 检查屏幕宽度,决定是使用双栏布局还是标签页布局
     final isWideScreen = MediaQuery.of(context).size.width > 800;

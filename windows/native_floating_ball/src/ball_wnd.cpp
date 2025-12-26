@@ -61,13 +61,8 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     // Layered per-pixel alpha, click-through disabled (we need interactivity)
     SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
     InitializeD2D();
-    // Try load GIFs from exe directory
-    wchar_t exePath[MAX_PATH]; GetModuleFileName(nullptr, exePath, MAX_PATH);
-    wchar_t* slash = wcsrchr(exePath, L'\\'); if (slash) *(slash) = 0;
-    std::wstring unreadPath = std::wstring(exePath) + L"\\unread_logo.gif";
-    std::wstring dynPath    = std::wstring(exePath) + L"\\dynamic_logo.gif";
-    m_gifUnread.Load(m_pWIC, unreadPath);
-    m_gifDynamic.Load(m_pWIC, dynPath);
+    // Load GIFs (with fallbacks)
+    LoadGifs();
     SelectGifByUnread();
     m_frameIndex = 0;
     if (m_activeGif && m_activeGif->FrameCount() > 0) {
@@ -246,6 +241,35 @@ void BallWindow::OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam) {
   // Recreate DIB for new size if needed (omitted for brevity)
 }
 
+void BallWindow::LoadGifs() {
+  // Primary: exe directory
+  wchar_t exePath[MAX_PATH]; GetModuleFileName(nullptr, exePath, MAX_PATH);
+  wchar_t* slash = wcsrchr(exePath, L'\\'); if (slash) *(slash) = 0; // dirname
+  std::wstring dir = exePath;
+  auto tryLoad = [&](const std::wstring& baseDir) -> bool {
+    std::wstring unread = baseDir + L"\\unread_logo.gif";
+    std::wstring dyn    = baseDir + L"\\dynamic_logo.gif";
+    bool okU = m_gifUnread.Load(m_pWIC, unread);
+    bool okD = m_gifDynamic.Load(m_pWIC, dyn);
+    return okU && okD;
+  };
+
+  if (tryLoad(dir)) return;
+
+  // Fallback 1: sibling Runner output directory (..\..\Debug or Release)
+  std::wstring parent = dir; // ...\runner\native_floating_folders\(Config)
+  wchar_t* slash2 = wcsrchr(parent.data(), L'\\');
+  if (slash2) { *slash2 = 0; /* ...\runner\native_floating_folders */
+    wchar_t* slash3 = wcsrchr(parent.data(), L'\\');
+    if (slash3) { *slash3 = 0; /* ...\runner */
+      if (tryLoad(std::wstring(parent) + L"\\Debug")) return;
+      if (tryLoad(std::wstring(parent) + L"\\Release")) return;
+    }
+  }
+
+  // If still not found, leave players empty; Render() draws a fallback circle.
+}
+
 void BallWindow::SelectGifByUnread() {
   m_activeGif = (m_unreadCount > 0) ? &m_gifDynamic : &m_gifUnread;
 }
@@ -255,7 +279,7 @@ void BallWindow::OpenMainApp() {
   HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", nullptr);
   if (!hwndMain) hwndMain = FindWindowW(nullptr, nullptr);
   if (hwndMain) {
-    ShowWindow(hwndMain, SW_SHOWNORMAL);
+    ShowWindow(hwndMain, SW_RESTORE);
     SetForegroundWindow(hwndMain);
     // Optionally hide the floating ball
     ShowWindow(m_hWnd, SW_HIDE);
