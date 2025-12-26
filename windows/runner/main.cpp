@@ -27,12 +27,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
-  // Configure Bitsdojo Window: custom frame + hide on startup
-  // Transparency is handled on the Dart side (flutter_acrylic/window_manager)
-  bitsdojo_window_configure(BDW_CUSTOM_FRAME | BDW_HIDE_ON_STARTUP);
+  // Configure Bitsdojo Window only for mini-window (see below)
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
+  std::vector<std::string> command_line_arguments = GetCommandLineArguments();
+
+  // Only enable custom frame for the mini window process
+  bool is_mini_window = false;
+  for (const auto& arg : command_line_arguments) {
+    if (arg.find("mini_window") != std::string::npos) {
+      is_mini_window = true;
+      break;
+    }
+  }
+  if (is_mini_window) {
+    bitsdojo_window_configure(BDW_CUSTOM_FRAME);
+  }
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
