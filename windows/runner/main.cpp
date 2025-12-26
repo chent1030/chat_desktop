@@ -29,7 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   // Configure Bitsdojo Window: custom frame + hide on startup
   // Transparency is handled on the Dart side (flutter_acrylic/window_manager)
-  auto bdw = bitsdojo_window_configure(BDW_CUSTOM_FRAME | BDW_HIDE_ON_STARTUP);
+  bitsdojo_window_configure(BDW_CUSTOM_FRAME | BDW_HIDE_ON_STARTUP);
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
