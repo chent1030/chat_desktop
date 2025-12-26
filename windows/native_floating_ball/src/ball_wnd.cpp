@@ -10,7 +10,7 @@ static const wchar_t* kBallClass = L"NativeFloatingBallWindow";
 
 ATOM BallWindow::Register(HINSTANCE hInst) {
   WNDCLASSEX wc{ sizeof(WNDCLASSEX) };
-  wc.style = CS_HREDRAW | CS_VREDRAW;
+  wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS; // enable double click
   wc.lpfnWndProc = &BallWindow::WndProc;
   wc.hInstance = hInst;
   wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -61,14 +61,17 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     // Layered per-pixel alpha, click-through disabled (we need interactivity)
     SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
     InitializeD2D();
-    // Try load GIF from exe directory: ball.gif
+    // Try load GIFs from exe directory
     wchar_t exePath[MAX_PATH]; GetModuleFileName(nullptr, exePath, MAX_PATH);
     wchar_t* slash = wcsrchr(exePath, L'\\'); if (slash) *(slash) = 0;
-    std::wstring gifPath = std::wstring(exePath) + L"\\ball.gif";
-    m_gif.Load(m_pWIC, gifPath);
+    std::wstring unreadPath = std::wstring(exePath) + L"\\unread_logo.gif";
+    std::wstring dynPath    = std::wstring(exePath) + L"\\dynamic_logo.gif";
+    m_gifUnread.Load(m_pWIC, unreadPath);
+    m_gifDynamic.Load(m_pWIC, dynPath);
+    SelectGifByUnread();
     m_frameIndex = 0;
-    if (m_gif.FrameCount() > 0) {
-      SetTimer(hWnd, m_timerId, m_gif.GetDelayMs(0), nullptr);
+    if (m_activeGif && m_activeGif->FrameCount() > 0) {
+      SetTimer(hWnd, m_timerId, m_activeGif->GetDelayMs(0), nullptr);
     }
     Render();
     return 0;
@@ -81,6 +84,8 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   }
   case WM_MOUSELEAVE:
     HideBubble(); return 0;
+  case WM_LBUTTONDBLCLK:
+    OpenMainApp(); return 0;
   case WM_COPYDATA: {
     // Accept UPDATE_TASKS from external sender: dwData=1, payload = L"<id> <title>\n..."
     auto cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
@@ -97,6 +102,14 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (pos == std::wstring::npos) break; else start = pos + 1;
       }
       EnsureBubble();
+      // Unread count = items count
+      m_unreadCount = (int)items.size();
+      SelectGifByUnread();
+      m_frameIndex = 0;
+      if (m_activeGif && m_activeGif->FrameCount() > 0) {
+        KillTimer(m_hWnd, m_timerId);
+        SetTimer(m_hWnd, m_timerId, m_activeGif->GetDelayMs(0), nullptr);
+      }
       if (m_bubble) {
         m_bubble->SetItems(items);
         // If visible, re-show to refresh content/size
@@ -116,10 +129,10 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     return HTCAPTION;
   }
   case WM_TIMER:
-    if (wParam == m_timerId && m_gif.FrameCount() > 0) {
-      m_frameIndex = (m_frameIndex + 1) % m_gif.FrameCount();
+    if (wParam == m_timerId && m_activeGif && m_activeGif->FrameCount() > 0) {
+      m_frameIndex = (m_frameIndex + 1) % m_activeGif->FrameCount();
       KillTimer(hWnd, m_timerId);
-      SetTimer(hWnd, m_timerId, m_gif.GetDelayMs(m_frameIndex), nullptr);
+      SetTimer(hWnd, m_timerId, m_activeGif->GetDelayMs(m_frameIndex), nullptr);
       Render();
     }
     return 0;
@@ -178,15 +191,15 @@ void BallWindow::Render() {
   m_pRT->CreateLayer(nullptr, &layer);
   m_pRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), geo), layer);
 
-  if (m_gif.FrameCount() > 0) {
+  if (m_activeGif && m_activeGif->FrameCount() > 0) {
     IWICFormatConverter* conv = nullptr;
-    if (m_gif.CreateConvertedFrame(m_pWIC, m_frameIndex, &conv)) {
+    if (m_activeGif->CreateConvertedFrame(m_pWIC, m_frameIndex, &conv)) {
       ID2D1Bitmap* bmp = nullptr;
       if (SUCCEEDED(m_pRT->CreateBitmapFromWicBitmap(conv, nullptr, &bmp))) {
         const float tw = (float)m_diameter;
         const float th = (float)m_diameter;
-        const float gw = (float)m_gif.Width();
-        const float gh = (float)m_gif.Height();
+        const float gw = (float)m_activeGif->Width();
+        const float gh = (float)m_activeGif->Height();
         // Cover fit: scale to cover circle
         float scale = max(tw / gw, th / gh);
         float dw = gw * scale;
@@ -230,6 +243,22 @@ void BallWindow::OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam) {
                prcNew->right - prcNew->left, prcNew->bottom - prcNew->top,
                SWP_NOZORDER | SWP_NOACTIVATE);
   // Recreate DIB for new size if needed (omitted for brevity)
+}
+
+void BallWindow::SelectGifByUnread() {
+  m_activeGif = (m_unreadCount > 0) ? &m_gifDynamic : &m_gifUnread;
+}
+
+void BallWindow::OpenMainApp() {
+  // Find Flutter main window and show/focus
+  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"chat_desktop");
+  if (!hwndMain) hwndMain = FindWindowW(nullptr, L"chat_desktop");
+  if (hwndMain) {
+    ShowWindow(hwndMain, SW_SHOWNORMAL);
+    SetForegroundWindow(hwndMain);
+    // Optionally hide the floating ball
+    ShowWindow(m_hWnd, SW_HIDE);
+  }
 }
 
 void BallWindow::EnsureBubble() {

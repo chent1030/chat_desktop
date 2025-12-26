@@ -26,6 +26,9 @@ private:
   void PresentLayered();
 
   void OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam);
+  void LoadGifs();
+  void SelectGifByUnread();
+  void OpenMainApp();
 
 private:
   HINSTANCE m_hInst{};
@@ -33,7 +36,10 @@ private:
   int m_diameter{120};
   UINT m_frameIndex{0};
   UINT m_timerId{1};
-  GifPlayer m_gif;
+  GifPlayer m_gifUnread;
+  GifPlayer m_gifDynamic;
+  GifPlayer* m_activeGif{nullptr};
+  int m_unreadCount{0};
   HWND m_hwndBubble{nullptr};
   std::unique_ptr<BubbleWindow> m_bubble;
   void EnsureBubble();

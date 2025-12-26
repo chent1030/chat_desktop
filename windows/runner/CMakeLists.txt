@@ -56,3 +56,13 @@ add_custom_command(
     "$<TARGET_FILE_DIR:${BINARY_NAME}>/app_icon.ico"
   COMMENT "Copying static_logo.ico for tray manager"
 )
+
+# Copy floating GIF assets (used by native floating window)
+add_custom_command(
+  TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../dynamic_logo.gif"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../unread_logo.gif"
+    "$<TARGET_FILE_DIR:${BINARY_NAME}>/"
+  COMMENT "Copying floating GIF assets to Runner directory"
+)
