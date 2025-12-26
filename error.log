@@ -1,6 +1,38 @@
-CMake Error at runner/CMakeLists.txt:46 (add_custom_command):
-  TARGET 'native_floating_ball' was not created in this directory.
+[CRASH] Flutter框架异常: 'package:flutter_riverpod/src/consumer.dart': Failed assertion: line 600 pos 7: 'debugDoingBuild': ref.listen can only be used within the build method of a ConsumerWidget
+Stack trace: #0      _AssertionError._doThrowNew (dart:core-patch/errors_patch.dart:67:4)
+#1      _AssertionError._throwNew (dart:core-patch/errors_patch.dart:49:5)
+#2      ConsumerStatefulElement.listen (package:flutter_riverpod/src/consumer.dart:600:7)
+#3      _HomeScreenState.initState.<anonymous closure> (package:chat_desktop/screens/home_screen.dart:39:11)
+#4      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
+#5      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1361:11)
+#6      SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1057:9)
+#7      PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:906:16)
+#8      _rootRun (dart:async/zone.dart:1517:47)
+#9      _CustomZone.run (dart:async/zone.dart:1422:19)
+#10     _CustomZone.runGuarded (dart:async/zone.dart:1321:7)
+#11     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1362:23)
+#12     _rootRun (dart:async/zone.dart:1525:13)
+#13     _CustomZone.run (dart:async/zone.dart:1422:19)
+#14     _CustomZone.bindCallback.<anonymous closure> (dart:async/zone.dart:1345:23)
+#15     Timer._createTimer.<anonymous closure> (dart:async-patch/timer_patch.dart:18:15)
+#16     _Timer._runTimers (dart:isolate-patch/timer_impl.dart:423:19)
+#17     _Timer._handleMessage (dart:isolate-patch/timer_impl.dart:454:5)
+#18     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
 
+📊 [Provider] loadTasks() 被调用
 
-Building Windows application...                                    104ms
-Error: Unable to generate build files
+══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during a scheduler callback:
+ref.listen can only be used within the build method of a ConsumerWidget
+'package:flutter_riverpod/src/consumer.dart':
+Failed assertion: line 600 pos 7: 'debugDoingBuild'
+
+When the exception was thrown, this was the stack:
+#2      ConsumerStatefulElement.listen (package:flutter_riverpod/src/consumer.dart:600:7)
+#3      _HomeScreenState.initState.<anonymous closure> (package:chat_desktop/screens/home_screen.dart:39:11)
+#4      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
+#5      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1361:11)
+#6      SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1057:9)
+#7      PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:906:16)
+#18     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
+(elided 12 frames from class _AssertionError, class _Timer, dart:async, and dart:async-patch)
