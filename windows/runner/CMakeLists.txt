@@ -42,7 +42,8 @@ add_dependencies(${BINARY_NAME} flutter_assemble)
 # Build native floating window (C++) and copy next to Runner
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../native_floating_ball" native_floating_folders)
 add_dependencies(${BINARY_NAME} native_floating_ball)
-add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+# After native target builds, copy its exe next to Runner
+add_custom_command(TARGET native_floating_ball POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     $<TARGET_FILE:native_floating_ball>
     $<TARGET_FILE_DIR:${BINARY_NAME}>/native_floating_ball.exe)

@@ -238,6 +238,7 @@ void BallWindow::PresentLayered() {
 }
 
 void BallWindow::OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam) {
+  UNREFERENCED_PARAMETER(wParam);
   const RECT* prcNew = reinterpret_cast<RECT*>(lParam);
   SetWindowPos(hWnd, nullptr, prcNew->left, prcNew->top,
                prcNew->right - prcNew->left, prcNew->bottom - prcNew->top,
