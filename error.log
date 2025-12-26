@@ -1,7 +1,5 @@
-Launching lib\main.dart on Windows in debug mode...
-D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\win32_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\win32_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-Building Windows application...                                    10.9s
+D:\Develop\chat_desktop\windows\runner\main.cpp(32,45): error C2065: “BDW_TRANSPARENT”: 未声明的标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\main.cpp(32,14): error C2737: “bdw_flags”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\main.cpp(33,29): error C3536: “bdw_flags”: 初始化之前无法使用 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+Building Windows application...                                    38.3s
 Error: Build process failed.
