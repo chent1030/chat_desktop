@@ -1,5 +1,5 @@
-D:\Develop\chat_desktop\windows\runner\main.cpp(32,45): error C2065: “BDW_TRANSPARENT”: 未声明的标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\main.cpp(32,14): error C2737: “bdw_flags”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\main.cpp(33,29): error C3536: “bdw_flags”: 初始化之前无法使用 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-Building Windows application...                                    38.3s
+Launching lib\main.dart on Windows in debug mode...
+D:\Develop\chat_desktop\windows\runner\main.cpp(32,8): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\main.cpp(32,8): warning C4189: “bdw”: 局部变量已初始化但不引用 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+Building Windows application...                                    12.2s
 Error: Build process failed.
