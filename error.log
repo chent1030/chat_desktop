@@ -1,5 +1,7 @@
-Launching lib\main.dart on Windows in debug mode...
-D:\Develop\chat_desktop\windows\runner\main.cpp(32,8): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\main.cpp(32,8): warning C4189: “bdw”: 局部变量已初始化但不引用 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-Building Windows application...                                    12.2s
+D:\Develop\chat_desktop\windows\native_floating_ball\src\app.cpp(10,11): warning C4189: “hr”: 局部变量已初始化但不引用 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]      
+D:\Develop\chat_desktop\windows\native_floating_ball\src\ball_wnd.cpp(195,42): error C2065: “D2D1_BITMAP_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC”: 未声明的标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\bubble_wnd.cpp(122,15): error C3861: “GET_X_LPARAM”: 找不到标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
+D:\Develop\chat_desktop\windows\native_floating_ball\src\bubble_wnd.cpp(122,37): error C3861: “GET_Y_LPARAM”: 找不到标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
+D:\Develop\chat_desktop\windows\native_floating_ball\src\bubble_wnd.cpp(167,3): error C2065: “m_pRT”: 未声明的标识符 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]        
+Building Windows application...                                    15.1s
 Error: Build process failed.
