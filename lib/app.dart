@@ -141,6 +141,12 @@ class AppTrayListener extends TrayListener {
     } else if (menuItem.key == 'exit_app') {
       // 真正退出应用（不是进入小窗模式）
       print('🔴 [APP] 用户从系统托盘选择退出，正在关闭程序...');
+      // Windows: 先关闭原生悬浮窗（若存在）
+      try {
+        if (Platform.isWindows) {
+          WindowsFloatingIpc.closeFloatingWindow();
+        }
+      } catch (_) {}
       windowManager.destroy();
       exit(0); // 强制退出进程
     }

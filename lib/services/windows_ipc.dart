@@ -40,6 +40,37 @@ class WindowsFloatingIpc {
       calloc.free(className);
     }
   }
+
+  /// Attempts to close the native floating window (and its bubble window) if running.
+  /// Returns true if a window was found and a close message was sent.
+  static bool closeFloatingWindow() {
+    if (!Platform.isWindows) return false;
+    bool closed = false;
+    // Close ball window
+    final clsBall = 'NativeFloatingBallWindow'.toNativeUtf16(allocator: calloc);
+    try {
+      final hwndBall = win32.FindWindow(clsBall, ffi.nullptr);
+      if (hwndBall != 0) {
+        // WM_CLOSE = 0x0010
+        win32.SendMessage(hwndBall, 0x0010, 0, 0);
+        closed = true;
+      }
+    } finally {
+      calloc.free(clsBall);
+    }
+    // Close bubble window if any
+    final clsBubble = 'NativeFloatingBubbleWindow'.toNativeUtf16(allocator: calloc);
+    try {
+      final hwndBubble = win32.FindWindow(clsBubble, ffi.nullptr);
+      if (hwndBubble != 0) {
+        win32.SendMessage(hwndBubble, 0x0010, 0, 0);
+        closed = true;
+      }
+    } finally {
+      calloc.free(clsBubble);
+    }
+    return closed;
+  }
 }
 
 // Minimal struct mirror of Windows COPYDATASTRUCT
