@@ -35,7 +35,7 @@ Future<void> miniWindowMain(List<String> args) async {
       // 延迟以确保子窗口句柄可用
       await Future.delayed(const Duration(milliseconds: 80));
       await windowManager.setAsFrameless();
-      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden, windowButtonVisibility: false);
       await windowManager.setAlwaysOnTop(true);
       await windowManager.setSkipTaskbar(true);
       await windowManager.setResizable(false);
@@ -52,6 +52,19 @@ Future<void> miniWindowMain(List<String> args) async {
         appWindow.show();
       });
     } catch (_) {}
+
+    // 再次尝试数次，确保系统栏被移除（在某些机器上首次调用不生效）
+    int tries = 0;
+    Timer.periodic(const Duration(milliseconds: 180), (t) async {
+      tries++;
+      try {
+        await windowManager.setAsFrameless();
+        await windowManager.setTitleBarStyle(TitleBarStyle.hidden, windowButtonVisibility: false);
+        await windowManager.setHasShadow(false);
+        await windowManager.setResizable(false);
+      } catch (_) {}
+      if (tries >= 10) t.cancel();
+    });
   }
 }
 
@@ -182,13 +195,15 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
         behavior: HitTestBehavior.translucent,
         onDoubleTap: _onDoubleTap,
         child: Center(
-          child: Image.asset(
-            lottieAsset,
-            width: 120,
-            height: 120,
-            fit: BoxFit.contain,
-            gaplessPlayback: true,
-            filterQuality: FilterQuality.high,
+          child: ClipOval(
+            child: Image.asset(
+              lottieAsset,
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.high,
+            ),
           ),
         ),
       ),

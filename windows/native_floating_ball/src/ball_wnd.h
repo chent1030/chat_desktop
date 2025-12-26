@@ -1,0 +1,52 @@
+#pragma once
+#include <windows.h>
+#include <d2d1.h>
+#include <wincodec.h>
+#include <memory>
+#include "gif_player.h"
+#include "bubble_wnd.h"
+
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "windowscodecs.lib")
+
+class BallWindow {
+public:
+  static ATOM Register(HINSTANCE hInst);
+  static HWND Create(HINSTANCE hInst, int x, int y, int diameter);
+
+private:
+  explicit BallWindow(HINSTANCE hInst);
+  ~BallWindow();
+
+  static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+  bool InitializeD2D();
+  void Render();
+  void PresentLayered();
+
+  void OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam);
+
+private:
+  HINSTANCE m_hInst{};
+  HWND m_hWnd{};
+  int m_diameter{120};
+  UINT m_frameIndex{0};
+  UINT m_timerId{1};
+  GifPlayer m_gif;
+  HWND m_hwndBubble{nullptr};
+  std::unique_ptr<BubbleWindow> m_bubble;
+  void EnsureBubble();
+  void ShowBubble();
+  void HideBubble();
+
+  // D2D / WIC
+  ID2D1Factory* m_pD2DFactory{nullptr};
+  ID2D1DCRenderTarget* m_pRT{nullptr};
+  IWICImagingFactory* m_pWIC{nullptr};
+
+  // Back buffer (GDI)
+  HBITMAP m_hDIB{nullptr};
+  HDC m_hMemDC{nullptr};
+  void* m_pBits{nullptr};
+};

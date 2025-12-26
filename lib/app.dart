@@ -10,6 +10,7 @@ import 'widgets/window/mini_window.dart';
 import 'providers/window_provider.dart';
 import 'services/log_service.dart';
 import 'utils/theme.dart';
+import 'services/windows_ipc.dart';
 
 /// 窗口监听器 - 处理窗口关闭事件
 class AppWindowListener extends WindowListener {
@@ -53,7 +54,7 @@ class AppWindowListener extends WindowListener {
         // 等待一小段时间确保悬浮窗已经初始化
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // 使用正确的 API 发送消息给子窗口
+        // 使用正确的 API 发送消息给子窗口（Flutter 悬浮窗）
         await DesktopMultiWindow.invokeMethod(
           window.windowId,
           'update_unread_count',
@@ -76,6 +77,11 @@ class AppWindowListener extends WindowListener {
           taskMaps,
         );
         print('✓ [WINDOW] 未读任务列表已发送，数量: ${taskMaps.length}');
+
+        // Windows: 同步未读任务到原生悬浮窗（如果已启动）
+        if (Platform.isWindows) {
+          WindowsFloatingIpc.sendUnreadTasks(unreadTasks);
+        }
       } catch (e) {
         print('✗ [WINDOW] 发送数据失败: $e');
       }

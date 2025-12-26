@@ -9,6 +9,8 @@ import '../widgets/common/emp_no_dialog.dart';
 import '../services/config_service.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
+import '../services/windows_ipc.dart';
+import 'dart:io' show Platform;
 
 /// HomeScreen - 应用主界面
 class HomeScreen extends ConsumerStatefulWidget {
@@ -31,6 +33,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // 强制初始化TaskListProvider，确保它订阅了所有需要的流
       print('🎯 [HomeScreen] 初始化 TaskListProvider');
       ref.read(taskListProvider);
+
+      // 监听未读任务变化，Windows 下实时同步到原生悬浮窗（不做过滤逻辑，主程序仅发送未读）
+      ref.listen<List<Task>>(unreadTasksProvider, (previous, next) {
+        try {
+          if (Platform.isWindows) {
+            WindowsFloatingIpc.sendUnreadTasks(next);
+          }
+        } catch (_) {}
+      });
+
+      // 初始同步一次（若已存在任务）
+      try {
+        if (Platform.isWindows) {
+          final unread = ref.read(unreadTasksProvider);
+          WindowsFloatingIpc.sendUnreadTasks(unread);
+        }
+      } catch (_) {}
 
       _checkAndInitializeMqtt();
     });

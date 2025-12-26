@@ -60,6 +60,7 @@ dependencies:
 
   # 动画
   lottie: ^3.1.0
+  win32: ^5.5.4
   bitsdojo_window: ^0.1.5
 
 dev_dependencies:
