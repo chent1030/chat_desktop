@@ -7,7 +7,7 @@
 int APIENTRY wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, int) {
   // DPI awareness (Win10): per‑monitor v2
   SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-  HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
   BallWindow::Register(hInst);
   const int diameter = 120;
@@ -25,4 +25,3 @@ int APIENTRY wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, int) {
   CoUninitialize();
   return 0;
 }
-

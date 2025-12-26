@@ -2,6 +2,7 @@
 #include <dwmapi.h>
 #include <uxtheme.h>
 #include <d2d1helper.h>
+#include <windowsx.h>
 #include <string>
 
 #pragma comment(lib, "Dwmapi.lib")
@@ -164,7 +165,7 @@ void BubbleWindow::Render() {
   float opacity = 0.1f + 0.9f * t;
   float scale = 0.96f + 0.04f * t;
   D2D1_MATRIX_3X2_F mat = D2D1::Matrix3x2F::Scale(scale, scale, D2D1::Point2F(0.f, 0.f));
-  m_pRT->SetTransform(mat);
+  m_hwndRT->SetTransform(mat);
 
   // Frosted card (simulated): rounded rect with subtle gradient and inner border
   ID2D1SolidColorBrush* brush = nullptr; m_hwndRT->CreateSolidColorBrush(D2D1::ColorF(1.f,1.f,1.f, 0.12f * opacity), &brush);

@@ -192,7 +192,7 @@ void BallWindow::Render() {
         float dw = gw * scale;
         float dh = gh * scale;
         D2D1_RECT_F dst = D2D1::RectF((tw - dw) / 2.f, (th - dh) / 2.f, (tw - dw) / 2.f + dw, (th - dh) / 2.f + dh);
-        m_pRT->DrawBitmap(bmp, dst, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC);
+        m_pRT->DrawBitmap(bmp, dst, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
         bmp->Release();
       }
       conv->Release();
