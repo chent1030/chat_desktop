@@ -30,6 +30,20 @@ class WindowsFloatingHelper {
       try {
         final file = File(p).absolute;
         if (await file.exists()) {
+          // Ensure GIF assets present beside target exe; copy from Runner dir if missing
+          try {
+            final runnerDir = File(Platform.resolvedExecutable).parent.path;
+            final gif1 = File('$runnerDir\\dynamic_logo.gif');
+            final gif2 = File('$runnerDir\\unread_logo.gif');
+            final targetDir = file.parent.path;
+            if (await gif1.exists() && !await File('$targetDir\\dynamic_logo.gif').exists()) {
+              await gif1.copy('$targetDir\\dynamic_logo.gif');
+            }
+            if (await gif2.exists() && !await File('$targetDir\\unread_logo.gif').exists()) {
+              await gif2.copy('$targetDir\\unread_logo.gif');
+            }
+          } catch (_) {}
+
           await Process.start(file.path, const [], runInShell: true);
           return true;
         }

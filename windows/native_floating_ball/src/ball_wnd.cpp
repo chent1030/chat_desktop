@@ -251,9 +251,9 @@ void BallWindow::SelectGifByUnread() {
 }
 
 void BallWindow::OpenMainApp() {
-  // Find Flutter main window and show/focus
-  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"chat_desktop");
-  if (!hwndMain) hwndMain = FindWindowW(nullptr, L"chat_desktop");
+  // Find Flutter main window by class (title may vary/localized)
+  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", nullptr);
+  if (!hwndMain) hwndMain = FindWindowW(nullptr, nullptr);
   if (hwndMain) {
     ShowWindow(hwndMain, SW_SHOWNORMAL);
     SetForegroundWindow(hwndMain);

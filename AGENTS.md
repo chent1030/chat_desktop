@@ -1,52 +1,44 @@
 # Repository Guidelines
 
-This guide helps contributors work efficiently on the Chat Desktop (Flutter) app. Keep changes focused, small, and testable.
-
 ## Project Structure & Module Organization
-- `lib/` — main source code
-  - `main.dart`, `app.dart`, `mini_window_entry.dart`
-  - `models/` (data classes, generated `*.g.dart`)
-  - `providers/` (state via Provider)
-  - `services/` (API, MQTT, AI adapters, storage, logging)
-  - `screens/`, `widgets/`, `utils/`
-- `assets/` — images, animations, static files
-- `test/` — `unit_test/`, `widget_test/`, `integration_test/`
-- Platform: `macos/`, `windows/`
-- Config: `.env` (copy from `.env.example`, do not commit secrets)
+- Flutter app: `lib/` (Dart sources), `assets/`, `test/`, platform folders (`windows/`, `macos/`, `linux/`).
+- Windows runner: `windows/runner/` (Flutter host app).
+- Native floating window (Win10+): `windows/native_floating_ball/` (C++ WIC/D2D, Acrylic bubble, IPC).
+- Icons/media: e.g. `assets/static_logo.ico`, `dynamic_logo.gif`, `unread_logo.gif`.
 
 ## Build, Test, and Development Commands
 - Install deps: `flutter pub get`
-- Run (auto‑detect device): `flutter run`
-- Run macOS: `flutter run -d macos`
-- Run Windows: `flutter run -d windows`
-- Analyze lints: `flutter analyze`
-- Format: `dart format .`
+- Run (macOS): `flutter run -d macos`
+- Run (Windows): `flutter run -d windows`
+- Build (Windows): `flutter build windows`
 - Tests: `flutter test`
-- Coverage: `flutter test --coverage`
-- Release builds: `flutter build macos --release` or `flutter build windows --release`
+- Native floating window (standalone debug, optional):
+  - `cmake -S windows/native_floating_ball -B build -G Ninja`
+  - `cmake --build build --config Debug`
 
 ## Coding Style & Naming Conventions
-- Dart style, 2‑space indent, single quotes preferred.
-- Follow `analysis_options.yaml` (enabled rules include: `prefer_single_quotes`, `prefer_const_*`, `avoid_print`, `prefer_relative_imports`, etc.).
-- Naming: `UpperCamelCase` classes, `lowerCamelCase` methods/vars, `SCREAMING_SNAKE_CASE` consts.
-- Prefer relative imports inside `lib/`.
+- Dart: 2‑space indent; types `UpperCamelCase`, members `lowerCamelCase`, files `snake_case.dart`.
+- Prefer domain names over DB-reserved terms (e.g., use `taskId`/`taskUuid` not bare `uuid`).
+- Run formatter: `dart format .`; keep imports ordered; avoid one‑letter vars.
+- C++: follow existing patterns; classes `PascalCase`, methods `lowerCamelCase`, files `snake_case.cpp/h`.
 
 ## Testing Guidelines
-- Framework: `flutter_test`; place tests under `test/` with `*_test.dart` names.
-- Keep tests fast and deterministic; mock external services (e.g., MQTT, HTTP, AI adapters).
-- Aim to cover providers, services, and critical widgets.
-- Run `flutter test` locally before opening a PR.
+- Unit/widget tests live in `test/` mirroring `lib/` paths.
+- Name tests `*_test.dart`; keep fast and deterministic.
+- Run locally with `flutter test`; add screenshots only to PR description, not to repo.
 
 ## Commit & Pull Request Guidelines
-- Commits: short imperative summary (≤ 50 chars), optional body for rationale; English or Chinese OK, be consistent. Reference issues (e.g., `Fixes #123`).
-- PRs must include:
-  - Purpose and scope, notable design decisions
-  - How to test (commands, steps, target platform)
-  - Screenshots/GIFs for UI changes
-  - Linked issues and risk/rollback notes
+- Conventional commits: `feat:`, `fix:`, `refactor:`, `build(windows):`, `chore:`.
+- PRs must include: purpose, linked issues, platform(s) affected, reproduction steps, and before/after screenshots or a short clip for UI.
+- For Windows issues, attach relevant snippets from `error.log` and the failing MSBuild/CMake lines.
 
 ## Security & Configuration Tips
-- Never commit secrets. Use `.env` and document required keys in `.env.example`.
-- Avoid `print`; use `services/log_service.dart`.
-- Network/API keys should be read via `services/config_service.dart`.
+- MQTT credentials via environment variables (do not commit): `MQTT_USERNAME`, `MQTT_PASSWORD`.
+- Platform launch helpers should read env at runtime; avoid hardcoding secrets.
+- Keep media next to the executable when required by native code (e.g., `dynamic_logo.gif`, `unread_logo.gif`).
+
+## Platform Notes
+- Windows floating window: frameless, transparent, draggable, top‑most; communicates with main app via IPC.
+- macOS/Windows UI parity: avoid OS‑only features without graceful fallbacks.
+- App icon: use `assets/static_logo.ico` for Windows runner.
 

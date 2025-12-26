@@ -197,9 +197,9 @@ int BubbleWindow::HitTest(POINT pt) const {
 }
 
 void BubbleWindow::SendOpenTaskToMain(const std::wstring& idStr) {
-  // Find Flutter main window if present; class name from runner is FLUTTER_RUNNER_WIN32_WINDOW
-  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"chat_desktop");
-  if (!hwndMain) hwndMain = FindWindowW(nullptr, L"chat_desktop");
+  // Find Flutter main window by class (title may vary)
+  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", nullptr);
+  if (!hwndMain) hwndMain = FindWindowW(nullptr, nullptr);
   if (!hwndMain) return;
   std::wstring payload = L"{\"action\":\"open_task\",\"taskId\":" + idStr + L"}";
   COPYDATASTRUCT cds{}; cds.dwData = 2; // OPEN_TASK
