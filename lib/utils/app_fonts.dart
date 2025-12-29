@@ -3,6 +3,7 @@ class AppFonts {
   static const String keyDefault = 'default';
   static const String keyNotoSansSC = 'NotoSansSC';
   static const String keyLXGWWenKai = 'LXGWWenKai';
+  static const String keySourceHanSansSC = 'SourceHanSansSC';
 
   static const List<AppFontOption> options = [
     AppFontOption(
@@ -14,6 +15,11 @@ class AppFonts {
       key: keyNotoSansSC,
       label: 'Noto Sans SC',
       family: 'NotoSansSC',
+    ),
+    AppFontOption(
+      key: keySourceHanSansSC,
+      label: '思源黑体（Source Han Sans SC）',
+      family: 'SourceHanSansSC',
     ),
     AppFontOption(
       key: keyLXGWWenKai,

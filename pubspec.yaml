@@ -95,6 +95,9 @@ flutter:
     - family: LXGWWenKai
       fonts:
         - asset: assets/fonts/LXGWWenKai-Regular.ttf
+    - family: SourceHanSansSC
+      fonts:
+        - asset: assets/fonts/SourceHanSansSC-Regular.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

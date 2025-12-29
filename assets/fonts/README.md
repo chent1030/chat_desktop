@@ -6,7 +6,11 @@
 - 下载页（Google Fonts）：https://fonts.google.com/noto/specimen/Noto+Sans+SC
 - 建议放置文件：`assets/fonts/NotoSansSC-Regular.ttf`
 
-### 2) 霞鹜文楷（LXGW WenKai，开源）
+### 2) 思源黑体（Source Han Sans SC，开源）
+- Releases：https://github.com/adobe-fonts/source-han-sans/releases
+- 建议放置文件：`assets/fonts/SourceHanSansSC-Regular.otf`
+
+### 3) 霞鹜文楷（LXGW WenKai，开源）
 - Releases：https://github.com/lxgw/LxgwWenKai/releases
 - 建议放置文件：`assets/fonts/LXGWWenKai-Regular.ttf`
 
@@ -14,4 +18,3 @@
 1. 确认 `pubspec.yaml` 已配置对应 fonts（项目已预置配置，文件名需匹配）。
 2. 执行 `flutter pub get`
 3. 重新 `flutter run -d windows` 或 `flutter build windows`
-
