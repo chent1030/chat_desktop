@@ -10,6 +10,7 @@ import 'widgets/window/mini_window.dart';
 import 'providers/window_provider.dart';
 import 'services/log_service.dart';
 import 'utils/theme.dart';
+import 'providers/font_provider.dart';
 import 'services/windows_ipc.dart';
 import 'services/windows_floating_helper.dart';
 
@@ -29,7 +30,8 @@ class AppWindowListener extends WindowListener {
       // Windows: 优先使用原生悬浮窗
       if (Platform.isWindows) {
         final unreadTasks = ref.read(unreadTasksProvider);
-        final started = await WindowsFloatingHelper.launchFloatingAndSync(unreadTasks);
+        final started =
+            await WindowsFloatingHelper.launchFloatingAndSync(unreadTasks);
         if (started) {
           await windowManager.hide();
           await LogService.instance.info('已启动原生悬浮窗并隐藏主窗口', tag: 'WINDOW');
@@ -47,8 +49,9 @@ class AppWindowListener extends WindowListener {
       // 设置悬浮窗属性
       // 预留右侧气泡显示空间（避免被窗口边界裁剪）
       const double bubbleWidth = 280; // 与子窗口 UI 中的 _bubbleWidth 保持一致
-      await window.setFrame(const Offset(100, 100) & const Size(120 + 10 + bubbleWidth, 120));
-      await window.setTitle('');  // 空标题
+      await window.setFrame(
+          const Offset(100, 100) & const Size(120 + 10 + bubbleWidth, 120));
+      await window.setTitle(''); // 空标题
       await window.center();
 
       // 关键设置：移除标题栏和边框
@@ -64,7 +67,8 @@ class AppWindowListener extends WindowListener {
       try {
         final unreadCount = ref.read(unreadBadgeCountProvider);
         final unreadTasks = ref.read(unreadTasksProvider);
-        print('📤 [WINDOW] 发送未读任务数给悬浮窗: $unreadCount, 窗口ID: ${window.windowId}');
+        print(
+            '📤 [WINDOW] 发送未读任务数给悬浮窗: $unreadCount, 窗口ID: ${window.windowId}');
 
         // 等待一小段时间确保悬浮窗已经初始化
         await Future.delayed(const Duration(milliseconds: 500));
@@ -78,13 +82,15 @@ class AppWindowListener extends WindowListener {
         print('✓ [WINDOW] 未读任务数已发送');
 
         // 发送未读任务列表（转换为 Map 列表）
-        final taskMaps = unreadTasks.map((task) => {
-          'id': task.id,
-          'title': task.title,
-          'description': task.description,
-          'isCompleted': task.isCompleted,
-          'isRead': task.isRead,
-        }).toList();
+        final taskMaps = unreadTasks
+            .map((task) => {
+                  'id': task.id,
+                  'title': task.title,
+                  'description': task.description,
+                  'isCompleted': task.isCompleted,
+                  'isRead': task.isRead,
+                })
+            .toList();
 
         await DesktopMultiWindow.invokeMethod(
           window.windowId,
@@ -192,9 +198,10 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final fontFamily = ref.watch(appFontFamilyProvider);
     return MaterialApp(
       title: '芯服务',
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.lightTheme(fontFamily: fontFamily),
       debugShowCheckedModeBanner: false,
       home: const HomeScreen(),
     );

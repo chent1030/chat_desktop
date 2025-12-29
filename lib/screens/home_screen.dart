@@ -7,6 +7,8 @@ import '../widgets/tasks/task_form.dart';
 import '../widgets/chat/chat_view.dart';
 import '../widgets/common/emp_no_dialog.dart';
 import '../services/config_service.dart';
+import '../providers/font_provider.dart';
+import '../utils/app_fonts.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
 import '../services/windows_ipc.dart';
@@ -99,7 +101,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: _buildAppBar(theme, taskListState, isWideScreen),
-      body: isWideScreen ? _buildWideScreenLayout() : _buildNarrowScreenLayout(),
+      body:
+          isWideScreen ? _buildWideScreenLayout() : _buildNarrowScreenLayout(),
       // 浮动按钮仅在窄屏任务列表页面显示
       floatingActionButton: (!isWideScreen && _selectedIndex == 0)
           ? FloatingActionButton.extended(
@@ -192,6 +195,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     TaskListState state,
     bool isWideScreen,
   ) {
+    final currentFontKey = ref.watch(appFontKeyProvider);
     return AppBar(
       elevation: 0,
       backgroundColor: theme.colorScheme.surface,
@@ -227,6 +231,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )
           : null,
       actions: [
+        PopupMenuButton<String>(
+          tooltip: '字体',
+          icon: const Icon(Icons.text_fields, size: 20),
+          onSelected: (key) async {
+            await ref.read(appFontKeyProvider.notifier).setFontKey(key);
+            if (!context.mounted) return;
+            final label = AppFonts.optionForKey(key).label;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('已切换字体：$label')),
+            );
+          },
+          itemBuilder: (context) {
+            return AppFonts.options
+                .map(
+                  (o) => PopupMenuItem<String>(
+                    value: o.key,
+                    child: Row(
+                      children: [
+                        Icon(
+                          o.key == currentFontKey
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                o.label,
+                                style: TextStyle(fontFamily: o.family),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '示例：中文 ABC 123',
+                                style: TextStyle(
+                                  fontFamily: o.family,
+                                  fontSize: 12,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.65),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(growable: false);
+          },
+        ),
         // 更多菜单（合并搜索和清除功能）
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 20),

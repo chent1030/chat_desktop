@@ -38,18 +38,12 @@ class AppTheme {
   static const double spacingXl = 32.0;
 
   // Light主题
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme({String? fontFamily}) {
     final isWindows = defaultTargetPlatform == TargetPlatform.windows;
     return ThemeData(
       useMaterial3: true,
-      // Windows 下使用微软雅黑，提升中文显示效果
-      fontFamily: isWindows ? 'Microsoft YaHei UI' : null,
-      fontFamilyFallback: isWindows
-          ? const [
-              'Microsoft YaHei',
-              'Segoe UI',
-            ]
-          : null,
+      // Windows 下支持选择开源字体（未选择时使用默认字体）
+      fontFamily: isWindows ? fontFamily : null,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         secondary: secondaryColor,
@@ -131,7 +125,7 @@ class AppTheme {
 
   // Dark主题（未来扩展）
   static ThemeData get darkTheme {
-    return lightTheme.copyWith(
+    return lightTheme().copyWith(
       brightness: Brightness.dark,
     );
   }

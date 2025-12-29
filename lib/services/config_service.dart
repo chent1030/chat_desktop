@@ -126,8 +126,7 @@ class ConfigService {
   /// 获取窗口大小
   Map<String, double>? get windowSize {
     final width = _prefs.getDouble('${AppConstants.prefKeyWindowSize}_width');
-    final height =
-        _prefs.getDouble('${AppConstants.prefKeyWindowSize}_height');
+    final height = _prefs.getDouble('${AppConstants.prefKeyWindowSize}_height');
 
     if (width != null && height != null) {
       return {'width': width, 'height': height};
@@ -143,10 +142,8 @@ class ConfigService {
 
   /// 获取小窗口位置
   Map<String, double>? get miniWindowPosition {
-    final x =
-        _prefs.getDouble('${AppConstants.prefKeyMiniWindowPosition}_x');
-    final y =
-        _prefs.getDouble('${AppConstants.prefKeyMiniWindowPosition}_y');
+    final x = _prefs.getDouble('${AppConstants.prefKeyMiniWindowPosition}_x');
+    final y = _prefs.getDouble('${AppConstants.prefKeyMiniWindowPosition}_y');
 
     if (x != null && y != null) {
       return {'x': x, 'y': y};
@@ -194,6 +191,16 @@ class ConfigService {
   /// 清除工号
   Future<void> clearEmpNo() async {
     await _prefs.remove(AppConstants.prefKeyEmpNo);
+  }
+
+  /// 获取字体Key（default / NotoSansSC / LXGWWenKai）
+  String get fontKey {
+    return _prefs.getString(AppConstants.prefKeyFontKey) ?? 'default';
+  }
+
+  /// 设置字体Key
+  Future<void> setFontKey(String key) async {
+    await _prefs.setString(AppConstants.prefKeyFontKey, key);
   }
 
   /// 清除所有配置（用于测试或重置）

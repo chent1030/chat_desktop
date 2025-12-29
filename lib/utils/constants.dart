@@ -20,7 +20,15 @@ class AppConstants {
   // WebSocket配置
   static const int websocketHeartbeatInterval = 30; // 秒
   static const int websocketReconnectMaxAttempts = 10;
-  static const List<int> websocketReconnectDelays = [0, 2, 4, 8, 16, 32, 60]; // 秒
+  static const List<int> websocketReconnectDelays = [
+    0,
+    2,
+    4,
+    8,
+    16,
+    32,
+    60
+  ]; // 秒
   static const int websocketTimeout = 30; // 秒
 
   // AI服务配置
@@ -52,6 +60,7 @@ class AppConstants {
   static const String prefKeyLastSeenTaskTimestamp = 'last_seen_task_timestamp';
   static const String prefKeyDeviceId = 'device_id';
   static const String prefKeyEmpNo = 'emp_no'; // 用户工号
+  static const String prefKeyFontKey = 'font_key'; // 字体选择
 
   // 环境变量键名
   static const String envKeyOpenAIApiKey = 'OPENAI_API_KEY';
@@ -77,8 +86,10 @@ class AppConstants {
   static String? get dingTalkPathWindows => dotenv.env['DINGTALK_PATH_WINDOWS'];
 
   // API端点
-  static const String openAIEndpoint = 'https://api.openai.com/v1/chat/completions';
-  static const String anthropicEndpoint = 'https://api.anthropic.com/v1/messages';
+  static const String openAIEndpoint =
+      'https://api.openai.com/v1/chat/completions';
+  static const String anthropicEndpoint =
+      'https://api.anthropic.com/v1/messages';
 
   // 预设AI智能体ID
   static const String agentIdGPT4 = 'gpt-4';

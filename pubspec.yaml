@@ -87,6 +87,15 @@ flutter:
     - unread_logo.gif
     - assets/static_logo.ico
 
+  # 开源字体（请将字体文件放到 assets/fonts/ 下，文件名需与此处一致）
+  fonts:
+    - family: NotoSansSC
+      fonts:
+        - asset: assets/fonts/NotoSansSC-Regular.ttf
+    - family: LXGWWenKai
+      fonts:
+        - asset: assets/fonts/LXGWWenKai-Regular.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

@@ -7,10 +7,20 @@ import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:window_manager/window_manager.dart'
     show windowManager, TitleBarStyle;
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'services/config_service.dart';
+import 'utils/app_fonts.dart';
 
 // 悬浮窗入口
 Future<void> miniWindowMain(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 读取字体配置（不影响悬浮窗启动，失败则用默认字体）
+  try {
+    await ConfigService.instance.initialize();
+    _miniWindowFontFamily = AppFonts.familyForKey(
+      ConfigService.instance.fontKey,
+    );
+  } catch (_) {}
 
   // 注册窗口间消息
   DesktopMultiWindow.setMethodHandler((call, fromWindowId) async {
@@ -78,6 +88,8 @@ final unreadCountController = StreamController<int>.broadcast();
 final unreadTasksController =
     StreamController<List<Map<String, dynamic>>>.broadcast();
 
+String? _miniWindowFontFamily;
+
 class MiniWindowApp extends StatelessWidget {
   const MiniWindowApp({super.key});
   @override
@@ -86,14 +98,7 @@ class MiniWindowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        // Windows 下使用微软雅黑，保持与主程序一致
-        fontFamily: Platform.isWindows ? 'Microsoft YaHei UI' : null,
-        fontFamilyFallback: Platform.isWindows
-            ? const [
-                'Microsoft YaHei',
-                'Segoe UI',
-              ]
-            : null,
+        fontFamily: Platform.isWindows ? _miniWindowFontFamily : null,
         scaffoldBackgroundColor: Colors.transparent,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
