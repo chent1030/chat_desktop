@@ -90,6 +90,17 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case WM_COPYDATA: {
+      // 接收来自原生悬浮窗的控制消息（例如：从托盘隐藏状态恢复主窗口）
+      auto cds = reinterpret_cast<COPYDATASTRUCT*>(lparam);
+      if (cds && cds->dwData == 3) { // 3 = RESTORE_MAIN_WINDOW
+        ShowWindow(hwnd, SW_SHOW);
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+        return 0;
+      }
+      break;
+    }
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;

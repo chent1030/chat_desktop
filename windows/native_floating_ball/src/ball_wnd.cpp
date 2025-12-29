@@ -8,6 +8,68 @@
 #pragma comment(lib, "Shcore.lib")
 
 static const wchar_t* kBallClass = L"NativeFloatingBallWindow";
+static const wchar_t* kFlutterMainClass = L"FLUTTER_RUNNER_WIN32_WINDOW";
+
+static HWND FindFlutterMainWindow() {
+  struct Ctx {
+    HWND found{nullptr};
+  } ctx;
+  EnumWindows(
+      [](HWND hWnd, LPARAM lp) -> BOOL {
+        auto* c = reinterpret_cast<Ctx*>(lp);
+        wchar_t cls[256]{0};
+        if (GetClassNameW(hWnd, cls, (int)(sizeof(cls) / sizeof(cls[0])))) {
+          if (wcscmp(cls, kFlutterMainClass) == 0) {
+            c->found = hWnd;
+            return FALSE; // stop
+          }
+        }
+        return TRUE; // continue
+      },
+      reinterpret_cast<LPARAM>(&ctx));
+  return ctx.found;
+}
+
+static void ActivateToForeground(HWND hWnd) {
+  if (!hWnd || !IsWindow(hWnd)) return;
+
+  // 确保窗口可见（很多情况下主程序是 hide 而不是 minimize）
+  ShowWindow(hWnd, SW_SHOW);
+  ShowWindow(hWnd, SW_RESTORE);
+
+  // 提升到顶层并请求前台
+  SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+  // 解决跨进程 SetForegroundWindow 可能失败的问题：临时绑定输入队列
+  const DWORD selfThread = GetCurrentThreadId();
+  DWORD targetThread = 0;
+  GetWindowThreadProcessId(hWnd, &targetThread);
+  const HWND hFore = GetForegroundWindow();
+  DWORD foreThread = 0;
+  if (hFore) GetWindowThreadProcessId(hFore, &foreThread);
+
+  if (targetThread) AttachThreadInput(selfThread, targetThread, TRUE);
+  if (foreThread) AttachThreadInput(selfThread, foreThread, TRUE);
+
+  SetForegroundWindow(hWnd);
+  SetActiveWindow(hWnd);
+  SetFocus(hWnd);
+  BringWindowToTop(hWnd);
+
+  if (targetThread) AttachThreadInput(selfThread, targetThread, FALSE);
+  if (foreThread) AttachThreadInput(selfThread, foreThread, FALSE);
+}
+
+static void SendRestoreRequest(HWND hWnd) {
+  if (!hWnd || !IsWindow(hWnd)) return;
+  // 约定：dwData=3 表示“恢复主窗口”（由 Runner 进程自行 Show/Restore/Foreground）
+  const wchar_t* payload = L"restore_main_window";
+  COPYDATASTRUCT cds{};
+  cds.dwData = 3;
+  cds.cbData = (DWORD)((wcslen(payload) + 1) * sizeof(wchar_t));
+  cds.lpData = (PVOID)payload;
+  SendMessageW(hWnd, WM_COPYDATA, 0, (LPARAM)&cds);
+}
 
 ATOM BallWindow::Register(HINSTANCE hInst) {
   WNDCLASSEX wc{ sizeof(WNDCLASSEX) };
@@ -279,12 +341,13 @@ void BallWindow::SelectGifByUnread() {
 }
 
 void BallWindow::OpenMainApp() {
-  // 仅按 Flutter Runner 的窗口类名查找，避免误命中其它窗口导致“点了没反应还把悬浮球隐藏了”
-  HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", nullptr);
+  // 有些情况下 FindWindow 会找不到（多窗口/不同线程创建），这里改为枚举顶层窗口更稳。
+  HWND hwndMain = FindFlutterMainWindow();
   if (!hwndMain) return;
 
-  ShowWindow(hwndMain, SW_RESTORE);
-  SetForegroundWindow(hwndMain);
+  // 先让主程序自己从托盘隐藏状态恢复（跨进程前台激活限制更少）
+  SendRestoreRequest(hwndMain);
+  ActivateToForeground(hwndMain);
   // 打开主程序后隐藏悬浮球（如需保留可删除此行）
   ShowWindow(m_hWnd, SW_HIDE);
 }
