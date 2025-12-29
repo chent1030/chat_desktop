@@ -68,6 +68,9 @@ class AppConstants {
       int.tryParse(dotenv.env['MQTT_BROKER_PORT'] ?? '1883') ?? 1883;
   static String? get mqttUsername => dotenv.env['MQTT_USERNAME'];
   static String? get mqttPassword => dotenv.env['MQTT_PASSWORD'];
+  // MQTT 会话过期（秒），用于MQTT5持久会话；若未设置，使用Broker默认（例如 EMQX 配置）
+  static int get mqttSessionExpirySeconds =>
+      int.tryParse(dotenv.env['MQTT_SESSION_EXPIRY_SECONDS'] ?? '') ?? 0;
 
   // External app paths (Windows overrides)
   static String? get outlookPathWindows => dotenv.env['OUTLOOK_PATH_WINDOWS'];

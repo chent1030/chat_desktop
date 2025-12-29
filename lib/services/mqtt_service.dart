@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart' as
 import '../models/task.dart';
 import 'task_service.dart';
 import 'log_service.dart';
+import '../utils/constants.dart';
 
 /// MQTT服务连接状态枚举
 enum MqttServiceState {
@@ -185,8 +186,9 @@ class MqttService {
 
       print('🆕 [MQTT] 创建新的MQTT 5.0客户端实例...');
 
-      // ⚠️ 关键：使用时间戳确保Client ID唯一，避免sessionTakenOver
-      final String clientId = 'chat_desktop_${empNo}_${DateTime.now().millisecondsSinceEpoch}';
+      // ⚠️ 关键（持久会话）：使用稳定的 Client ID 以启用服务器端会话持久化和离线消息排队
+      // 注意：同一时间只能有一个客户端使用同一 Client ID，否则后连者会踢掉先前会话
+      final String clientId = 'chat_desktop_${empNo}';
 
       // 创建MQTT 5.0客户端
       _client = MqttServerClient(broker, clientId);
@@ -207,10 +209,13 @@ class MqttService {
       // 设置连接消息
       final connectionMessage = MqttConnectMessage()
           .withClientIdentifier(clientId) // 使用与client相同的ID
-          .startClean() // ⚠️ 始终Clean Start=true，匹配MQTTX行为
+          .startSession(sessionExpiryInterval: 604800) // 非持久会话
           .keepAliveFor(60);
 
-      print('🔧 [MQTT] Clean Start = true');
+      print('🔧 [MQTT] Clean Start = false（持久会话）');
+      // 提示：EMQX 已配置 Session Expiry（你当前为 168 小时），客户端侧不再强制设置，
+      // 以避免因 mqtt5_client 版本差异导致的编译问题。如需显式设置，请告知当前
+      // mqtt5_client 的可用 API（connect properties 字段名），我再补上兼容实现。
 
       // 认证
       if (username != null && username.isNotEmpty) {
@@ -270,7 +275,7 @@ class MqttService {
   /// 订阅Topic
   void _subscribeToTopics(String empNo) {
     // 订阅个人所有待办相关消息 (使用通配符)
-    final personalTopic = 'mqtt_app/tasks/$empNo/#';
+    final personalTopic = 'mqtt_app/tasks/$empNo/+/+';
     _client!.subscribe(personalTopic, MqttQos.atLeastOnce);
     print('📬 [MQTT] 已订阅: $personalTopic');
   }
