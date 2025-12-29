@@ -1,20 +1,4 @@
-Launching lib\main.dart on Windows in debug mode...
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\ball_wnd.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,14): error C2737: “maxW”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,14): error C2737: “maxH”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]        
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,14): error C2737: “maxW”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj] 
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]        
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
-D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,14): error C2737: “maxH”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj] 
-Building Windows application...                                    51.3s
+D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
+Building Windows application...                                     8.4s
 Error: Build process failed.
