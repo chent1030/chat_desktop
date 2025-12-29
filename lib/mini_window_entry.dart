@@ -4,7 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
-import 'package:window_manager/window_manager.dart' show windowManager, TitleBarStyle;
+import 'package:window_manager/window_manager.dart'
+    show windowManager, TitleBarStyle;
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 // 悬浮窗入口
@@ -17,7 +18,9 @@ Future<void> miniWindowMain(List<String> args) async {
       unreadCountController.add(call.arguments as int);
     } else if (call.method == 'update_unread_tasks') {
       final raw = call.arguments as List;
-      final tasks = raw.map((e) => Map<String, dynamic>.from(e as Map)).toList(growable: false);
+      final tasks = raw
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(growable: false);
       unreadTasksController.add(tasks);
     }
   });
@@ -35,7 +38,8 @@ Future<void> miniWindowMain(List<String> args) async {
       // 延迟以确保子窗口句柄可用
       await Future.delayed(const Duration(milliseconds: 80));
       await windowManager.setAsFrameless();
-      await windowManager.setTitleBarStyle(TitleBarStyle.hidden, windowButtonVisibility: false);
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden,
+          windowButtonVisibility: false);
       await windowManager.setAlwaysOnTop(true);
       await windowManager.setSkipTaskbar(true);
       await windowManager.setResizable(false);
@@ -59,7 +63,8 @@ Future<void> miniWindowMain(List<String> args) async {
       tries++;
       try {
         await windowManager.setAsFrameless();
-        await windowManager.setTitleBarStyle(TitleBarStyle.hidden, windowButtonVisibility: false);
+        await windowManager.setTitleBarStyle(TitleBarStyle.hidden,
+            windowButtonVisibility: false);
         await windowManager.setHasShadow(false);
         await windowManager.setResizable(false);
       } catch (_) {}
@@ -70,7 +75,8 @@ Future<void> miniWindowMain(List<String> args) async {
 
 // 跨 Widget 的数据流
 final unreadCountController = StreamController<int>.broadcast();
-final unreadTasksController = StreamController<List<Map<String, dynamic>>>.broadcast();
+final unreadTasksController =
+    StreamController<List<Map<String, dynamic>>>.broadcast();
 
 class MiniWindowApp extends StatelessWidget {
   const MiniWindowApp({super.key});
@@ -80,6 +86,14 @@ class MiniWindowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        // Windows 下使用微软雅黑，保持与主程序一致
+        fontFamily: Platform.isWindows ? 'Microsoft YaHei UI' : null,
+        fontFamilyFallback: Platform.isWindows
+            ? const [
+                'Microsoft YaHei',
+                'Segoe UI',
+              ]
+            : null,
         scaffoldBackgroundColor: Colors.transparent,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
@@ -118,8 +132,10 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
   @override
   void initState() {
     super.initState();
-    _cSub = unreadCountController.stream.listen((v) => setState(() => _unreadCount = v));
-    _tSub = unreadTasksController.stream.listen((v) => setState(() => _unreadTasks = v));
+    _cSub = unreadCountController.stream
+        .listen((v) => setState(() => _unreadCount = v));
+    _tSub = unreadTasksController.stream
+        .listen((v) => setState(() => _unreadTasks = v));
   }
 
   @override
@@ -154,7 +170,8 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
 
   @override
   Widget build(BuildContext context) {
-    final lottieAsset = _unreadCount > 0 ? 'dynamic_logo.gif' : 'unread_logo.gif';
+    final lottieAsset =
+        _unreadCount > 0 ? 'dynamic_logo.gif' : 'unread_logo.gif';
     return Material(
       type: MaterialType.transparency,
       child: MouseRegion(
@@ -179,10 +196,13 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
         child: Platform.isWindows
             ? WindowTitleBarBox(
                 child: MoveWindow(
-                  child: Stack(clipBehavior: Clip.none, children: _stackChildren(lottieAsset)),
+                  child: Stack(
+                      clipBehavior: Clip.none,
+                      children: _stackChildren(lottieAsset)),
                 ),
               )
-            : Stack(clipBehavior: Clip.none, children: _stackChildren(lottieAsset)),
+            : Stack(
+                clipBehavior: Clip.none, children: _stackChildren(lottieAsset)),
       ),
     );
   }
@@ -228,7 +248,8 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
               child: Container(
-                constraints: BoxConstraints(maxWidth: _bubbleWidth, maxHeight: 400),
+                constraints:
+                    BoxConstraints(maxWidth: _bubbleWidth, maxHeight: 400),
                 // 全透明背景，仅保留高斯模糊以提升可读性
                 color: Colors.transparent,
                 child: Column(
@@ -240,7 +261,8 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.notifications_active, color: Colors.white, size: 16),
+                          const Icon(Icons.notifications_active,
+                              color: Colors.white, size: 16),
                           const SizedBox(width: 6),
                           Text(
                             '未读待办 (' + _unreadCount.toString() + ')',
@@ -253,29 +275,47 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: Color.fromARGB(60, 255, 255, 255)),
+                    const Divider(
+                        height: 1, color: Color.fromARGB(60, 255, 255, 255)),
                     Flexible(
                       child: ListView.separated(
                         shrinkWrap: true,
                         padding: const EdgeInsets.all(8),
-                        itemCount: _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1, color: Color.fromARGB(40, 255, 255, 255)),
+                        itemCount:
+                            _unreadTasks.length > 5 ? 5 : _unreadTasks.length,
+                        separatorBuilder: (context, index) => const Divider(
+                            height: 1,
+                            color: Color.fromARGB(40, 255, 255, 255)),
                         itemBuilder: (context, index) {
                           final task = _unreadTasks[index];
                           return ListTile(
                             dense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            leading: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-                            title: Text(task['title'] ?? '无标题', style: const TextStyle(fontSize: 13, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            leading: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                    color: Colors.red, shape: BoxShape.circle)),
+                            title: Text(task['title'] ?? '无标题',
+                                style: const TextStyle(
+                                    fontSize: 13, color: Colors.white),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis),
                             onTap: () async {
                               try {
-                                await DesktopMultiWindow.invokeMethod(0, 'open_task', {
+                                await DesktopMultiWindow.invokeMethod(
+                                    0, 'open_task', {
                                   'id': task['id']?.toString(),
                                 });
                               } catch (_) {}
                             },
                             subtitle: task['description'] != null
-                                ? Text(task['description'], style: const TextStyle(fontSize: 11, color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis)
+                                ? Text(task['description'],
+                                    style: const TextStyle(
+                                        fontSize: 11, color: Colors.white70),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis)
                                 : null,
                           );
                         },
@@ -284,7 +324,10 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
                     if (_unreadTasks.length > 5)
                       const Padding(
                         padding: EdgeInsets.all(8),
-                        child: Center(child: Text('还有更多…', style: TextStyle(fontSize: 11, color: Colors.white70))),
+                        child: Center(
+                            child: Text('还有更多…',
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.white70))),
                       ),
                   ],
                 ),

@@ -6,17 +6,20 @@ import '../../providers/task_provider.dart';
 import 'task_detail.dart';
 import '../../services/task_service.dart';
 
+enum _TaskItemMenuAction {
+  detail,
+  dispatch,
+}
+
 /// TaskItem widget - 显示单个任务的卡片组件
 class TaskItem extends ConsumerWidget {
   final Task task;
-  final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const TaskItem({
     super.key,
     required this.task,
-    this.onTap,
     this.onEdit,
     this.onDelete,
   });
@@ -31,14 +34,12 @@ class TaskItem extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: task.isCompleted
-              ? Colors.grey.shade300
-              : Colors.grey.shade200,
+          color: task.isCompleted ? Colors.grey.shade300 : Colors.grey.shade200,
           width: 1,
         ),
       ),
       child: InkWell(
-        onTap: onTap ?? () => _onTapDefault(context, ref),
+        onTap: () => _markAsRead(context, ref),
         onLongPress: () => _showContextMenu(context, ref),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -80,10 +81,12 @@ class TaskItem extends ConsumerWidget {
                           duration: const Duration(milliseconds: 220),
                           switchInCurve: Curves.easeOut,
                           switchOutCurve: Curves.easeIn,
-                          transitionBuilder: (child, animation) => FadeTransition(
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
                             opacity: animation,
                             child: ScaleTransition(
-                              scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                              scale: Tween<double>(begin: 0.85, end: 1.0)
+                                  .animate(animation),
                               child: child,
                             ),
                           ),
@@ -103,6 +106,8 @@ class TaskItem extends ConsumerWidget {
                                   ),
                                 ),
                         ),
+                        const SizedBox(width: 6),
+                        _buildTopRightMenu(context, ref),
                       ],
                     ),
 
@@ -136,18 +141,57 @@ class TaskItem extends ConsumerWidget {
     );
   }
 
-  Future<void> _onTapDefault(BuildContext context, WidgetRef ref) async {
+  Future<void> _markAsRead(BuildContext context, WidgetRef ref) async {
     try {
       await TaskService.instance.markTaskAsRead(task.id);
       // 立即刷新列表以获得即时动画反馈
       // Isar watch 也会触发，但这里主动刷新可更快反馈
-      // ignore: use_build_context_synchronously
       await ref.read(taskListProvider.notifier).loadTasks();
     } catch (_) {}
+  }
 
-    // 展示详情
-    if (!context.mounted) return;
-    await TaskDetailDialog.show(context, task);
+  Widget _buildTopRightMenu(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<_TaskItemMenuAction>(
+      tooltip: '更多',
+      icon: Icon(Icons.more_horiz, size: 18, color: Colors.grey.shade700),
+      onSelected: (action) async {
+        switch (action) {
+          case _TaskItemMenuAction.detail:
+            await _markAsRead(context, ref);
+            if (!context.mounted) return;
+            await TaskDetailDialog.show(context, task);
+            return;
+          case _TaskItemMenuAction.dispatch:
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('开发中,请等待...')),
+            );
+            return;
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: _TaskItemMenuAction.detail,
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 18),
+              SizedBox(width: 8),
+              Text('详情'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: _TaskItemMenuAction.dispatch,
+          child: Row(
+            children: [
+              Icon(Icons.send_outlined, size: 18),
+              SizedBox(width: 8),
+              Text('任务派发'),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   /// 构建完成状态复选框
@@ -155,9 +199,7 @@ class TaskItem extends ConsumerWidget {
     return Checkbox(
       value: task.isCompleted,
       onChanged: (value) async {
-        await ref
-            .read(taskListProvider.notifier)
-            .toggleTaskCompletion(task.id);
+        await ref.read(taskListProvider.notifier).toggleTaskCompletion(task.id);
       },
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(4),
@@ -380,9 +422,7 @@ class TaskItem extends ConsumerWidget {
                 if (confirmed && onDelete != null) {
                   onDelete?.call();
                 } else if (confirmed) {
-                  await ref
-                      .read(taskListProvider.notifier)
-                      .deleteTask(task.id);
+                  await ref.read(taskListProvider.notifier).deleteTask(task.id);
                 }
               },
             ),

@@ -8,13 +8,11 @@ import 'task_item.dart';
 
 /// TaskList widget - 显示任务列表
 class TaskList extends ConsumerStatefulWidget {
-  final VoidCallback? onTaskTap;
   final Function(Task)? onTaskEdit;
   final Function(Task)? onTaskDelete;
 
   const TaskList({
     super.key,
-    this.onTaskTap,
     this.onTaskEdit,
     this.onTaskDelete,
   });
@@ -207,7 +205,6 @@ class _TaskListState extends ConsumerState<TaskList> {
           return TaskItem(
             key: ValueKey(task.id),
             task: task,
-            onTap: widget.onTaskTap,
             onEdit: widget.onTaskEdit != null
                 ? () => widget.onTaskEdit!(task)
                 : null,

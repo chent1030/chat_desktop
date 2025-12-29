@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class AppTheme {
   // 主色调
@@ -38,8 +39,17 @@ class AppTheme {
 
   // Light主题
   static ThemeData get lightTheme {
+    final isWindows = defaultTargetPlatform == TargetPlatform.windows;
     return ThemeData(
       useMaterial3: true,
+      // Windows 下使用微软雅黑，提升中文显示效果
+      fontFamily: isWindows ? 'Microsoft YaHei UI' : null,
+      fontFamilyFallback: isWindows
+          ? const [
+              'Microsoft YaHei',
+              'Segoe UI',
+            ]
+          : null,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         secondary: secondaryColor,
