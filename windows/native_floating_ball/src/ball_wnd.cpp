@@ -2,6 +2,7 @@
 #include <dwmapi.h>
 #include <shellscalingapi.h>
 #include <cassert>
+#include <algorithm>
 
 #pragma comment(lib, "Dwmapi.lib")
 #pragma comment(lib, "Shcore.lib")
@@ -199,7 +200,7 @@ void BallWindow::Render() {
         const float gw = (float)m_activeGif->Width();
         const float gh = (float)m_activeGif->Height();
         // Cover fit: scale to cover circle
-        float scale = max(tw / gw, th / gh);
+        float scale = (std::max)(tw / gw, th / gh);
         float dw = gw * scale;
         float dh = gh * scale;
         D2D1_RECT_F dst = D2D1::RectF((tw - dw) / 2.f, (th - dh) / 2.f, (tw - dw) / 2.f + dw, (th - dh) / 2.f + dh);

@@ -59,8 +59,8 @@ static void BlendPremultipliedBGRA(
   const UINT canvasStride = canvasW * 4u;
   const UINT srcStride = srcW * 4u;
 
-  const UINT maxW = std::min(srcW, (left < canvasW) ? (canvasW - left) : 0u);
-  const UINT maxH = std::min(srcH, (top < canvasH) ? (canvasH - top) : 0u);
+  const UINT maxW = (std::min)(srcW, (left < canvasW) ? (canvasW - left) : 0u);
+  const UINT maxH = (std::min)(srcH, (top < canvasH) ? (canvasH - top) : 0u);
   if (maxW == 0 || maxH == 0) return;
 
   for (UINT y = 0; y < maxH; ++y) {
@@ -103,8 +103,8 @@ static void ClearRectPremultipliedBGRA(
     UINT width,
     UINT height) {
   const UINT canvasStride = canvasW * 4u;
-  const UINT maxW = std::min(width, (left < canvasW) ? (canvasW - left) : 0u);
-  const UINT maxH = std::min(height, (top < canvasH) ? (canvasH - top) : 0u);
+  const UINT maxW = (std::min)(width, (left < canvasW) ? (canvasW - left) : 0u);
+  const UINT maxH = (std::min)(height, (top < canvasH) ? (canvasH - top) : 0u);
   if (maxW == 0 || maxH == 0) return;
 
   for (UINT y = 0; y < maxH; ++y) {

@@ -22,5 +22,6 @@ target_link_libraries(native_floating_ball
 )
 
 if (MSVC)
-  target_compile_options(native_floating_ball PRIVATE /W4 /permissive-)
+  target_compile_definitions(native_floating_ball PRIVATE NOMINMAX)
+  target_compile_options(native_floating_ball PRIVATE /W4 /permissive- /utf-8)
 endif()

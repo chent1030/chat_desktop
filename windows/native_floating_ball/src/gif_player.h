@@ -1,4 +1,8 @@
 #pragma once
+// 避免 Windows 头文件定义 min/max 宏，导致 std::min/std::max 编译报错
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <wincodec.h>
 #include <vector>
 #include <string>
