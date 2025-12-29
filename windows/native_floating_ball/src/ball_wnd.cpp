@@ -81,6 +81,9 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     HideBubble(); return 0;
   case WM_LBUTTONDBLCLK:
     OpenMainApp(); return 0;
+  case WM_NCLBUTTONDBLCLK:
+    // 当前窗口在 WM_NCHITTEST 中返回 HTCAPTION，双击会走非客户区消息
+    OpenMainApp(); return 0;
   case WM_COPYDATA: {
     // Accept UPDATE_TASKS from external sender: dwData=1, payload = L"<id> <title>\n..."
     auto cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
@@ -275,15 +278,14 @@ void BallWindow::SelectGifByUnread() {
 }
 
 void BallWindow::OpenMainApp() {
-  // Find Flutter main window by class (title may vary/localized)
+  // 仅按 Flutter Runner 的窗口类名查找，避免误命中其它窗口导致“点了没反应还把悬浮球隐藏了”
   HWND hwndMain = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", nullptr);
-  if (!hwndMain) hwndMain = FindWindowW(nullptr, nullptr);
-  if (hwndMain) {
-    ShowWindow(hwndMain, SW_RESTORE);
-    SetForegroundWindow(hwndMain);
-    // Optionally hide the floating ball
-    ShowWindow(m_hWnd, SW_HIDE);
-  }
+  if (!hwndMain) return;
+
+  ShowWindow(hwndMain, SW_RESTORE);
+  SetForegroundWindow(hwndMain);
+  // 打开主程序后隐藏悬浮球（如需保留可删除此行）
+  ShowWindow(m_hWnd, SW_HIDE);
 }
 
 void BallWindow::EnsureBubble() {

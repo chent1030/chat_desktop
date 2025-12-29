@@ -19,8 +19,8 @@ public:
   UINT Height() const { return m_height; }
 
 private:
-  std::vector<IWICBitmapFrameDecode*> m_frames;
+  // 预合成后的整帧（已按 GIF 的 FrameRect/Disposal 规则叠加），用于直接绘制。
+  std::vector<IWICBitmap*> m_frames;
   std::vector<UINT> m_delaysMs;
   UINT m_width{0}, m_height{0};
 };
-
