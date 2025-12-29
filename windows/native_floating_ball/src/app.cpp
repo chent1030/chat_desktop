@@ -11,7 +11,8 @@ int APIENTRY wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, int) {
 
   BallWindow::Register(hInst);
   const int diameter = 120;
-  HWND hWnd = BallWindow::Create(hInst, 100, 100, diameter);
+  // 初始位置由悬浮窗内部计算（固定右下角），这里的 x/y 仅作占位
+  HWND hWnd = BallWindow::Create(hInst, 0, 0, diameter);
   if (!hWnd) return -1;
   ShowWindow(hWnd, SW_SHOWNOACTIVATE);
   UpdateWindow(hWnd);

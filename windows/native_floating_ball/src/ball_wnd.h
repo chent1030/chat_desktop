@@ -3,6 +3,7 @@
 #include <d2d1.h>
 #include <wincodec.h>
 #include <memory>
+#include <string>
 #include "gif_player.h"
 #include "bubble_wnd.h"
 
@@ -26,6 +27,12 @@ private:
   void PresentLayered();
 
   void OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam);
+  void PositionBottomRight();
+  void PositionInitial();
+  bool LoadSavedPosition(POINT* ptOut);
+  void SaveCurrentPosition();
+  void ClampToWorkArea(POINT* ptInOut);
+  std::wstring GetSettingsPath() const;
   void LoadGifs();
   void SelectGifByUnread();
   void OpenMainApp();

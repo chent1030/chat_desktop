@@ -1,14 +1,20 @@
 #include "ball_wnd.h"
 #include <dwmapi.h>
 #include <shellscalingapi.h>
+#include <shlobj.h>
 #include <cassert>
 #include <algorithm>
+#include <fstream>
 
 #pragma comment(lib, "Dwmapi.lib")
 #pragma comment(lib, "Shcore.lib")
 
 static const wchar_t* kBallClass = L"NativeFloatingBallWindow";
 static const wchar_t* kFlutterMainClass = L"FLUTTER_RUNNER_WIN32_WINDOW";
+
+struct BallCreateParams {
+  int diameter{120};
+};
 
 static HWND FindFlutterMainWindow() {
   struct Ctx {
@@ -82,11 +88,13 @@ ATOM BallWindow::Register(HINSTANCE hInst) {
 }
 
 HWND BallWindow::Create(HINSTANCE hInst, int x, int y, int diameter) {
+  BallCreateParams params{};
+  params.diameter = diameter;
   HWND hWnd = CreateWindowEx(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED,
       kBallClass, L"", WS_POPUP,
       x, y, diameter, diameter,
-      nullptr, nullptr, hInst, nullptr);
+      nullptr, nullptr, hInst, &params);
   return hWnd;
 }
 
@@ -105,6 +113,10 @@ LRESULT CALLBACK BallWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     auto cs = reinterpret_cast<CREATESTRUCT*>(lParam);
     self = new BallWindow(cs->hInstance);
     self->m_hWnd = hWnd;
+    if (cs->lpCreateParams) {
+      auto* p = reinterpret_cast<BallCreateParams*>(cs->lpCreateParams);
+      self->m_diameter = p->diameter;
+    }
     SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     return DefWindowProc(hWnd, msg, wParam, lParam);
   }
@@ -122,7 +134,7 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   switch (msg) {
   case WM_CREATE: {
     // Layered per-pixel alpha, click-through disabled (we need interactivity)
-    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+    PositionInitial();
     InitializeD2D();
     // Load GIFs (with fallbacks)
     LoadGifs();
@@ -185,6 +197,15 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   }
   case WM_DPICHANGED:
     OnDpiChanged(hWnd, wParam, lParam); return 0;
+  case WM_DISPLAYCHANGE:
+  case WM_SETTINGCHANGE:
+    // 分辨率/缩放/任务栏位置变化后，重新贴右下角
+    PositionBottomRight();
+    return 0;
+  case WM_EXITSIZEMOVE:
+    // 用户拖拽结束后保存位置，下次启动自动回放
+    SaveCurrentPosition();
+    return 0;
   case WM_NCHITTEST: {
     // 必须返回 HTCLIENT，否则鼠标事件会走非客户区消息（WM_NC*），导致 WM_MOUSEMOVE 等不触发，
     // 表现为“悬停/点击没反应”。拖拽在 WM_LBUTTONDOWN 中手动触发。
@@ -208,6 +229,88 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     Render(); return 0;
   }
   return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+std::wstring BallWindow::GetSettingsPath() const {
+  PWSTR appData = nullptr;
+  std::wstring path;
+  if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &appData)) && appData) {
+    path = appData;
+    CoTaskMemFree(appData);
+    path += L"\\chat_desktop";
+    CreateDirectoryW(path.c_str(), nullptr);
+    path += L"\\native_floating_ball_pos.txt";
+  }
+  return path;
+}
+
+bool BallWindow::LoadSavedPosition(POINT* ptOut) {
+  if (!ptOut) return false;
+  const std::wstring path = GetSettingsPath();
+  if (path.empty()) return false;
+
+  std::wifstream in(path);
+  if (!in.is_open()) return false;
+  long x = 0, y = 0;
+  in >> x >> y;
+  if (!in.good()) return false;
+  ptOut->x = (LONG)x;
+  ptOut->y = (LONG)y;
+  return true;
+}
+
+void BallWindow::SaveCurrentPosition() {
+  if (!m_hWnd) return;
+  const std::wstring path = GetSettingsPath();
+  if (path.empty()) return;
+
+  RECT wr{};
+  if (!GetWindowRect(m_hWnd, &wr)) return;
+  std::wofstream out(path, std::ios::trunc);
+  if (!out.is_open()) return;
+  out << wr.left << L" " << wr.top;
+}
+
+void BallWindow::ClampToWorkArea(POINT* ptInOut) {
+  if (!ptInOut) return;
+  // 以目标点所在显示器为准；若不在任何显示器上，则用最近的显示器
+  const HMONITOR mon = MonitorFromPoint(*ptInOut, MONITOR_DEFAULTTONEAREST);
+  MONITORINFO mi{ sizeof(mi) };
+  if (!GetMonitorInfoW(mon, &mi)) return;
+
+  const int minX = mi.rcWork.left;
+  const int minY = mi.rcWork.top;
+  const int maxX = mi.rcWork.right - m_diameter;
+  const int maxY = mi.rcWork.bottom - m_diameter;
+
+  if (ptInOut->x < minX) ptInOut->x = minX;
+  if (ptInOut->y < minY) ptInOut->y = minY;
+  if (ptInOut->x > maxX) ptInOut->x = maxX;
+  if (ptInOut->y > maxY) ptInOut->y = maxY;
+}
+
+void BallWindow::PositionInitial() {
+  POINT pt{};
+  if (LoadSavedPosition(&pt)) {
+    ClampToWorkArea(&pt);
+    SetWindowPos(m_hWnd, HWND_TOPMOST, pt.x, pt.y, m_diameter, m_diameter, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    return;
+  }
+  PositionBottomRight();
+}
+
+void BallWindow::PositionBottomRight() {
+  if (!m_hWnd) return;
+  const HMONITOR mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+  MONITORINFO mi{ sizeof(mi) };
+  if (!GetMonitorInfoW(mon, &mi)) return;
+
+  const UINT dpi = GetDpiForWindow(m_hWnd);
+  const int margin = MulDiv(18, (int)dpi, 96); // 距离右下角的边距（可按体验调整）
+  const int x = mi.rcWork.right - m_diameter - margin;
+  const int y = mi.rcWork.bottom - m_diameter - margin;
+
+  SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, m_diameter, m_diameter, SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
 bool BallWindow::InitializeD2D() {
@@ -312,6 +415,7 @@ void BallWindow::OnDpiChanged(HWND hWnd, WPARAM wParam, LPARAM lParam) {
                prcNew->right - prcNew->left, prcNew->bottom - prcNew->top,
                SWP_NOZORDER | SWP_NOACTIVATE);
   // Recreate DIB for new size if needed (omitted for brevity)
+  PositionBottomRight();
 }
 
 void BallWindow::LoadGifs() {

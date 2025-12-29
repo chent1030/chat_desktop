@@ -18,7 +18,7 @@ add_executable(native_floating_ball WIN32
 target_include_directories(native_floating_ball PRIVATE src)
 
 target_link_libraries(native_floating_ball
-  PRIVATE d2d1 dwrite windowscodecs Dwmapi user32 gdi32 ole32 oleaut32
+  PRIVATE d2d1 dwrite windowscodecs Dwmapi user32 gdi32 ole32 oleaut32 shell32
 )
 
 if (MSVC)
