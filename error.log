@@ -1,38 +1,20 @@
-[CRASH] Flutter框架异常: 'package:flutter_riverpod/src/consumer.dart': Failed assertion: line 600 pos 7: 'debugDoingBuild': ref.listen can only be used within the build method of a ConsumerWidget
-Stack trace: #0      _AssertionError._doThrowNew (dart:core-patch/errors_patch.dart:67:4)
-#1      _AssertionError._throwNew (dart:core-patch/errors_patch.dart:49:5)
-#2      ConsumerStatefulElement.listen (package:flutter_riverpod/src/consumer.dart:600:7)
-#3      _HomeScreenState.initState.<anonymous closure> (package:chat_desktop/screens/home_screen.dart:39:11)
-#4      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
-#5      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1361:11)
-#6      SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1057:9)
-#7      PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:906:16)
-#8      _rootRun (dart:async/zone.dart:1517:47)
-#9      _CustomZone.run (dart:async/zone.dart:1422:19)
-#10     _CustomZone.runGuarded (dart:async/zone.dart:1321:7)
-#11     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1362:23)
-#12     _rootRun (dart:async/zone.dart:1525:13)
-#13     _CustomZone.run (dart:async/zone.dart:1422:19)
-#14     _CustomZone.bindCallback.<anonymous closure> (dart:async/zone.dart:1345:23)
-#15     Timer._createTimer.<anonymous closure> (dart:async-patch/timer_patch.dart:18:15)
-#16     _Timer._runTimers (dart:isolate-patch/timer_impl.dart:423:19)
-#17     _Timer._handleMessage (dart:isolate-patch/timer_impl.dart:454:5)
-#18     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
-
-📊 [Provider] loadTasks() 被调用
-
-══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during a scheduler callback:
-ref.listen can only be used within the build method of a ConsumerWidget
-'package:flutter_riverpod/src/consumer.dart':
-Failed assertion: line 600 pos 7: 'debugDoingBuild'
-
-When the exception was thrown, this was the stack:
-#2      ConsumerStatefulElement.listen (package:flutter_riverpod/src/consumer.dart:600:7)
-#3      _HomeScreenState.initState.<anonymous closure> (package:chat_desktop/screens/home_screen.dart:39:11)
-#4      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
-#5      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1361:11)
-#6      SchedulerBinding.scheduleWarmUpFrame.<anonymous closure> (package:flutter/src/scheduler/binding.dart:1057:9)
-#7      PlatformDispatcher.scheduleWarmUpFrame.<anonymous closure> (dart:ui/platform_dispatcher.dart:906:16)
-#18     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:193:12)
-(elided 12 frames from class _AssertionError, class _Timer, dart:async, and dart:async-patch)
+Launching lib\main.dart on Windows in debug mode...
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\ball_wnd.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(62,14): error C2737: “maxW”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(63,14): error C2737: “maxH”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]  
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]        
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(106,14): error C2737: “maxW”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj] 
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,26): error C2589: “(”:“::”右边的非法标记 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]        
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,26): error C2059: 语法错误:“)” [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj]
+D:\Develop\chat_desktop\windows\native_floating_ball\src\gif_player.cpp(107,14): error C2737: “maxH”: 必须初始化 const 对象 [D:\Develop\chat_desktop\build\windows\x64\runner\native_floating_folders\native_floating_ball.vcxproj] 
+Building Windows application...                                    51.3s
+Error: Build process failed.
