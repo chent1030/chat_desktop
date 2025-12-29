@@ -186,8 +186,15 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   case WM_DPICHANGED:
     OnDpiChanged(hWnd, wParam, lParam); return 0;
   case WM_NCHITTEST: {
-    // Draggable by default
-    return HTCAPTION;
+    // 必须返回 HTCLIENT，否则鼠标事件会走非客户区消息（WM_NC*），导致 WM_MOUSEMOVE 等不触发，
+    // 表现为“悬停/点击没反应”。拖拽在 WM_LBUTTONDOWN 中手动触发。
+    return HTCLIENT;
+  }
+  case WM_LBUTTONDOWN: {
+    // 手动进入系统拖拽（保持 HTCLIENT 的同时支持拖动窗口）
+    ReleaseCapture();
+    SendMessageW(hWnd, WM_NCLBUTTONDOWN, HTCAPTION, lParam);
+    return 0;
   }
   case WM_TIMER:
     if (wParam == m_timerId && m_activeGif && m_activeGif->FrameCount() > 0) {
