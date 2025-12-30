@@ -23,6 +23,7 @@ private:
   LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
   bool InitializeD2D();
+  bool CreateRenderTarget(D2D1_RENDER_TARGET_TYPE type);
   void Render();
   void PresentLayered();
 
@@ -33,6 +34,11 @@ private:
   void SaveCurrentPosition();
   void ClampToWorkArea(POINT* ptInOut);
   std::wstring GetSettingsPath() const;
+  std::wstring GetLogPath() const;
+  void LogLine(const std::wstring& line) const;
+  void LogHr(const wchar_t* where, HRESULT hr) const;
+  void LogLastError(const wchar_t* where) const;
+  void EnsureBorderlessStyle();
   void LoadGifs();
   void SelectGifByUnread();
   void OpenMainApp();
@@ -57,6 +63,7 @@ private:
   ID2D1Factory* m_pD2DFactory{nullptr};
   ID2D1DCRenderTarget* m_pRT{nullptr};
   IWICImagingFactory* m_pWIC{nullptr};
+  D2D1_RENDER_TARGET_TYPE m_rtType{D2D1_RENDER_TARGET_TYPE_SOFTWARE};
 
   // Back buffer (GDI)
   HBITMAP m_hDIB{nullptr};

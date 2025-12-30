@@ -5,12 +5,19 @@
 #include <cassert>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 #pragma comment(lib, "Dwmapi.lib")
 #pragma comment(lib, "Shcore.lib")
 
 static const wchar_t* kBallClass = L"NativeFloatingBallWindow";
 static const wchar_t* kFlutterMainClass = L"FLUTTER_RUNNER_WIN32_WINDOW";
+
+static std::wstring HrToString(HRESULT hr) {
+  std::wstringstream ss;
+  ss << L"0x" << std::hex << (unsigned long)hr;
+  return ss.str();
+}
 
 struct BallCreateParams {
   int diameter{120};
@@ -135,6 +142,7 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   case WM_CREATE: {
     // Layered per-pixel alpha, click-through disabled (we need interactivity)
     PositionInitial();
+    EnsureBorderlessStyle();
     InitializeD2D();
     // Load GIFs (with fallbacks)
     LoadGifs();
@@ -201,6 +209,7 @@ LRESULT BallWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
   case WM_SETTINGCHANGE:
     // 分辨率/缩放/任务栏位置变化后，重新贴右下角
     PositionBottomRight();
+    EnsureBorderlessStyle();
     return 0;
   case WM_EXITSIZEMOVE:
     // 用户拖拽结束后保存位置，下次启动自动回放
@@ -242,6 +251,65 @@ std::wstring BallWindow::GetSettingsPath() const {
     path += L"\\native_floating_ball_pos.txt";
   }
   return path;
+}
+
+std::wstring BallWindow::GetLogPath() const {
+  std::wstring path = GetSettingsPath();
+  if (path.empty()) return path;
+  const std::wstring suffix = L"native_floating_ball_pos.txt";
+  if (path.size() >= suffix.size() &&
+      path.compare(path.size() - suffix.size(), suffix.size(), suffix) == 0) {
+    path.resize(path.size() - suffix.size());
+    path += L"native_floating_ball.log";
+    return path;
+  }
+  path += L".log";
+  return path;
+}
+
+void BallWindow::LogLine(const std::wstring& line) const {
+  const std::wstring path = GetLogPath();
+  if (path.empty()) return;
+
+  std::wofstream out(path, std::ios::app);
+  if (!out.is_open()) return;
+  out << line << L"\n";
+}
+
+void BallWindow::LogHr(const wchar_t* where, HRESULT hr) const {
+  if (!where) return;
+  std::wstring line = L"[native_floating_ball] ";
+  line += where;
+  line += L" hr=";
+  line += HrToString(hr);
+  LogLine(line);
+}
+
+void BallWindow::LogLastError(const wchar_t* where) const {
+  if (!where) return;
+  const DWORD err = GetLastError();
+  std::wstringstream ss;
+  ss << L"[native_floating_ball] " << where << L" GetLastError=" << err;
+  LogLine(ss.str());
+}
+
+void BallWindow::EnsureBorderlessStyle() {
+  if (!m_hWnd) return;
+
+  LONG_PTR style = GetWindowLongPtrW(m_hWnd, GWL_STYLE);
+  LONG_PTR exStyle = GetWindowLongPtrW(m_hWnd, GWL_EXSTYLE);
+
+  style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+  style |= WS_POPUP;
+
+  exStyle |= (WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST);
+
+  SetWindowLongPtrW(m_hWnd, GWL_STYLE, style);
+  SetWindowLongPtrW(m_hWnd, GWL_EXSTYLE, exStyle);
+
+  SetWindowPos(
+      m_hWnd, nullptr, 0, 0, 0, 0,
+      SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 }
 
 bool BallWindow::LoadSavedPosition(POINT* ptOut) {
@@ -314,40 +382,76 @@ void BallWindow::PositionBottomRight() {
 }
 
 bool BallWindow::InitializeD2D() {
-  HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
-  if (FAILED(hr)) return false;
-  hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pWIC));
-  if (FAILED(hr)) return false;
+  HRESULT hr = S_OK;
+  if (!m_pD2DFactory) {
+    hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
+    if (FAILED(hr)) {
+      LogHr(L"D2D1CreateFactory", hr);
+      return false;
+    }
+  }
+  if (!m_pWIC) {
+    hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pWIC));
+    if (FAILED(hr)) {
+      LogHr(L"CoCreateInstance(WICImagingFactory)", hr);
+      return false;
+    }
+  }
 
   // Create memory DC + DIB
-  HDC hdcScreen = GetDC(nullptr);
-  m_hMemDC = CreateCompatibleDC(hdcScreen);
-  ReleaseDC(nullptr, hdcScreen);
+  if (!m_hMemDC) {
+    HDC hdcScreen = GetDC(nullptr);
+    m_hMemDC = CreateCompatibleDC(hdcScreen);
+    ReleaseDC(nullptr, hdcScreen);
+  }
 
-  BITMAPINFO bi{};
-  bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bi.bmiHeader.biWidth = m_diameter;
-  bi.bmiHeader.biHeight = -m_diameter; // top-down
-  bi.bmiHeader.biPlanes = 1;
-  bi.bmiHeader.biBitCount = 32;
-  bi.bmiHeader.biCompression = BI_RGB;
-  m_hDIB = CreateDIBSection(m_hMemDC, &bi, DIB_RGB_COLORS, &m_pBits, nullptr, 0);
-  SelectObject(m_hMemDC, m_hDIB);
+  if (!m_hDIB) {
+    BITMAPINFO bi{};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = m_diameter;
+    bi.bmiHeader.biHeight = -m_diameter; // top-down
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    m_hDIB = CreateDIBSection(m_hMemDC, &bi, DIB_RGB_COLORS, &m_pBits, nullptr, 0);
+    if (!m_hDIB) {
+      LogLastError(L"CreateDIBSection");
+      return false;
+    }
+    SelectObject(m_hMemDC, m_hDIB);
+  }
+
+  // 为了在部分核显/企业版系统上更稳定，默认使用 SOFTWARE 渲染（悬浮球很小，性能足够）。
+  m_rtType = D2D1_RENDER_TARGET_TYPE_SOFTWARE;
+  return CreateRenderTarget(m_rtType);
+}
+
+bool BallWindow::CreateRenderTarget(D2D1_RENDER_TARGET_TYPE type) {
+  if (!m_pD2DFactory || !m_hMemDC) return false;
+
+  if (m_pRT) {
+    m_pRT->Release();
+    m_pRT = nullptr;
+  }
 
   D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(
-      D2D1_RENDER_TARGET_TYPE_DEFAULT,
+      type,
       D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
       96.f, 96.f);
-  RECT rc{ 0,0,m_diameter,m_diameter };
-  hr = m_pD2DFactory->CreateDCRenderTarget(&props, &m_pRT);
-  if (FAILED(hr)) return false;
-
+  const RECT rc{ 0,0,m_diameter,m_diameter };
+  const HRESULT hr = m_pD2DFactory->CreateDCRenderTarget(&props, &m_pRT);
+  if (FAILED(hr) || !m_pRT) {
+    LogHr(L"CreateDCRenderTarget", hr);
+    return false;
+  }
   m_pRT->BindDC(m_hMemDC, &rc);
   return true;
 }
 
 void BallWindow::Render() {
-  if (!m_pRT) return;
+  if (!m_pRT) {
+    if (!CreateRenderTarget(m_rtType)) return;
+  }
   RECT rc{ 0,0,m_diameter,m_diameter };
   m_pRT->BindDC(m_hMemDC, &rc);
   m_pRT->BeginDraw();
@@ -393,7 +497,14 @@ void BallWindow::Render() {
   layer->Release();
   geo->Release();
 
-  m_pRT->EndDraw();
+  const HRESULT hr = m_pRT->EndDraw();
+  if (FAILED(hr)) {
+    LogHr(L"EndDraw", hr);
+    if (hr == D2DERR_RECREATE_TARGET) {
+      CreateRenderTarget(m_rtType);
+    }
+    return;
+  }
   PresentLayered();
 }
 
@@ -404,7 +515,11 @@ void BallWindow::PresentLayered() {
   RECT wr{}; GetWindowRect(m_hWnd, &wr); ptDst.x = wr.left; ptDst.y = wr.top;
   SIZE sz{ m_diameter, m_diameter };
   BLENDFUNCTION bf{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-  UpdateLayeredWindow(m_hWnd, hdcScreen, &ptDst, &sz, m_hMemDC, &ptSrc, 0, &bf, ULW_ALPHA);
+  const BOOL ok = UpdateLayeredWindow(m_hWnd, hdcScreen, &ptDst, &sz, m_hMemDC, &ptSrc, 0, &bf, ULW_ALPHA);
+  if (!ok) {
+    LogLastError(L"UpdateLayeredWindow");
+    EnsureBorderlessStyle();
+  }
   ReleaseDC(nullptr, hdcScreen);
 }
 
