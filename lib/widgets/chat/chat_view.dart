@@ -165,7 +165,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
         ChatInput(
           onSend: _handleSendMessage,
           isEnabled: !chatState.isStreaming && !chatState.isLoading,
-          hintText: '输入消息... (Cmd/Ctrl+Enter 发送)',
+          hintText: '输入消息... (Enter发送，Shift+Enter换行)',
         ),
       ],
     );

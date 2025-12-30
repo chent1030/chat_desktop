@@ -85,30 +85,47 @@ class _ChatInputState extends State<ChatInput> {
                   width: _focusNode.hasFocus ? 2 : 1,
                 ),
               ),
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                enabled: widget.isEnabled,
-                maxLines: null,
-                textInputAction: TextInputAction.newline,
-                decoration: InputDecoration(
-                  hintText: widget.hintText,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                ),
-                onChanged: (text) {
-                  setState(() {
-                    _isComposing = text.trim().isNotEmpty;
-                  });
-                },
-                onSubmitted: (_) {
+              child: Focus(
+                onKeyEvent: (node, event) {
+                  if (!widget.isEnabled) return KeyEventResult.ignored;
+                  if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+                  final isEnter =
+                      event.logicalKey == LogicalKeyboardKey.enter ||
+                          event.logicalKey == LogicalKeyboardKey.numpadEnter;
+                  if (!isEnter) return KeyEventResult.ignored;
+
+                  // Shift+Enter 换行：交给 TextField 默认行为处理
+                  if (HardwareKeyboard.instance.isShiftPressed) {
+                    return KeyEventResult.ignored;
+                  }
+
+                  // Enter 发送：拦截默认换行
                   if (_isComposing) {
                     _handleSubmit();
                   }
+                  return KeyEventResult.handled;
                 },
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  enabled: widget.isEnabled,
+                  maxLines: null,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                  onChanged: (text) {
+                    setState(() {
+                      _isComposing = text.trim().isNotEmpty;
+                    });
+                  },
+                ),
               ),
             ),
           ),
@@ -120,11 +137,9 @@ class _ChatInputState extends State<ChatInput> {
             enabled: widget.isEnabled,
             onRecordComplete: (audioPath) async {
               try {
-
                 final text = await SpeechToTextService.instance.uploadAndTranscribe(
-                  audioPath,
-                  'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText'
-                );
+                    audioPath,
+                    'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText');
                 _controller.text = text;
                 setState(() {
                   _isComposing = true;
@@ -155,7 +170,7 @@ class _ChatInputState extends State<ChatInput> {
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
             ),
-            tooltip: '发送消息 (Cmd/Ctrl + Enter)',
+            tooltip: '发送消息 (Enter)',
             style: IconButton.styleFrom(
               backgroundColor: _isComposing && widget.isEnabled
                   ? Theme.of(context).colorScheme.primaryContainer
@@ -184,8 +199,7 @@ class ChatInputWithShortcuts extends StatefulWidget {
   });
 
   @override
-  State<ChatInputWithShortcuts> createState() =>
-      _ChatInputWithShortcutsState();
+  State<ChatInputWithShortcuts> createState() => _ChatInputWithShortcutsState();
 }
 
 class _ChatInputWithShortcutsState extends State<ChatInputWithShortcuts> {
