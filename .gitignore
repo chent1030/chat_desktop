@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Ignore all dot-prefixed folders
+**/.*/
+
 # Native (Windows) build artifacts
 windows/native_floating_ball/build/
 
