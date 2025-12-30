@@ -5,15 +5,15 @@ part 'task.g.dart';
 
 /// 任务优先级枚举
 enum Priority {
-  low,    // 0
+  low, // 0
   medium, // 1
-  high,   // 2
+  high, // 2
 }
 
 /// 任务来源枚举
 enum TaskSource {
   manual, // 用户手动创建 - 0
-  ai,     // AI助手创建 - 1
+  ai, // AI助手创建 - 1
 }
 
 /// 任务实体模型
@@ -92,6 +92,9 @@ class Task {
   /// 分配时间
   DateTime? assignedAt;
 
+  /// 是否允许派发（用于控制“任务派发”功能是否可用）
+  late bool allowDispatch;
+
   /// 构造函数
   Task({
     this.id = Isar.autoIncrement,
@@ -114,6 +117,7 @@ class Task {
     this.assignedToType,
     this.assignedBy,
     this.assignedAt,
+    this.allowDispatch = false,
   }) {
     // 如果uuid为null，生成一个新的
     taskUid = uuid ?? const Uuid().v4();
@@ -141,6 +145,7 @@ class Task {
     String? assignedToType,
     String? assignedBy,
     DateTime? assignedAt,
+    bool? allowDispatch,
   }) {
     return Task(
       id: id ?? this.id,
@@ -163,6 +168,7 @@ class Task {
       assignedToType: assignedToType ?? this.assignedToType,
       assignedBy: assignedBy ?? this.assignedBy,
       assignedAt: assignedAt ?? this.assignedAt,
+      allowDispatch: allowDispatch ?? this.allowDispatch,
     );
   }
 
@@ -250,6 +256,7 @@ class Task {
       'assignedToType': assignedToType,
       'assignedBy': assignedBy,
       'assignedAt': formatDateTime(assignedAt),
+      'allowDispatch': allowDispatch,
     };
   }
 
@@ -302,12 +309,13 @@ class Task {
       assignedToType: json['assignedToType'] as String?,
       assignedBy: json['assignedBy'] as String?,
       assignedAt: parseDateTime(json['assignedAt'] as String?),
+      allowDispatch: json['allowDispatch'] as bool? ?? false,
     );
   }
 
   @override
   String toString() {
-    return 'Task(id: $id, taskUid: $taskUid, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate)';
+    return 'Task(id: $id, taskUid: $taskUid, title: $title, priority: $priority, isCompleted: $isCompleted, dueDate: $dueDate, allowDispatch: $allowDispatch)';
   }
 }
 

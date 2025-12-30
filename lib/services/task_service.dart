@@ -30,6 +30,7 @@ class TaskService {
     Priority priority = Priority.medium,
     DateTime? dueDate,
     String? tags,
+    bool allowDispatch = false,
     TaskSource source = TaskSource.manual,
     String? createdByAgentId,
   }) async {
@@ -47,6 +48,7 @@ class TaskService {
       createdByAgentId: createdByAgentId,
       tags: tags,
       isSynced: false,
+      allowDispatch: allowDispatch,
     );
 
     // 保存任务到数据库
@@ -81,9 +83,10 @@ class TaskService {
       TaskActionHelper.createTaskCreated(
         taskId: task.id,
         title: task.title,
-        performedBy: task.source == TaskSource.ai && task.createdByAgentId != null
-            ? task.createdByAgentId!
-            : 'mqtt',
+        performedBy:
+            task.source == TaskSource.ai && task.createdByAgentId != null
+                ? task.createdByAgentId!
+                : 'mqtt',
       ),
     );
 

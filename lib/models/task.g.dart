@@ -17,110 +17,120 @@ const TaskSchema = CollectionSchema(
   name: r'Task',
   id: 2998003626758701373,
   properties: {
-    r'assignedAt': PropertySchema(
+    r'allowDispatch': PropertySchema(
       id: 0,
+      name: r'allowDispatch',
+      type: IsarType.bool,
+    ),
+    r'assignedAt': PropertySchema(
+      id: 1,
       name: r'assignedAt',
       type: IsarType.dateTime,
     ),
     r'assignedBy': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'assignedBy',
       type: IsarType.string,
     ),
     r'assignedTo': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'assignedTo',
       type: IsarType.string,
     ),
     r'assignedToType': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'assignedToType',
       type: IsarType.string,
     ),
     r'completedAt': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'completedAt',
       type: IsarType.dateTime,
     ),
     r'createdAt': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'createdByAgentId': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'createdByAgentId',
       type: IsarType.string,
     ),
     r'description': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'description',
       type: IsarType.string,
     ),
     r'dueDate': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'dueDate',
       type: IsarType.dateTime,
     ),
     r'isCompleted': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isDueSoon': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'isDueSoon',
       type: IsarType.bool,
     ),
     r'isOverdue': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'isOverdue',
       type: IsarType.bool,
     ),
     r'isRead': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'isRead',
       type: IsarType.bool,
     ),
     r'isSynced': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'isSynced',
       type: IsarType.bool,
     ),
     r'lastSyncedAt': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
     r'priority': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'priority',
       type: IsarType.byte,
       enumMap: _TaskpriorityEnumValueMap,
     ),
     r'source': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'source',
       type: IsarType.byte,
       enumMap: _TasksourceEnumValueMap,
     ),
     r'tags': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'tags',
       type: IsarType.string,
     ),
+    r'taskUid': PropertySchema(
+      id: 19,
+      name: r'taskUid',
+      type: IsarType.string,
+    ),
     r'title': PropertySchema(
-      id: 18,
+      id: 20,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 19,
+      id: 21,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'uuid',
       type: IsarType.string,
     )
@@ -131,14 +141,14 @@ const TaskSchema = CollectionSchema(
   deserializeProp: _taskDeserializeProp,
   idName: r'id',
   indexes: {
-    r'uuid': IndexSchema(
-      id: 2134397340427724972,
-      name: r'uuid',
+    r'taskUid': IndexSchema(
+      id: -6909308179907510437,
+      name: r'taskUid',
       unique: true,
       replace: true,
       properties: [
         IndexPropertySchema(
-          name: r'uuid',
+          name: r'taskUid',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -273,6 +283,12 @@ int _taskEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.taskUid;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.title.length * 3;
   {
     final value = object.uuid;
@@ -289,27 +305,29 @@ void _taskSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.assignedAt);
-  writer.writeString(offsets[1], object.assignedBy);
-  writer.writeString(offsets[2], object.assignedTo);
-  writer.writeString(offsets[3], object.assignedToType);
-  writer.writeDateTime(offsets[4], object.completedAt);
-  writer.writeDateTime(offsets[5], object.createdAt);
-  writer.writeString(offsets[6], object.createdByAgentId);
-  writer.writeString(offsets[7], object.description);
-  writer.writeDateTime(offsets[8], object.dueDate);
-  writer.writeBool(offsets[9], object.isCompleted);
-  writer.writeBool(offsets[10], object.isDueSoon);
-  writer.writeBool(offsets[11], object.isOverdue);
-  writer.writeBool(offsets[12], object.isRead);
-  writer.writeBool(offsets[13], object.isSynced);
-  writer.writeDateTime(offsets[14], object.lastSyncedAt);
-  writer.writeByte(offsets[15], object.priority.index);
-  writer.writeByte(offsets[16], object.source.index);
-  writer.writeString(offsets[17], object.tags);
-  writer.writeString(offsets[18], object.title);
-  writer.writeDateTime(offsets[19], object.updatedAt);
-  writer.writeString(offsets[20], object.uuid);
+  writer.writeBool(offsets[0], object.allowDispatch);
+  writer.writeDateTime(offsets[1], object.assignedAt);
+  writer.writeString(offsets[2], object.assignedBy);
+  writer.writeString(offsets[3], object.assignedTo);
+  writer.writeString(offsets[4], object.assignedToType);
+  writer.writeDateTime(offsets[5], object.completedAt);
+  writer.writeDateTime(offsets[6], object.createdAt);
+  writer.writeString(offsets[7], object.createdByAgentId);
+  writer.writeString(offsets[8], object.description);
+  writer.writeDateTime(offsets[9], object.dueDate);
+  writer.writeBool(offsets[10], object.isCompleted);
+  writer.writeBool(offsets[11], object.isDueSoon);
+  writer.writeBool(offsets[12], object.isOverdue);
+  writer.writeBool(offsets[13], object.isRead);
+  writer.writeBool(offsets[14], object.isSynced);
+  writer.writeDateTime(offsets[15], object.lastSyncedAt);
+  writer.writeByte(offsets[16], object.priority.index);
+  writer.writeByte(offsets[17], object.source.index);
+  writer.writeString(offsets[18], object.tags);
+  writer.writeString(offsets[19], object.taskUid);
+  writer.writeString(offsets[20], object.title);
+  writer.writeDateTime(offsets[21], object.updatedAt);
+  writer.writeString(offsets[22], object.uuid);
 }
 
 Task _taskDeserialize(
@@ -319,29 +337,31 @@ Task _taskDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Task(
-    assignedAt: reader.readDateTimeOrNull(offsets[0]),
-    assignedBy: reader.readStringOrNull(offsets[1]),
-    assignedTo: reader.readStringOrNull(offsets[2]),
-    assignedToType: reader.readStringOrNull(offsets[3]),
-    completedAt: reader.readDateTimeOrNull(offsets[4]),
-    createdAt: reader.readDateTime(offsets[5]),
-    createdByAgentId: reader.readStringOrNull(offsets[6]),
-    description: reader.readStringOrNull(offsets[7]),
-    dueDate: reader.readDateTimeOrNull(offsets[8]),
+    allowDispatch: reader.readBoolOrNull(offsets[0]) ?? false,
+    assignedAt: reader.readDateTimeOrNull(offsets[1]),
+    assignedBy: reader.readStringOrNull(offsets[2]),
+    assignedTo: reader.readStringOrNull(offsets[3]),
+    assignedToType: reader.readStringOrNull(offsets[4]),
+    completedAt: reader.readDateTimeOrNull(offsets[5]),
+    createdAt: reader.readDateTime(offsets[6]),
+    createdByAgentId: reader.readStringOrNull(offsets[7]),
+    description: reader.readStringOrNull(offsets[8]),
+    dueDate: reader.readDateTimeOrNull(offsets[9]),
     id: id,
-    isCompleted: reader.readBoolOrNull(offsets[9]) ?? false,
-    isRead: reader.readBoolOrNull(offsets[12]) ?? false,
-    isSynced: reader.readBoolOrNull(offsets[13]) ?? false,
-    lastSyncedAt: reader.readDateTimeOrNull(offsets[14]),
-    priority: _TaskpriorityValueEnumMap[reader.readByteOrNull(offsets[15])] ??
+    isCompleted: reader.readBoolOrNull(offsets[10]) ?? false,
+    isRead: reader.readBoolOrNull(offsets[13]) ?? false,
+    isSynced: reader.readBoolOrNull(offsets[14]) ?? false,
+    lastSyncedAt: reader.readDateTimeOrNull(offsets[15]),
+    priority: _TaskpriorityValueEnumMap[reader.readByteOrNull(offsets[16])] ??
         Priority.medium,
-    source: _TasksourceValueEnumMap[reader.readByteOrNull(offsets[16])] ??
+    source: _TasksourceValueEnumMap[reader.readByteOrNull(offsets[17])] ??
         TaskSource.manual,
-    tags: reader.readStringOrNull(offsets[17]),
-    title: reader.readString(offsets[18]),
-    updatedAt: reader.readDateTime(offsets[19]),
-    uuid: reader.readStringOrNull(offsets[20]),
+    tags: reader.readStringOrNull(offsets[18]),
+    title: reader.readString(offsets[20]),
+    updatedAt: reader.readDateTime(offsets[21]),
+    uuid: reader.readStringOrNull(offsets[22]),
   );
+  object.taskUid = reader.readStringOrNull(offsets[19]);
   return object;
 }
 
@@ -353,48 +373,52 @@ P _taskDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 5:
-      return (reader.readDateTime(offset)) as P;
-    case 6:
       return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 10:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
       return (reader.readBool(offset)) as P;
     case 12:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readBool(offset)) as P;
     case 13:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 14:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 15:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 16:
       return (_TaskpriorityValueEnumMap[reader.readByteOrNull(offset)] ??
           Priority.medium) as P;
-    case 16:
+    case 17:
       return (_TasksourceValueEnumMap[reader.readByteOrNull(offset)] ??
           TaskSource.manual) as P;
-    case 17:
-      return (reader.readStringOrNull(offset)) as P;
     case 18:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 19:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 20:
+      return (reader.readString(offset)) as P;
+    case 21:
+      return (reader.readDateTime(offset)) as P;
+    case 22:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -433,56 +457,56 @@ void _taskAttach(IsarCollection<dynamic> col, Id id, Task object) {
 }
 
 extension TaskByIndex on IsarCollection<Task> {
-  Future<Task?> getByUuid(String? uuid) {
-    return getByIndex(r'uuid', [uuid]);
+  Future<Task?> getByTaskUid(String? taskUid) {
+    return getByIndex(r'taskUid', [taskUid]);
   }
 
-  Task? getByUuidSync(String? uuid) {
-    return getByIndexSync(r'uuid', [uuid]);
+  Task? getByTaskUidSync(String? taskUid) {
+    return getByIndexSync(r'taskUid', [taskUid]);
   }
 
-  Future<bool> deleteByUuid(String? uuid) {
-    return deleteByIndex(r'uuid', [uuid]);
+  Future<bool> deleteByTaskUid(String? taskUid) {
+    return deleteByIndex(r'taskUid', [taskUid]);
   }
 
-  bool deleteByUuidSync(String? uuid) {
-    return deleteByIndexSync(r'uuid', [uuid]);
+  bool deleteByTaskUidSync(String? taskUid) {
+    return deleteByIndexSync(r'taskUid', [taskUid]);
   }
 
-  Future<List<Task?>> getAllByUuid(List<String?> uuidValues) {
-    final values = uuidValues.map((e) => [e]).toList();
-    return getAllByIndex(r'uuid', values);
+  Future<List<Task?>> getAllByTaskUid(List<String?> taskUidValues) {
+    final values = taskUidValues.map((e) => [e]).toList();
+    return getAllByIndex(r'taskUid', values);
   }
 
-  List<Task?> getAllByUuidSync(List<String?> uuidValues) {
-    final values = uuidValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'uuid', values);
+  List<Task?> getAllByTaskUidSync(List<String?> taskUidValues) {
+    final values = taskUidValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'taskUid', values);
   }
 
-  Future<int> deleteAllByUuid(List<String?> uuidValues) {
-    final values = uuidValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'uuid', values);
+  Future<int> deleteAllByTaskUid(List<String?> taskUidValues) {
+    final values = taskUidValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'taskUid', values);
   }
 
-  int deleteAllByUuidSync(List<String?> uuidValues) {
-    final values = uuidValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'uuid', values);
+  int deleteAllByTaskUidSync(List<String?> taskUidValues) {
+    final values = taskUidValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'taskUid', values);
   }
 
-  Future<Id> putByUuid(Task object) {
-    return putByIndex(r'uuid', object);
+  Future<Id> putByTaskUid(Task object) {
+    return putByIndex(r'taskUid', object);
   }
 
-  Id putByUuidSync(Task object, {bool saveLinks = true}) {
-    return putByIndexSync(r'uuid', object, saveLinks: saveLinks);
+  Id putByTaskUidSync(Task object, {bool saveLinks = true}) {
+    return putByIndexSync(r'taskUid', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByUuid(List<Task> objects) {
-    return putAllByIndex(r'uuid', objects);
+  Future<List<Id>> putAllByTaskUid(List<Task> objects) {
+    return putAllByIndex(r'taskUid', objects);
   }
 
-  List<Id> putAllByUuidSync(List<Task> objects, {bool saveLinks = true}) {
-    return putAllByIndexSync(r'uuid', objects, saveLinks: saveLinks);
+  List<Id> putAllByTaskUidSync(List<Task> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'taskUid', objects, saveLinks: saveLinks);
   }
 }
 
@@ -608,19 +632,19 @@ extension TaskQueryWhere on QueryBuilder<Task, Task, QWhereClause> {
     });
   }
 
-  QueryBuilder<Task, Task, QAfterWhereClause> uuidIsNull() {
+  QueryBuilder<Task, Task, QAfterWhereClause> taskUidIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'uuid',
+        indexName: r'taskUid',
         value: [null],
       ));
     });
   }
 
-  QueryBuilder<Task, Task, QAfterWhereClause> uuidIsNotNull() {
+  QueryBuilder<Task, Task, QAfterWhereClause> taskUidIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'uuid',
+        indexName: r'taskUid',
         lower: [null],
         includeLower: false,
         upper: [],
@@ -628,43 +652,44 @@ extension TaskQueryWhere on QueryBuilder<Task, Task, QWhereClause> {
     });
   }
 
-  QueryBuilder<Task, Task, QAfterWhereClause> uuidEqualTo(String? uuid) {
+  QueryBuilder<Task, Task, QAfterWhereClause> taskUidEqualTo(String? taskUid) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'uuid',
-        value: [uuid],
+        indexName: r'taskUid',
+        value: [taskUid],
       ));
     });
   }
 
-  QueryBuilder<Task, Task, QAfterWhereClause> uuidNotEqualTo(String? uuid) {
+  QueryBuilder<Task, Task, QAfterWhereClause> taskUidNotEqualTo(
+      String? taskUid) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'uuid',
+              indexName: r'taskUid',
               lower: [],
-              upper: [uuid],
+              upper: [taskUid],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'uuid',
-              lower: [uuid],
+              indexName: r'taskUid',
+              lower: [taskUid],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'uuid',
-              lower: [uuid],
+              indexName: r'taskUid',
+              lower: [taskUid],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'uuid',
+              indexName: r'taskUid',
               lower: [],
-              upper: [uuid],
+              upper: [taskUid],
               includeUpper: false,
             ));
       }
@@ -1165,6 +1190,16 @@ extension TaskQueryWhere on QueryBuilder<Task, Task, QWhereClause> {
 }
 
 extension TaskQueryFilter on QueryBuilder<Task, Task, QFilterCondition> {
+  QueryBuilder<Task, Task, QAfterFilterCondition> allowDispatchEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'allowDispatch',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterFilterCondition> assignedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2572,6 +2607,150 @@ extension TaskQueryFilter on QueryBuilder<Task, Task, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'taskUid',
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'taskUid',
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'taskUid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'taskUid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidMatches(String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'taskUid',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taskUid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterFilterCondition> taskUidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'taskUid',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterFilterCondition> titleEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2903,6 +3082,18 @@ extension TaskQueryObject on QueryBuilder<Task, Task, QFilterCondition> {}
 extension TaskQueryLinks on QueryBuilder<Task, Task, QFilterCondition> {}
 
 extension TaskQuerySortBy on QueryBuilder<Task, Task, QSortBy> {
+  QueryBuilder<Task, Task, QAfterSortBy> sortByAllowDispatch() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'allowDispatch', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> sortByAllowDispatchDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'allowDispatch', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> sortByAssignedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'assignedAt', Sort.asc);
@@ -3119,6 +3310,18 @@ extension TaskQuerySortBy on QueryBuilder<Task, Task, QSortBy> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterSortBy> sortByTaskUid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskUid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> sortByTaskUidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskUid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3157,6 +3360,18 @@ extension TaskQuerySortBy on QueryBuilder<Task, Task, QSortBy> {
 }
 
 extension TaskQuerySortThenBy on QueryBuilder<Task, Task, QSortThenBy> {
+  QueryBuilder<Task, Task, QAfterSortBy> thenByAllowDispatch() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'allowDispatch', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> thenByAllowDispatchDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'allowDispatch', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> thenByAssignedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'assignedAt', Sort.asc);
@@ -3385,6 +3600,18 @@ extension TaskQuerySortThenBy on QueryBuilder<Task, Task, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Task, Task, QAfterSortBy> thenByTaskUid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskUid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Task, Task, QAfterSortBy> thenByTaskUidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taskUid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Task, Task, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3423,6 +3650,12 @@ extension TaskQuerySortThenBy on QueryBuilder<Task, Task, QSortThenBy> {
 }
 
 extension TaskQueryWhereDistinct on QueryBuilder<Task, Task, QDistinct> {
+  QueryBuilder<Task, Task, QDistinct> distinctByAllowDispatch() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'allowDispatch');
+    });
+  }
+
   QueryBuilder<Task, Task, QDistinct> distinctByAssignedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'assignedAt');
@@ -3539,6 +3772,13 @@ extension TaskQueryWhereDistinct on QueryBuilder<Task, Task, QDistinct> {
     });
   }
 
+  QueryBuilder<Task, Task, QDistinct> distinctByTaskUid(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'taskUid', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Task, Task, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -3564,6 +3804,12 @@ extension TaskQueryProperty on QueryBuilder<Task, Task, QQueryProperty> {
   QueryBuilder<Task, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Task, bool, QQueryOperations> allowDispatchProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'allowDispatch');
     });
   }
 
@@ -3672,6 +3918,12 @@ extension TaskQueryProperty on QueryBuilder<Task, Task, QQueryProperty> {
   QueryBuilder<Task, String?, QQueryOperations> tagsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tags');
+    });
+  }
+
+  QueryBuilder<Task, String?, QQueryOperations> taskUidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'taskUid');
     });
   }
 

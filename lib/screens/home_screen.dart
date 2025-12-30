@@ -340,6 +340,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 构建紧凑型统计信息（侧边栏用）
   Widget _buildCompactStatistics() {
     final statisticsAsync = ref.watch(taskStatisticsProvider);
+    final currentFilter = ref.watch(
+      taskListProvider.select((state) => state.filter),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -360,6 +363,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: '未完成',
               value: stats['incomplete'].toString(),
               color: Theme.of(context).colorScheme.primary,
+              isActive: currentFilter == TaskFilter.incomplete,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.incomplete);
+              },
             ),
             Container(
               width: 1,
@@ -370,6 +379,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: '已完成',
               value: stats['completed'].toString(),
               color: Colors.green,
+              isActive: currentFilter == TaskFilter.completed,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.completed);
+              },
             ),
             Container(
               width: 1,
@@ -380,6 +395,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               label: '逾期',
               value: stats['overdue'].toString(),
               color: Colors.red,
+              isActive: currentFilter == TaskFilter.overdue,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.overdue);
+              },
             ),
           ],
         ),
@@ -405,33 +426,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String label,
     required String value,
     required Color color,
+    VoidCallback? onTap,
+    bool isActive = false,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            fontSize: 11,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   /// 构建统计信息卡片（窄屏用）
   Widget _buildStatisticsCard() {
     final statisticsAsync = ref.watch(taskStatisticsProvider);
+    final currentFilter = ref.watch(
+      taskListProvider.select((state) => state.filter),
+    );
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -465,16 +502,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: Icons.pending_actions,
               label: '未完成',
               value: stats['incomplete'].toString(),
+              isActive: currentFilter == TaskFilter.incomplete,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.incomplete);
+              },
             ),
             _buildStatItem(
               icon: Icons.check_circle,
               label: '已完成',
               value: stats['completed'].toString(),
+              isActive: currentFilter == TaskFilter.completed,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.completed);
+              },
             ),
             _buildStatItem(
               icon: Icons.event_busy,
               label: '逾期',
               value: stats['overdue'].toString(),
+              isActive: currentFilter == TaskFilter.overdue,
+              onTap: () {
+                ref
+                    .read(taskListProvider.notifier)
+                    .setFilter(TaskFilter.overdue);
+              },
             ),
           ],
         ),
@@ -496,8 +551,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required IconData icon,
     required String label,
     required String value,
+    VoidCallback? onTap,
+    bool isActive = false,
   }) {
-    return Column(
+    final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: Colors.white, size: 28),
@@ -512,12 +569,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.white70,
             fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ],
+    );
+
+    if (onTap == null) return child;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: child,
+      ),
     );
   }
 

@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/conversation.dart';
 import '../models/message.dart';
 import '../services/conversation_service.dart';
 import '../services/ai_service.dart';
 import 'agent_provider.dart';
+import 'ai_assistant_provider.dart';
+import '../utils/ai_assistants.dart';
 
 /// 对话状态
 class ChatState {
@@ -53,8 +56,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   /// 后端返回的conversation_id（用于维持同一对话）
   String? _backendConversationId;
 
-  ChatNotifier(this._conversationService, this._ref)
-      : super(const ChatState());
+  ChatNotifier(this._conversationService, this._ref) : super(const ChatState());
 
   /// 获取当前会话ID
   int? get currentConversationId => _currentConversationId;
@@ -83,6 +85,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
       print('✗ 加载消息失败: $e');
     }
+  }
+
+  /// 清除当前错误提示
+  void clearError() {
+    if (state.error == null) return;
+    state = state.copyWith(clearError: true);
   }
 
   /// 创建新会话并加载
@@ -144,11 +152,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final foundMessage = state.messages.firstWhere(
         (msg) => msg.id == assistantMessageId,
         orElse: () {
-          print('⚠️ [Chat] 警告: 在state.messages中找不到assistantMessageId=$assistantMessageId');
+          print(
+              '⚠️ [Chat] 警告: 在state.messages中找不到assistantMessageId=$assistantMessageId');
           return state.messages.first;
         },
       );
-      print('✓ [Chat] 找到助手消息: ID=${foundMessage.id}, Content="${foundMessage.content}"');
+      print(
+          '✓ [Chat] 找到助手消息: ID=${foundMessage.id}, Content="${foundMessage.content}"');
 
       // 开始流式响应
       await _streamAIResponse(assistantMessageId);
@@ -156,6 +166,51 @@ class ChatNotifier extends StateNotifier<ChatState> {
       state = state.copyWith(error: '发送消息失败: $e');
       print('✗ 发送消息失败: $e');
     }
+  }
+
+  String _formatAiError(Object error) {
+    final raw = error.toString();
+    final parsed = _tryParseErrorJsonFromText(raw);
+    final message = parsed?['message']?.toString();
+    final code = parsed?['code']?.toString();
+    final status = parsed?['status'];
+    final statusCode = status is int ? status : int.tryParse('$status');
+
+    final lower = raw.toLowerCase();
+    final isUnauthorized = lower.contains('unauthorized') ||
+        lower.contains('access token is invalid') ||
+        lower.contains('invalid token') ||
+        raw.contains('401') ||
+        statusCode == 401 ||
+        code == 'unauthorized';
+
+    if (isUnauthorized) {
+      final key = _ref.read(aiAssistantKeyProvider);
+      final assistantLabel = AiAssistants.optionForKey(key).label;
+      return '鉴权失败：当前「$assistantLabel」API Key 无效或已过期，请检查环境变量并重启应用。';
+    }
+
+    if (message != null && message.trim().isNotEmpty) {
+      final prefix = code == null ? '' : '[$code] ';
+      final statusPrefix = statusCode == null ? '' : '($statusCode) ';
+      return 'AI返回错误：$statusPrefix$prefix$message';
+    }
+
+    return 'AI响应失败：$raw';
+  }
+
+  Map<String, dynamic>? _tryParseErrorJsonFromText(String text) {
+    final start = text.indexOf('{');
+    final end = text.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
+
+    final jsonText = text.substring(start, end + 1);
+    try {
+      final decoded = jsonDecode(jsonText);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return decoded.cast<String, dynamic>();
+    } catch (_) {}
+    return null;
   }
 
   /// 流式接收AI响应
@@ -174,15 +229,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
 
       // 过滤掉streaming状态的消息（当前正在生成的消息）
-      final historyMessages = messages
-          .where((m) => m.id != assistantMessageId)
-          .toList();
+      final historyMessages =
+          messages.where((m) => m.id != assistantMessageId).toList();
 
       // TODO: 获取最新的用户消息内容作为query
       // 这里需要从historyMessages中获取最后一条用户消息
-      final lastUserMessage = historyMessages
-          .lastWhere((m) => m.role == MessageRole.user,
-              orElse: () => historyMessages.last);
+      final lastUserMessage = historyMessages.lastWhere(
+          (m) => m.role == MessageRole.user,
+          orElse: () => historyMessages.last);
       final query = lastUserMessage.content;
 
       print('💬 [Chat] 发送消息 - conversation_id: $_backendConversationId');
@@ -212,12 +266,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
           // 如果有文本内容，累积并实时更新UI
           if (response.content != null && response.content!.isNotEmpty) {
             accumulatedContent += response.content!;
-            print('📝 [Chat] 累积内容长度: ${accumulatedContent.length}, 新内容: "${response.content}"');
+            print(
+                '📝 [Chat] 累积内容长度: ${accumulatedContent.length}, 新内容: "${response.content}"');
 
             // 直接更新state中的消息列表，实现实时显示
             final updatedMessages = state.messages.map((msg) {
               if (msg.id == assistantMessageId) {
-                print('🔄 [Chat] 更新消息ID: $assistantMessageId, 内容长度: ${accumulatedContent.length}');
+                print(
+                    '🔄 [Chat] 更新消息ID: $assistantMessageId, 内容长度: ${accumulatedContent.length}');
                 // 创建新的消息对象with updated content
                 return Message(
                   id: msg.id,
@@ -277,7 +333,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
           state = state.copyWith(
             isStreaming: false,
-            error: 'AI响应失败: $error',
+            error: _formatAiError(error),
             clearStreamingMessage: true,
           );
 
@@ -290,7 +346,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     } catch (e) {
       state = state.copyWith(
         isStreaming: false,
-        error: 'AI响应失败: $e',
+        error: _formatAiError(e),
       );
       print('✗ AI响应失败: $e');
     }
@@ -535,7 +591,8 @@ final pinnedConversationsProvider =
 
 /// 会话统计Provider
 final conversationStatisticsProvider =
-    FutureProvider.family<Map<String, dynamic>, int>((ref, conversationId) async {
+    FutureProvider.family<Map<String, dynamic>, int>(
+        (ref, conversationId) async {
   return await ConversationService.instance
       .getConversationStatistics(conversationId);
 });

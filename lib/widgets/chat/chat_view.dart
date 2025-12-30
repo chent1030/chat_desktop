@@ -158,6 +158,12 @@ class _ChatViewState extends ConsumerState<ChatView> {
         // 顶部工具栏
         _buildToolbar(context),
 
+        if (chatState.error != null)
+          _buildErrorBanner(
+            context,
+            message: chatState.error!,
+          ),
+
         // 消息列表
         Expanded(
           child: _buildMessageList(chatState),
@@ -177,7 +183,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget _buildToolbar(BuildContext context) {
     final conversationListState = ref.watch(conversationListProvider);
     final theme = Theme.of(context);
-    final aiLabel = ref.watch(aiAssistantLabelProvider);
     final aiKey = ref.watch(aiAssistantKeyProvider);
     final currentConversation = widget.conversationId == null
         ? null
@@ -198,308 +203,326 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ),
       child: Row(
         children: [
-          // // 标题
-          // Text(
-          //   'AI助手',
-          //   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          //         fontWeight: FontWeight.w600,
-          //       ),
-          // ),
-
-          const SizedBox(width: 12),
-
-          // AI助手切换：使用 Material 3 分段按钮（更直观、更现代）
-          Tooltip(
-            message: '切换AI助手（仅切换 API Key）',
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(
-                  value: AiAssistants.keyXinService,
-                  label: Text('芯服务'),
-                  icon: Icon(Icons.business_center_outlined),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'AI助手',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                ButtonSegment(
-                  value: AiAssistants.keyLocalQa,
-                  label: Text('本地问答'),
-                  icon: Icon(Icons.question_answer_outlined),
-                ),
-              ],
-              selected: {aiKey},
-              style: SegmentedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onSelectionChanged: (selection) {
-                final key = selection.isEmpty
-                    ? AiAssistants.keyXinService
-                    : selection.first;
-                if (key == aiKey) return;
-                () async {
-                  await ref.read(aiAssistantKeyProvider.notifier).setKey(key);
-                  ref.read(chatProvider.notifier).clearConversation();
-                  widget.onSelectConversation?.call(null);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            '已切换AI助手：${AiAssistants.optionForKey(key).label}')),
-                  );
-                }();
-              },
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // 会话选择（现代下拉）
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: conversationListState.isLoading
-                ? Row(
-                    children: const [
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      SizedBox(width: 8),
-                      Text('加载会话中...'),
-                    ],
-                  )
-                : PopupMenuButton<String>(
-                    key: _conversationMenuKey,
-                    tooltip: '选择会话',
-                    position: PopupMenuPosition.under,
-                    onSelected: (value) async {
-                      if (value == 'new') {
-                        widget.onSelectConversation?.call(null);
-                        return;
-                      }
-                      if (value.startsWith('c:')) {
-                        final id = int.tryParse(value.substring(2));
-                        widget.onSelectConversation?.call(id);
-                        return;
-                      }
-                      if (value.startsWith('del:')) {
-                        final id = int.tryParse(value.substring(4));
-                        if (id == null) return;
-                        await ref
-                            .read(conversationListProvider.notifier)
-                            .deleteConversation(id);
-                        ref.read(chatProvider.notifier).clearConversation();
-                        if (widget.conversationId == id) {
-                          widget.onSelectConversation?.call(null);
-                        }
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('会话已删除')),
-                        );
-                      }
-                    },
-                    itemBuilder: (context) {
-                      final items = <PopupMenuEntry<String>>[];
-                      items.add(
-                        const PopupMenuItem<String>(
-                          value: 'new',
-                          child: Row(
-                            children: [
-                              Icon(Icons.chat_bubble_outline, size: 18),
-                              SizedBox(width: 8),
-                              Text('新会话'),
-                            ],
+                const SizedBox(width: 12),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Tooltip(
+                      message: '切换AI助手（仅切换 API Key）',
+                      child: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(
+                            value: AiAssistants.keyXinService,
+                            label: Text('芯服务'),
+                            icon: Icon(Icons.business_center_outlined),
                           ),
+                          ButtonSegment(
+                            value: AiAssistants.keyLocalQa,
+                            label: Text('本地问答'),
+                            icon: Icon(Icons.question_answer_outlined),
+                          ),
+                        ],
+                        selected: {aiKey},
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                      );
-                      items.add(const PopupMenuDivider());
-
-                      if (conversationListState.conversations.isEmpty) {
-                        items.add(
-                          PopupMenuItem<String>(
-                            enabled: false,
-                            value: 'empty',
-                            child: Text(
-                              '暂无会话',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.6),
-                              ),
-                            ),
-                          ),
-                        );
-                      } else {
-                        for (final c in conversationListState.conversations) {
-                          final selected = c.id == widget.conversationId;
-                          items.add(
-                            PopupMenuItem<String>(
-                              value: 'c:${c.id}',
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    selected
-                                        ? Icons.radio_button_checked
-                                        : Icons.radio_button_unchecked,
-                                    size: 18,
-                                    color: selected
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme.onSurface
-                                            .withOpacity(0.55),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          c.title.isEmpty
-                                              ? '会话 ${c.id}'
-                                              : c.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        if ((c.lastMessageContent ?? '')
-                                            .isNotEmpty)
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 2),
-                                            child: Text(
-                                              c.lastMessageContent ?? '',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                color: theme
-                                                    .colorScheme.onSurface
-                                                    .withOpacity(0.6),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    tooltip: '删除会话',
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                      minWidth: 32,
-                                      minHeight: 32,
-                                    ),
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: theme.colorScheme.error,
-                                    ),
-                                    onPressed: () {
-                                      Navigator.pop(context, 'del:${c.id}');
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                      return items;
-                    },
-                    child: Material(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.45),
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          final state = _conversationMenuKey.currentState;
-                          if (state is PopupMenuButtonState<String>) {
-                            state.showButtonMenu();
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: 18,
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.7),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      currentConversation == null
-                                          ? '新会话'
-                                          : (currentConversation.title.isEmpty
-                                              ? '会话 ${currentConversation.id}'
-                                              : currentConversation.title),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (currentConversation != null &&
-                                        (currentConversation
-                                                    .lastMessageContent ??
-                                                '')
-                                            .isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: Text(
-                                          currentConversation
-                                                  .lastMessageContent ??
-                                              '',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
+                        onSelectionChanged: (selection) {
+                          final key = selection.isEmpty
+                              ? AiAssistants.keyXinService
+                              : selection.first;
+                          if (key == aiKey) return;
+                          () async {
+                            await ref
+                                .read(aiAssistantKeyProvider.notifier)
+                                .setKey(key);
+                            ref.read(chatProvider.notifier).clearConversation();
+                            widget.onSelectConversation?.call(null);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '已切换AI助手：${AiAssistants.optionForKey(key).label}',
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.expand_more,
-                                size: 18,
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.7),
-                              ),
-                            ],
-                          ),
-                        ),
+                            );
+                          }();
+                        },
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: conversationListState.isLoading
+                      ? const Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            SizedBox(width: 8),
+                            Text('加载会话中...'),
+                          ],
+                        )
+                      : PopupMenuButton<String>(
+                          key: _conversationMenuKey,
+                          tooltip: '选择会话',
+                          position: PopupMenuPosition.under,
+                          onSelected: (value) async {
+                            if (value == 'new') {
+                              widget.onSelectConversation?.call(null);
+                              return;
+                            }
+                            if (value.startsWith('c:')) {
+                              final id = int.tryParse(value.substring(2));
+                              widget.onSelectConversation?.call(id);
+                              return;
+                            }
+                            if (value.startsWith('del:')) {
+                              final id = int.tryParse(value.substring(4));
+                              if (id == null) return;
+                              await ref
+                                  .read(conversationListProvider.notifier)
+                                  .deleteConversation(id);
+                              ref
+                                  .read(chatProvider.notifier)
+                                  .clearConversation();
+                              if (widget.conversationId == id) {
+                                widget.onSelectConversation?.call(null);
+                              }
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('会话已删除')),
+                              );
+                            }
+                          },
+                          itemBuilder: (context) {
+                            final items = <PopupMenuEntry<String>>[];
+                            items.add(
+                              const PopupMenuItem<String>(
+                                value: 'new',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.chat_bubble_outline, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('新会话'),
+                                  ],
+                                ),
+                              ),
+                            );
+                            items.add(const PopupMenuDivider());
+
+                            if (conversationListState.conversations.isEmpty) {
+                              items.add(
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  value: 'empty',
+                                  child: Text(
+                                    '暂无会话',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.6),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              for (final c
+                                  in conversationListState.conversations) {
+                                final selected = c.id == widget.conversationId;
+                                items.add(
+                                  PopupMenuItem<String>(
+                                    value: 'c:${c.id}',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          selected
+                                              ? Icons.radio_button_checked
+                                              : Icons.radio_button_unchecked,
+                                          size: 18,
+                                          color: selected
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.onSurface
+                                                  .withOpacity(0.55),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                c.title.isEmpty
+                                                    ? '会话 ${c.id}'
+                                                    : c.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              if ((c.lastMessageContent ?? '')
+                                                  .isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    top: 2,
+                                                  ),
+                                                  child: Text(
+                                                    c.lastMessageContent ?? '',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: theme
+                                                        .textTheme.bodySmall
+                                                        ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme.onSurface
+                                                          .withOpacity(0.6),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          tooltip: '删除会话',
+                                          visualDensity: VisualDensity.compact,
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 32,
+                                            minHeight: 32,
+                                          ),
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            size: 18,
+                                            color: theme.colorScheme.error,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pop(
+                                              context,
+                                              'del:${c.id}',
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                            return items;
+                          },
+                          child: Material(
+                            color: theme.colorScheme.surfaceVariant
+                                .withOpacity(0.45),
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                final state = _conversationMenuKey.currentState;
+                                if (state is PopupMenuButtonState<String>) {
+                                  state.showButtonMenu();
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 18,
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.7),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            currentConversation == null
+                                                ? '新会话'
+                                                : (currentConversation
+                                                        .title.isEmpty
+                                                    ? '会话 ${currentConversation.id}'
+                                                    : currentConversation
+                                                        .title),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (currentConversation != null &&
+                                              (currentConversation
+                                                          .lastMessageContent ??
+                                                      '')
+                                                  .isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 2,
+                                              ),
+                                              child: Text(
+                                                currentConversation
+                                                        .lastMessageContent ??
+                                                    '',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme.onSurface
+                                                      .withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.expand_more,
+                                      size: 18,
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.7),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
           ),
-
-          const Spacer(),
-
-          // 取消流式响应按钮
           if (ref.watch(chatProvider).isStreaming)
-            TextButton.icon(
+            IconButton(
+              tooltip: '停止生成',
               onPressed: () {
                 ref.read(chatProvider.notifier).cancelStream();
               },
-              icon: const Icon(Icons.stop, size: 16),
-              label: const Text('停止生成'),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
+              icon: Icon(Icons.stop, color: theme.colorScheme.error),
             ),
-
-          // 新建会话（放在清除会话旁边）
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: '新建会话',
@@ -507,8 +530,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
               await _createNewConversation();
             },
           ),
-
-          // 清除会话按钮
           IconButton(
             icon: const Icon(Icons.delete_outline),
             tooltip: '清除会话',
@@ -521,46 +542,61 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
+  Widget _buildErrorBanner(
+    BuildContext context, {
+    required String message,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 18,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: () {
+              ref.read(chatProvider.notifier).clearError();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.onErrorContainer,
+            ),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 构建消息列表
   Widget _buildMessageList(chatState) {
     // 加载中
     if (chatState.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
-      );
-    }
-
-    // 错误状态
-    if (chatState.error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              chatState.error!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                // 清除错误并重试
-                ref.read(chatProvider.notifier).clearConversation();
-                _createNewConversation();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
-            ),
-          ],
-        ),
       );
     }
 

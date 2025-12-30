@@ -6,11 +6,6 @@ import '../../providers/task_provider.dart';
 import 'task_detail.dart';
 import '../../services/task_service.dart';
 
-enum _TaskItemMenuAction {
-  detail,
-  dispatch,
-}
-
 /// TaskItem widget - 显示单个任务的卡片组件
 class TaskItem extends ConsumerWidget {
   final Task task;
@@ -39,7 +34,7 @@ class TaskItem extends ConsumerWidget {
         ),
       ),
       child: InkWell(
-        onTap: () => _markAsRead(context, ref),
+        onTap: () => _openDetail(context, ref),
         onLongPress: () => _showContextMenu(context, ref),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -106,8 +101,6 @@ class TaskItem extends ConsumerWidget {
                                   ),
                                 ),
                         ),
-                        const SizedBox(width: 6),
-                        _buildTopRightMenu(context, ref),
                       ],
                     ),
 
@@ -150,48 +143,10 @@ class TaskItem extends ConsumerWidget {
     } catch (_) {}
   }
 
-  Widget _buildTopRightMenu(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<_TaskItemMenuAction>(
-      tooltip: '更多',
-      icon: Icon(Icons.more_horiz, size: 18, color: Colors.grey.shade700),
-      onSelected: (action) async {
-        switch (action) {
-          case _TaskItemMenuAction.detail:
-            await _markAsRead(context, ref);
-            if (!context.mounted) return;
-            await TaskDetailDialog.show(context, task);
-            return;
-          case _TaskItemMenuAction.dispatch:
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('开发中,请等待...')),
-            );
-            return;
-        }
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(
-          value: _TaskItemMenuAction.detail,
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, size: 18),
-              SizedBox(width: 8),
-              Text('详情'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: _TaskItemMenuAction.dispatch,
-          child: Row(
-            children: [
-              Icon(Icons.send_outlined, size: 18),
-              SizedBox(width: 8),
-              Text('任务派发'),
-            ],
-          ),
-        ),
-      ],
-    );
+  Future<void> _openDetail(BuildContext context, WidgetRef ref) async {
+    await _markAsRead(context, ref);
+    if (!context.mounted) return;
+    await TaskDetailDialog.show(context, task);
   }
 
   /// 构建完成状态复选框

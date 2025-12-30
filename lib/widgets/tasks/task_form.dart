@@ -100,12 +100,13 @@ class _TaskFormState extends ConsumerState<TaskForm> {
                   size: 40,
                   onRecordComplete: (audioPath) async {
                     try {
-                      final text = await SpeechToTextService.instance.uploadAndTranscribe(
-                        audioPath,
-                        'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText'
-                      );
+                      final text = await SpeechToTextService.instance
+                          .uploadAndTranscribe(audioPath,
+                              'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText');
                       _titleController.text = text;
-                      ref.read(taskFormProvider.notifier).setTitle(_titleController.text);
+                      ref
+                          .read(taskFormProvider.notifier)
+                          .setTitle(_titleController.text);
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -151,12 +152,13 @@ class _TaskFormState extends ConsumerState<TaskForm> {
                   size: 40,
                   onRecordComplete: (audioPath) async {
                     try {
-                      final text = await SpeechToTextService.instance.uploadAndTranscribe(
-                        audioPath,
-                        'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText'
-                      );
+                      final text = await SpeechToTextService.instance
+                          .uploadAndTranscribe(audioPath,
+                              'https://ipaas.catl.com/gateway/outside/ipaas/LY_BASIC/outer_LY_BASIC_voiceToText');
                       _descriptionController.text = text;
-                      ref.read(taskFormProvider.notifier).setDescription(_descriptionController.text);
+                      ref
+                          .read(taskFormProvider.notifier)
+                          .setDescription(_descriptionController.text);
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -179,6 +181,10 @@ class _TaskFormState extends ConsumerState<TaskForm> {
 
           // 截止日期选择器 (T029)
           _buildDueDatePicker(theme, formState),
+          const SizedBox(height: 16),
+
+          // 是否允许派发
+          _buildAllowDispatchSwitch(theme, formState),
           const SizedBox(height: 16),
 
           // 标签输入框 (可选)
@@ -355,8 +361,30 @@ class _TaskFormState extends ConsumerState<TaskForm> {
     );
   }
 
+  Widget _buildAllowDispatchSwitch(ThemeData theme, TaskFormState state) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.12),
+        ),
+      ),
+      child: SwitchListTile(
+        value: state.allowDispatch,
+        onChanged: (value) {
+          ref.read(taskFormProvider.notifier).setAllowDispatch(value);
+        },
+        title: const Text('允许派发'),
+        subtitle: const Text('开启后，详情页会显示“任务派发”按钮'),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      ),
+    );
+  }
+
   /// 选择截止日期
-  Future<void> _selectDueDate(BuildContext context, DateTime? initialDate) async {
+  Future<void> _selectDueDate(
+      BuildContext context, DateTime? initialDate) async {
     final now = DateTime.now();
     final firstDate = now;
     final lastDate = now.add(const Duration(days: 365));
@@ -375,8 +403,9 @@ class _TaskFormState extends ConsumerState<TaskForm> {
       // 选择时间
       final selectedTime = await showTimePicker(
         context: context,
-        initialTime:
-            initialDate != null ? TimeOfDay.fromDateTime(initialDate) : TimeOfDay.now(),
+        initialTime: initialDate != null
+            ? TimeOfDay.fromDateTime(initialDate)
+            : TimeOfDay.now(),
         helpText: '选择截止时间',
         cancelText: '取消',
         confirmText: '确定',

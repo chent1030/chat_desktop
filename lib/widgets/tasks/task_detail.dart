@@ -29,13 +29,22 @@ class TaskDetailDialog extends StatelessWidget {
     final desc = task.description ?? '';
     final descLower = desc.toLowerCase();
     // 匹配邮箱/关键字/邮件ID
-    final emailRegex = RegExp(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}");
-    final emailMatch = emailRegex.firstMatch(task.tags ?? '') ?? emailRegex.firstMatch(desc);
-    final hasMailKeyword = tagsLower.contains('邮件') || tagsLower.contains('邮箱') || descLower.contains('邮件') || descLower.contains('邮箱');
+    final emailRegex =
+        RegExp(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}");
+    final emailMatch =
+        emailRegex.firstMatch(task.tags ?? '') ?? emailRegex.firstMatch(desc);
+    final hasMailKeyword = tagsLower.contains('邮件') ||
+        tagsLower.contains('邮箱') ||
+        descLower.contains('邮件') ||
+        descLower.contains('邮箱');
     final idRegex = RegExp(r"(?:邮件ID|郵件ID)[:：]\s*(\S+)");
     final idMatch = idRegex.firstMatch(desc);
-    final canHandle = tagsLower.contains('补删卡') || emailMatch != null || hasMailKeyword || idMatch != null;
-    final isMailAction = emailMatch != null || hasMailKeyword || idMatch != null;
+    final canHandle = tagsLower.contains('补删卡') ||
+        emailMatch != null ||
+        hasMailKeyword ||
+        idMatch != null;
+    final isMailAction =
+        emailMatch != null || hasMailKeyword || idMatch != null;
     final Color priorityColor = Color(task.priority.colorValue);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -45,17 +54,25 @@ class TaskDetailDialog extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [priorityColor.withOpacity(0.16), theme.colorScheme.surface],
+              colors: [
+                priorityColor.withOpacity(0.16),
+                theme.colorScheme.surface
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border(
-              bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.08)),
+              bottom: BorderSide(
+                  color: theme.colorScheme.outline.withOpacity(0.08)),
             ),
           ),
           child: Row(
             children: [
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: priorityColor, shape: BoxShape.circle)),
+              Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                      color: priorityColor, shape: BoxShape.circle)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -63,7 +80,8 @@ class TaskDetailDialog extends StatelessWidget {
                   children: [
                     Text(
                       task.title,
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -73,8 +91,16 @@ class TaskDetailDialog extends StatelessWidget {
                       runSpacing: 6,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        _pill(theme, task.isRead ? '已读' : '未读', task.isRead ? theme.colorScheme.secondary : theme.colorScheme.primary),
-                        if (task.dueDate != null) _meta(theme, Icons.event, '${task.dueDate}') else _meta(theme, Icons.event_busy, '无截止'),
+                        _pill(
+                            theme,
+                            task.isRead ? '已读' : '未读',
+                            task.isRead
+                                ? theme.colorScheme.secondary
+                                : theme.colorScheme.primary),
+                        if (task.dueDate != null)
+                          _meta(theme, Icons.event, '${task.dueDate}')
+                        else
+                          _meta(theme, Icons.event_busy, '无截止'),
                         _meta(theme, Icons.source, task.source.displayName),
                       ],
                     ),
@@ -104,10 +130,12 @@ class TaskDetailDialog extends StatelessWidget {
                       runSpacing: 8,
                       children: [
                         Chip(
-                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                          backgroundColor:
+                              theme.colorScheme.surfaceVariant.withOpacity(0.5),
                           label: Text(task.tags!),
                           avatar: const Icon(Icons.label, size: 16),
-                          side: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                          side: BorderSide(
+                              color: theme.dividerColor.withOpacity(0.2)),
                         ),
                       ],
                     ),
@@ -117,7 +145,9 @@ class TaskDetailDialog extends StatelessWidget {
                   if ((task.description ?? '').isNotEmpty)
                     MarkdownBody(
                       data: task.description!,
-                      selectable: true,
+                      // flutter_markdown 在部分桌面环境下 selectable + 富文本 span 选择会触发异常，
+                      // 这里先禁用选择以避免详情页交互被中断（如需可再用其它方案替代）。
+                      selectable: false,
                       softLineBreak: true,
                       onTapLink: (text, href, title) async {
                         if (href == null) return;
@@ -132,12 +162,17 @@ class TaskDetailDialog extends StatelessWidget {
                         h3: theme.textTheme.titleMedium,
                         p: theme.textTheme.bodyMedium,
                         blockquoteDecoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.35),
+                          color: theme.colorScheme.surfaceVariant
+                              .withOpacity(0.35),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border(left: BorderSide(color: priorityColor.withOpacity(0.65), width: 4)),
+                          border: Border(
+                              left: BorderSide(
+                                  color: priorityColor.withOpacity(0.65),
+                                  width: 4)),
                         ),
                         codeblockDecoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                          color:
+                              theme.colorScheme.surfaceVariant.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -145,7 +180,8 @@ class TaskDetailDialog extends StatelessWidget {
                   else
                     Text(
                       '无描述',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.hintColor),
                     ),
                   const SizedBox(height: 8),
                 ],
@@ -157,7 +193,9 @@ class TaskDetailDialog extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: theme.colorScheme.outline.withOpacity(0.08))),
+            border: Border(
+                top: BorderSide(
+                    color: theme.colorScheme.outline.withOpacity(0.08))),
           ),
           child: Row(
             children: [
@@ -166,6 +204,18 @@ class TaskDetailDialog extends StatelessWidget {
                 label: const Text('关闭'),
                 onPressed: () => Navigator.of(context).pop(),
               ),
+              if (task.allowDispatch) ...[
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.send_outlined),
+                  label: const Text('任务派发'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('开发中,请等待...')),
+                    );
+                  },
+                ),
+              ],
               const Spacer(),
               if (canHandle)
                 FilledButton.icon(
@@ -179,7 +229,8 @@ class TaskDetailDialog extends StatelessWidget {
                       if (tagsLower.contains('补删卡')) {
                         await ExternalLauncher.openDingTalk();
                       } else {
-                        await ExternalLauncher.openOutlook(email: email, emailId: emailId);
+                        await ExternalLauncher.openOutlook(
+                            email: email, emailId: emailId);
                       }
                     } catch (e) {
                       if (context.mounted) {
@@ -206,7 +257,9 @@ Widget _pill(ThemeData theme, String text, Color color) {
       borderRadius: BorderRadius.circular(999),
       border: Border.all(color: color.withOpacity(0.3)),
     ),
-    child: Text(text, style: theme.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w600)),
+    child: Text(text,
+        style: theme.textTheme.labelMedium
+            ?.copyWith(color: color, fontWeight: FontWeight.w600)),
   );
 }
 
@@ -219,7 +272,11 @@ Widget _meta(ThemeData theme, IconData icon, String text) {
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
-      children: [Icon(icon, size: 14), const SizedBox(width: 6), Text(text, style: theme.textTheme.labelMedium)],
+      children: [
+        Icon(icon, size: 14),
+        const SizedBox(width: 6),
+        Text(text, style: theme.textTheme.labelMedium)
+      ],
     ),
   );
 }

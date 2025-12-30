@@ -49,7 +49,7 @@ class TaskListState {
 
   const TaskListState({
     this.tasks = const [],
-    this.filter = TaskFilter.all,
+    this.filter = TaskFilter.incomplete,
     this.sortOrder = TaskSortOrder.createdAtDesc,
     this.searchKeyword = '',
     this.isLoading = false,
@@ -95,7 +95,8 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
 
     // 监听MQTT任务变更通知
     try {
-      _mqttTaskChangeSubscription = MqttService.instance.taskChangeStream.listen(
+      _mqttTaskChangeSubscription =
+          MqttService.instance.taskChangeStream.listen(
         (_) {
           print('📊 [Provider] 收到MQTT任务变更通知，重新加载任务列表');
           loadTasks();
@@ -259,10 +260,12 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
         });
         break;
       case TaskSortOrder.priorityDesc:
-        sortedTasks.sort((a, b) => b.priority.index.compareTo(a.priority.index));
+        sortedTasks
+            .sort((a, b) => b.priority.index.compareTo(a.priority.index));
         break;
       case TaskSortOrder.priorityAsc:
-        sortedTasks.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+        sortedTasks
+            .sort((a, b) => a.priority.index.compareTo(b.priority.index));
         break;
       case TaskSortOrder.titleAsc:
         sortedTasks.sort((a, b) => a.title.compareTo(b.title));
@@ -293,6 +296,7 @@ class TaskFormState {
   final Priority priority;
   final DateTime? dueDate;
   final String? tags;
+  final bool allowDispatch;
   final bool isEditing; // true = 编辑模式, false = 创建模式
   final int? editingTaskId; // 正在编辑的任务ID
   final bool isSaving;
@@ -304,6 +308,7 @@ class TaskFormState {
     this.priority = Priority.medium,
     this.dueDate,
     this.tags,
+    this.allowDispatch = false,
     this.isEditing = false,
     this.editingTaskId,
     this.isSaving = false,
@@ -316,6 +321,7 @@ class TaskFormState {
     Priority? priority,
     DateTime? dueDate,
     String? tags,
+    bool? allowDispatch,
     bool? isEditing,
     int? editingTaskId,
     bool? isSaving,
@@ -327,6 +333,7 @@ class TaskFormState {
       priority: priority ?? this.priority,
       dueDate: dueDate ?? this.dueDate,
       tags: tags ?? this.tags,
+      allowDispatch: allowDispatch ?? this.allowDispatch,
       isEditing: isEditing ?? this.isEditing,
       editingTaskId: editingTaskId ?? this.editingTaskId,
       isSaving: isSaving ?? this.isSaving,
@@ -374,6 +381,11 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
     state = state.copyWith(tags: tags);
   }
 
+  /// 设置是否允许派发
+  void setAllowDispatch(bool allow) {
+    state = state.copyWith(allowDispatch: allow);
+  }
+
   /// 加载任务到表单 (用于编辑)
   Future<void> loadTask(int taskId) async {
     final task = await _taskService.getTaskById(taskId);
@@ -388,6 +400,7 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
       priority: task.priority,
       dueDate: task.dueDate,
       tags: task.tags,
+      allowDispatch: task.allowDispatch,
       isEditing: true,
       editingTaskId: taskId,
     );
@@ -419,6 +432,7 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
           priority: state.priority,
           dueDate: state.dueDate,
           tags: state.tags,
+          allowDispatch: state.allowDispatch,
         );
 
         await _taskService.updateTask(updatedTask);
@@ -432,6 +446,7 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
           priority: state.priority,
           dueDate: state.dueDate,
           tags: state.tags,
+          allowDispatch: state.allowDispatch,
         );
       }
 
@@ -476,7 +491,8 @@ final taskChangesStreamProvider = StreamProvider<void>((ref) {
 });
 
 /// 任务统计信息provider
-final taskStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final taskStatisticsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   // 监听任务变化
   ref.watch(taskChangesStreamProvider);
   final taskService = ref.watch(taskServiceProvider);
