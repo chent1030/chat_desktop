@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../providers/ai_assistant_provider.dart';
+import '../utils/ai_assistants.dart';
 
 /// 单智能体配置
 /// 从环境变量读取AI配置，不再从API获取智能体列表
@@ -15,17 +17,25 @@ class AgentConfig {
   });
 
   /// 从环境变量加载配置
-  factory AgentConfig.fromEnv() {
+  factory AgentConfig.fromEnv({required String aiAssistantKey}) {
     final apiUrl = dotenv.env['AI_API_URL'] ?? '';
     final sseUrl = dotenv.env['AI_SSE_URL'];
-    final apiKey = dotenv.env['AI_API_KEY'] ?? '';
+    final apiKey = switch (aiAssistantKey) {
+      AiAssistants.keyXinService => (dotenv.env['AI_API_KEY_XIN_SERVICE'] ??
+          dotenv.env['AI_API_KEY'] ??
+          ''),
+      AiAssistants.keyLocalQa =>
+        (dotenv.env['AI_API_KEY_LOCAL_QA'] ?? dotenv.env['AI_API_KEY'] ?? ''),
+      _ => (dotenv.env['AI_API_KEY'] ?? ''),
+    };
 
     if (apiUrl.isEmpty) {
       throw Exception('未配置AI_API_URL环境变量');
     }
 
     if (apiKey.isEmpty) {
-      throw Exception('未配置AI_API_KEY环境变量');
+      throw Exception(
+          '未配置AI_API_KEY（或对应的 AI_API_KEY_XIN_SERVICE/AI_API_KEY_LOCAL_QA）');
     }
 
     return AgentConfig(
@@ -41,5 +51,6 @@ class AgentConfig {
 
 /// 智能体配置Provider
 final agentConfigProvider = Provider<AgentConfig>((ref) {
-  return AgentConfig.fromEnv();
+  final key = ref.watch(aiAssistantKeyProvider);
+  return AgentConfig.fromEnv(aiAssistantKey: key);
 });

@@ -61,6 +61,8 @@ class AppConstants {
   static const String prefKeyDeviceId = 'device_id';
   static const String prefKeyEmpNo = 'emp_no'; // 用户工号
   static const String prefKeyFontKey = 'font_key'; // 字体选择
+  static const String prefKeyAiAssistantKey =
+      'ai_assistant_key'; // AI助手选择（不含密钥）
 
   // 环境变量键名
   static const String envKeyOpenAIApiKey = 'OPENAI_API_KEY';

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/chat_provider.dart';
 import '../../models/conversation.dart';
+import '../../providers/ai_assistant_provider.dart';
+import '../../utils/ai_assistants.dart';
 import 'message_bubble.dart';
 import 'chat_input.dart';
 
@@ -175,6 +177,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget _buildToolbar(BuildContext context) {
     final conversationListState = ref.watch(conversationListProvider);
     final theme = Theme.of(context);
+    final aiLabel = ref.watch(aiAssistantLabelProvider);
+    final aiKey = ref.watch(aiAssistantKeyProvider);
     final currentConversation = widget.conversationId == null
         ? null
         : conversationListState.conversations
@@ -194,12 +198,55 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ),
       child: Row(
         children: [
-          // 标题
-          Text(
-            'AI助手',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+          // // 标题
+          // Text(
+          //   'AI助手',
+          //   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          //         fontWeight: FontWeight.w600,
+          //       ),
+          // ),
+
+          const SizedBox(width: 12),
+
+          // AI助手切换：使用 Material 3 分段按钮（更直观、更现代）
+          Tooltip(
+            message: '切换AI助手（仅切换 API Key）',
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: AiAssistants.keyXinService,
+                  label: Text('芯服务'),
+                  icon: Icon(Icons.business_center_outlined),
                 ),
+                ButtonSegment(
+                  value: AiAssistants.keyLocalQa,
+                  label: Text('本地问答'),
+                  icon: Icon(Icons.question_answer_outlined),
+                ),
+              ],
+              selected: {aiKey},
+              style: SegmentedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onSelectionChanged: (selection) {
+                final key = selection.isEmpty
+                    ? AiAssistants.keyXinService
+                    : selection.first;
+                if (key == aiKey) return;
+                () async {
+                  await ref.read(aiAssistantKeyProvider.notifier).setKey(key);
+                  ref.read(chatProvider.notifier).clearConversation();
+                  widget.onSelectConversation?.call(null);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            '已切换AI助手：${AiAssistants.optionForKey(key).label}')),
+                  );
+                }();
+              },
+            ),
           ),
 
           const SizedBox(width: 12),

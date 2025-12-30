@@ -206,6 +206,17 @@ class ConfigService {
     await _prefs.setString(AppConstants.prefKeyFontKey, key);
   }
 
+  /// 获取AI助手Key（xin_service / local_qa）
+  String get aiAssistantKey {
+    return _prefs.getString(AppConstants.prefKeyAiAssistantKey) ??
+        'xin_service';
+  }
+
+  /// 设置AI助手Key
+  Future<void> setAiAssistantKey(String key) async {
+    await _prefs.setString(AppConstants.prefKeyAiAssistantKey, key);
+  }
+
   /// 清除所有配置（用于测试或重置）
   Future<void> clearAll() async {
     await _prefs.clear();
