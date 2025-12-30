@@ -207,12 +207,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'AI助手',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
                 const SizedBox(width: 12),
                 Flexible(
                   fit: FlexFit.loose,
@@ -220,7 +214,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Tooltip(
-                      message: '切换AI助手（仅切换 API Key）',
+                      message: '切换AI助手',
                       child: SegmentedButton<String>(
                         segments: const [
                           ButtonSegment(
