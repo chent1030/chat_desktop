@@ -2,6 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../utils/constants.dart';
+import '../utils/app_fonts.dart';
 
 /// 环境配置管理服务
 class ConfigService {
@@ -195,7 +196,9 @@ class ConfigService {
 
   /// 获取字体Key（default / NotoSansSC / LXGWWenKai）
   String get fontKey {
-    return _prefs.getString(AppConstants.prefKeyFontKey) ?? 'default';
+    // 首次进入默认选择思源黑体（开源字体），用户后续可在右上角菜单自行切换
+    return _prefs.getString(AppConstants.prefKeyFontKey) ??
+        AppFonts.keySourceHanSansSC;
   }
 
   /// 设置字体Key

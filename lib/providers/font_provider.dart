@@ -20,7 +20,7 @@ class AppFontKeyNotifier extends StateNotifier<String> {
     try {
       return ConfigService.instance.fontKey;
     } catch (_) {
-      return AppFonts.keyDefault;
+      return AppFonts.keySourceHanSansSC;
     }
   }
 
