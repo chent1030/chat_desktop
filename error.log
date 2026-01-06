@@ -1,4 +1,95 @@
-D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): error C2220: 以下警告被视为错误 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-D:\Develop\chat_desktop\windows\runner\flutter_window.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\Develop\chat_desktop\build\windows\x64\runner\chat_desktop.vcxproj]
-Building Windows application...                                     8.4s
-Error: Build process failed.
+ [MQTT] 连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCoode.badUsernameOrPassword
+Stack trace: #0      MqttSynchronousServerConnectionHandler.internalConnect (package:mqtt5_client/src/connectionhandling/server/mqtt_synchronous_server_connection_handler.dart:205:13)
+<asynchronous suspension>
+#1      MqttConnectionHandlerBase.connect (package:mqtt5_client/src/connectionhandling/mqtt_connection_handler_base.dart:117:7)
+<asynchronous suspension>
+#2      MqttServerClient.connect (package:mqtt5_client/src/mqtt_server_client.dart:123:12)
+<asynchronous suspension>
+#3      MqttService.connect (package:chat_desktop/services/mqtt_service.dart:236:7)
+<asynchronous suspension>
+#4      _HomeScreenState._checkAndInitializeMqtt (package:chat_desktop/screens/home_screen.dart:61:7)
+<asynchronous suspension>
+
+[2026-01-06 17:05:29.606] [ERROR] [MQTT] MQTT连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCode.badUsernameOrPassword
+📡 [MQTT] 连接状态变更: MqttServiceState.error
+🔄 [MQTT] 将在5秒后尝试重连...
+[2026-01-06 17:05:29.608] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.error
+🔄 [MQTT] 正在重连...
+📡 [MQTT] 连接状态变更: MqttServiceState.connecting
+ℹ️ [MQTT] 通知已初始化，跳过
+🧹 [MQTT] 清理旧客户端实例以避免sessionTakenOver...
+🆕 [MQTT] 创建新的MQTT 5.0客户端实例...
+🔧 [MQTT] 使用协议: MQTT 5.0
+🔧 [MQTT] Client ID: chat_desktop_61016968
+🔧 [MQTT] 客户端配置: keepAlive=60s
+🔧 [MQTT] Clean Start = false（持久会话）
+📡 [MQTT] 正在连接到 localhost:18883...
+[2026-01-06 17:05:34.610] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.connecting
+[2026-01-06 17:05:34.612] [INFO ] [MQTT] 正在连接到MQTT Broker: localhost:18883
+❌ [MQTT] 连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCoode.badUsernameOrPassword
+Stack trace: #0      MqttSynchronousServerConnectionHandler.internalConnect (package:mqtt5_client/src/connectionhandling/server/mqtt_synchronous_server_connection_handler.dart:205:13)
+<asynchronous suspension>
+#1      MqttConnectionHandlerBase.connect (package:mqtt5_client/src/connectionhandling/mqtt_connection_handler_base.dart:117:7)
+<asynchronous suspension>
+#2      MqttServerClient.connect (package:mqtt5_client/src/mqtt_server_client.dart:123:12)
+<asynchronous suspension>
+#3      MqttService.connect (package:chat_desktop/services/mqtt_service.dart:236:7)
+<asynchronous suspension>
+#4      MqttService._scheduleReconnect.<anonymous closure> (package:chat_desktop/services/mqtt_service.dart:359:25)
+<asynchronous suspension>
+
+[2026-01-06 17:05:44.631] [ERROR] [MQTT] MQTT连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCode.badUsernameOrPassword
+📡 [MQTT] 连接状态变更: MqttServiceState.error
+🔄 [MQTT] 将在5秒后尝试重连...
+[2026-01-06 17:05:44.634] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.error
+🔄 [MQTT] 正在重连...
+📡 [MQTT] 连接状态变更: MqttServiceState.connecting
+ℹ️ [MQTT] 通知已初始化，跳过
+🧹 [MQTT] 清理旧客户端实例以避免sessionTakenOver...
+🆕 [MQTT] 创建新的MQTT 5.0客户端实例...
+🔧 [MQTT] 使用协议: MQTT 5.0
+🔧 [MQTT] Client ID: chat_desktop_61016968
+🔧 [MQTT] 客户端配置: keepAlive=60s
+🔧 [MQTT] Clean Start = false（持久会话）
+📡 [MQTT] 正在连接到 localhost:18883...
+[2026-01-06 17:05:49.636] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.connecting
+[2026-01-06 17:05:49.636] [INFO ] [MQTT] 正在连接到MQTT Broker: localhost:18883
+❌ [MQTT] 连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCoode.badUsernameOrPassword
+Stack trace: #0      MqttSynchronousServerConnectionHandler.internalConnect (package:mqtt5_client/src/connectionhandling/server/mqtt_synchronous_server_connection_handler.dart:205:13)
+<asynchronous suspension>
+#1      MqttConnectionHandlerBase.connect (package:mqtt5_client/src/connectionhandling/mqtt_connection_handler_base.dart:117:7)
+<asynchronous suspension>
+#2      MqttServerClient.connect (package:mqtt5_client/src/mqtt_server_client.dart:123:12)
+<asynchronous suspension>
+#3      MqttService.connect (package:chat_desktop/services/mqtt_service.dart:236:7)
+<asynchronous suspension>
+#4      MqttService._scheduleReconnect.<anonymous closure> (package:chat_desktop/services/mqtt_service.dart:359:25)
+<asynchronous suspension>
+
+[2026-01-06 17:05:59.669] [ERROR] [MQTT] MQTT连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCode.badUsernameOrPassword
+📡 [MQTT] 连接状态变更: MqttServiceState.error
+🔄 [MQTT] 将在5秒后尝试重连...
+[2026-01-06 17:05:59.673] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.error
+🔄 [MQTT] 正在重连...
+📡 [MQTT] 连接状态变更: MqttServiceState.connecting
+ℹ️ [MQTT] 通知已初始化，跳过
+🧹 [MQTT] 清理旧客户端实例以避免sessionTakenOver...
+🆕 [MQTT] 创建新的MQTT 5.0客户端实例...
+🔧 [MQTT] 使用协议: MQTT 5.0
+🔧 [MQTT] Client ID: chat_desktop_61016968
+🔧 [MQTT] 客户端配置: keepAlive=60s
+🔧 [MQTT] Clean Start = false（持久会话）
+📡 [MQTT] 正在连接到 localhost:18883...
+[2026-01-06 17:06:04.685] [INFO ] [MQTT] MQTT连接状态变更: MqttServiceState.connecting
+[2026-01-06 17:06:04.685] [INFO ] [MQTT] 正在连接到MQTT Broker: localhost:18883
+❌ [MQTT] 连接异常: mqtt-client::NoConnectionException: The maximum allowed connection attempts ({3}) were exceeded. The broker is not responding to the connection request message correctly The reason code is MqttConnectReasonCoode.badUsernameOrPassword
+Stack trace: #0      MqttSynchronousServerConnectionHandler.internalConnect (package:mqtt5_client/src/connectionhandling/server/mqtt_synchronous_server_connection_handler.dart:205:13)
+<asynchronous suspension>
+#1      MqttConnectionHandlerBase.connect (package:mqtt5_client/src/connectionhandling/mqtt_connection_handler_base.dart:117:7)
+<asynchronous suspension>
+#2      MqttServerClient.connect (package:mqtt5_client/src/mqtt_server_client.dart:123:12)
+<asynchronous suspension>
+#3      MqttService.connect (package:chat_desktop/services/mqtt_service.dart:236:7)
+<asynchronous suspension>
+#4      MqttService._scheduleReconnect.<anonymous closure> (package:chat_desktop/services/mqtt_service.dart:359:25)
+<asynchronous suspension>
