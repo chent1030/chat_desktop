@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart' as notifications;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as notifications;
 import '../models/task.dart';
 import 'task_service.dart';
 import 'log_service.dart';
@@ -74,7 +76,8 @@ class MqttService {
       return;
     }
 
-    const androidSettings = notifications.AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        notifications.AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = notifications.DarwinInitializationSettings();
     const linuxSettings = notifications.LinuxInitializationSettings(
       defaultActionName: 'Open notification',
@@ -228,7 +231,8 @@ class MqttService {
 
       // 连接
       print('📡 [MQTT] 正在连接到 $broker:$port...');
-      await LogService.instance.info('正在连接到MQTT Broker: $broker:$port', tag: 'MQTT');
+      await LogService.instance
+          .info('正在连接到MQTT Broker: $broker:$port', tag: 'MQTT');
       await _client!.connect();
 
       if (_client!.connectionStatus!.state == MqttConnectionState.connected) {
@@ -258,7 +262,8 @@ class MqttService {
         return true;
       } else {
         print('✗ [MQTT] 连接失败: ${_client!.connectionStatus}');
-        await LogService.instance.error('MQTT连接失败: ${_client!.connectionStatus}', tag: 'MQTT');
+        await LogService.instance
+            .error('MQTT连接失败: ${_client!.connectionStatus}', tag: 'MQTT');
         _updateConnectionState(MqttServiceState.error);
         return false;
       }
@@ -274,10 +279,36 @@ class MqttService {
 
   /// 订阅Topic
   void _subscribeToTopics(String empNo) {
-    // 订阅个人所有待办相关消息 (使用通配符)
-    final personalTopic = 'mqtt_app/tasks/$empNo/+/+';
-    _client!.subscribe(personalTopic, MqttQos.atLeastOnce);
-    print('📬 [MQTT] 已订阅: $personalTopic');
+    final topics = _buildSubscribeTopics(empNo);
+    for (final topic in topics) {
+      _client!.subscribe(topic, MqttQos.atLeastOnce);
+      print('📬 [MQTT] 已订阅: $topic');
+    }
+  }
+
+  List<String> _buildSubscribeTopics(String empNo) {
+    final raw = dotenv.env['MQTT_TOPICS']?.trim() ?? '';
+    if (raw.isEmpty) {
+      // 默认：订阅个人所有待办相关消息（两级通配符）
+      return ['mqtt_app/tasks/$empNo/+/+'];
+    }
+
+    final parts = raw.split(RegExp(r'[,\n;]+'));
+    final topics = <String>{};
+    for (final p in parts) {
+      final t = p.trim();
+      if (t.isEmpty) continue;
+      topics.add(
+        t
+            .replaceAll(r'${empNo}', empNo)
+            .replaceAll(r'$empNo', empNo)
+            .replaceAll(
+              '{empNo}',
+              empNo,
+            ),
+      );
+    }
+    return topics.toList(growable: false);
   }
 
   /// 连接成功回调
@@ -456,7 +487,8 @@ class MqttService {
 
       await _taskService.updateTask(updatedTask);
       print('✓ [MQTT] 待办已更新: ${updatedTask.title}');
-      await LogService.instance.info('MQTT更新待办: ${updatedTask.title}', tag: 'MQTT');
+      await LogService.instance
+          .info('MQTT更新待办: ${updatedTask.title}', tag: 'MQTT');
 
       _taskChangeController.add(null);
 
