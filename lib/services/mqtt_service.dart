@@ -289,8 +289,10 @@ class MqttService {
   List<String> _buildSubscribeTopics(String empNo) {
     final raw = dotenv.env['MQTT_TOPICS']?.trim() ?? '';
     if (raw.isEmpty) {
-      // 默认：订阅个人所有待办相关消息（两级通配符）
-      return ['mqtt_app/tasks/$empNo/+/+'];
+      // 默认：订阅个人所有待办相关消息
+      // 注意：当前项目的 topic 规范是 mqtt_app/tasks/{empNo}/{action}，action 只有一段，
+      // 因此这里必须用 #（不能用 +/+，否则会收不到 create/update 等消息）。
+      return ['mqtt_app/tasks/$empNo/#'];
     }
 
     final parts = raw.split(RegExp(r'[,\n;]+'));
