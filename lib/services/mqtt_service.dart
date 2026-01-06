@@ -257,7 +257,7 @@ class MqttService {
         }
 
         // 订阅Topic
-        _subscribeToTopics(empNo);
+        await _subscribeToTopics(empNo);
 
         return true;
       } else {
@@ -278,8 +278,15 @@ class MqttService {
   }
 
   /// 订阅Topic
-  void _subscribeToTopics(String empNo) {
+  Future<void> _subscribeToTopics(String empNo) async {
+    final rawTopics = dotenv.env['MQTT_TOPICS']?.trim() ?? '';
     final topics = _buildSubscribeTopics(empNo);
+    await LogService.instance.info(
+      rawTopics.isEmpty
+          ? 'MQTT订阅Topic(默认): ${topics.join(', ')}'
+          : 'MQTT订阅Topic(来自MQTT_TOPICS="$rawTopics"): ${topics.join(', ')}',
+      tag: 'MQTT',
+    );
     for (final topic in topics) {
       _client!.subscribe(topic, MqttQos.atLeastOnce);
       print('📬 [MQTT] 已订阅: $topic');
@@ -336,6 +343,7 @@ class MqttService {
   /// 订阅成功回调
   void _onSubscribed(MqttSubscription subscription) {
     print('✓ [MQTT] 订阅成功: ${subscription.topic}');
+    LogService.instance.info('MQTT订阅成功: ${subscription.topic}', tag: 'MQTT');
   }
 
   /// 计划重连
