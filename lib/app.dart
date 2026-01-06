@@ -4,15 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'screens/home_screen.dart';
-import 'widgets/window/mini_window.dart';
 import 'providers/window_provider.dart';
 import 'services/log_service.dart';
 import 'utils/theme.dart';
 import 'providers/font_provider.dart';
-import 'services/windows_ipc.dart';
-import 'services/windows_floating_helper.dart';
+import 'services/floating_window_service.dart';
 
 /// 窗口监听器 - 处理窗口关闭事件
 class AppWindowListener extends WindowListener {
@@ -27,32 +24,22 @@ class AppWindowListener extends WindowListener {
     print('🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗');
 
     try {
-      // Windows: 优先使用原生悬浮窗
-      if (Platform.isWindows) {
-        final unreadTasks = ref.read(unreadTasksProvider);
-        final started =
-            await WindowsFloatingHelper.launchFloatingAndSync(unreadTasks);
-        if (started) {
-          await windowManager.hide();
-          await LogService.instance.info('已启动原生悬浮窗并隐藏主窗口', tag: 'WINDOW');
-          print('✓ [WINDOW] 已启动原生悬浮窗并隐藏主窗口');
-          return;
-        } else {
-          print('✗ [WINDOW] 启动原生悬浮窗失败，回退到 Flutter 子窗');
-        }
+      // Windows：同进程多窗口（Flutter 悬浮窗），避免原生 layered window 在部分机器上兼容性问题
+      if (Platform.isWindows && FloatingWindowService.instance.isOpen) {
+        await windowManager.hide();
+        return;
       }
 
       // 创建独立的悬浮窗（120x120，透明，置顶）
       // 传递 'mini_window' 作为第一个参数，子窗口的 main() 会接收到这个参数
       final window = await DesktopMultiWindow.createWindow('mini_window');
+      if (Platform.isWindows) {
+        FloatingWindowService.instance.bindWindowId(window.windowId);
+      }
 
       // 设置悬浮窗属性
-      // 预留右侧气泡显示空间（避免被窗口边界裁剪）
-      const double bubbleWidth = 280; // 与子窗口 UI 中的 _bubbleWidth 保持一致
-      await window.setFrame(
-          const Offset(100, 100) & const Size(120 + 10 + bubbleWidth, 120));
+      await window.setFrame(const Offset(100, 100) & const Size(120, 120));
       await window.setTitle(''); // 空标题
-      await window.center();
 
       // 关键设置：移除标题栏和边框
       // 注意：desktop_multi_window 的 API 有限，某些属性可能无法直接设置
@@ -65,44 +52,13 @@ class AppWindowListener extends WindowListener {
 
       // 获取当前未读任务数并发送给 Flutter 悬浮窗
       try {
-        final unreadCount = ref.read(unreadBadgeCountProvider);
         final unreadTasks = ref.read(unreadTasksProvider);
-        print(
-            '📤 [WINDOW] 发送未读任务数给悬浮窗: $unreadCount, 窗口ID: ${window.windowId}');
+        print('📤 [WINDOW] 发送未读任务给悬浮窗, 窗口ID: ${window.windowId}');
 
         // 等待一小段时间确保悬浮窗已经初始化
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // 使用正确的 API 发送消息给子窗口（Flutter 悬浮窗）
-        await DesktopMultiWindow.invokeMethod(
-          window.windowId,
-          'update_unread_count',
-          unreadCount,
-        );
-        print('✓ [WINDOW] 未读任务数已发送');
-
-        // 发送未读任务列表（转换为 Map 列表）
-        final taskMaps = unreadTasks
-            .map((task) => {
-                  'id': task.id,
-                  'title': task.title,
-                  'description': task.description,
-                  'isCompleted': task.isCompleted,
-                  'isRead': task.isRead,
-                })
-            .toList();
-
-        await DesktopMultiWindow.invokeMethod(
-          window.windowId,
-          'update_unread_tasks',
-          taskMaps,
-        );
-        print('✓ [WINDOW] 未读任务列表已发送，数量: ${taskMaps.length}');
-
-        // Windows: 同步未读任务到原生悬浮窗（如果已启动）
-        if (Platform.isWindows) {
-          WindowsFloatingIpc.sendUnreadTasks(unreadTasks);
-        }
+        await FloatingWindowService.instance.syncUnreadTasks(unreadTasks);
       } catch (e) {
         print('✗ [WINDOW] 发送数据失败: $e');
       }
@@ -130,6 +86,19 @@ class AppTrayListener extends TrayListener {
     // 点击托盘图标时恢复主窗口
     windowManager.show();
     windowManager.focus();
+
+    // 如果悬浮窗还在，顺便关闭（避免同时存在两个入口）
+    if (Platform.isWindows) {
+      final id = FloatingWindowService.instance.windowId;
+      if (id != null) {
+        () async {
+          try {
+            await WindowController.fromWindowId(id).close();
+          } catch (_) {}
+          FloatingWindowService.instance.unbindWindowId(id);
+        }();
+      }
+    }
   }
 
   @override
@@ -147,12 +116,6 @@ class AppTrayListener extends TrayListener {
     } else if (menuItem.key == 'exit_app') {
       // 真正退出应用（不是进入小窗模式）
       print('🔴 [APP] 用户从系统托盘选择退出，正在关闭程序...');
-      // Windows: 先关闭原生悬浮窗（若存在）
-      try {
-        if (Platform.isWindows) {
-          WindowsFloatingIpc.closeFloatingWindow();
-        }
-      } catch (_) {}
       windowManager.destroy();
       exit(0); // 强制退出进程
     }

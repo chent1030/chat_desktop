@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:window_manager/window_manager.dart'
-    show windowManager, TitleBarStyle;
+    show windowManager, TitleBarStyle, WindowListener;
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'services/config_service.dart';
 import 'utils/app_fonts.dart';
@@ -62,9 +62,24 @@ Future<void> miniWindowMain(List<String> args) async {
         const initialSize = Size(120, 120);
         appWindow.minSize = initialSize;
         appWindow.size = initialSize;
-        appWindow.alignment = Alignment.center;
+        // 默认贴近右下角（若存在保存位置则稍后会覆盖）
+        appWindow.alignment = Alignment.bottomRight;
         appWindow.show();
       });
+    } catch (_) {}
+
+    // 恢复上次拖拽的位置（若存在），否则使用底部右侧默认位置
+    try {
+      final pos = ConfigService.instance.miniWindowPosition;
+      if (pos != null) {
+        await Future.delayed(const Duration(milliseconds: 140));
+        await windowManager.setPosition(Offset(pos['x']!, pos['y']!));
+      }
+    } catch (_) {}
+
+    // 监听窗口拖拽结束，保存当前位置
+    try {
+      windowManager.addListener(_MiniWindowMoveListener());
     } catch (_) {}
 
     // 再次尝试数次，确保系统栏被移除（在某些机器上首次调用不生效）
@@ -80,6 +95,26 @@ Future<void> miniWindowMain(List<String> args) async {
       } catch (_) {}
       if (tries >= 10) t.cancel();
     });
+  }
+}
+
+class _MiniWindowMoveListener extends WindowListener {
+  @override
+  void onWindowMove() {
+    _savePos();
+  }
+
+  @override
+  void onWindowResized() {
+    _savePos();
+  }
+
+  Future<void> _savePos() async {
+    if (!Platform.isWindows) return;
+    try {
+      final pos = await windowManager.getPosition();
+      await ConfigService.instance.setMiniWindowPosition(pos.dx, pos.dy);
+    } catch (_) {}
   }
 }
 
@@ -219,6 +254,12 @@ class _MiniWindowHomeState extends State<MiniWindowHome> {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onDoubleTap: _onDoubleTap,
+        onPanStart: (_) {
+          if (!Platform.isWindows) return;
+          try {
+            windowManager.startDragging();
+          } catch (_) {}
+        },
         child: Center(
           child: ClipOval(
             child: Image.asset(

@@ -11,7 +11,7 @@ import '../providers/font_provider.dart';
 import '../utils/app_fonts.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
-import '../services/windows_ipc.dart';
+import '../services/floating_window_service.dart';
 import 'dart:io' show Platform;
 import '../models/task.dart';
 
@@ -79,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.listen<List<Task>>(unreadTasksProvider, (previous, next) {
         try {
           if (Platform.isWindows) {
-            WindowsFloatingIpc.sendUnreadTasks(next);
+            FloatingWindowService.instance.syncUnreadTasks(next);
           }
         } catch (_) {}
       });
@@ -91,7 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {
           final unread = ref.read(unreadTasksProvider);
-          WindowsFloatingIpc.sendUnreadTasks(unread);
+          FloatingWindowService.instance.syncUnreadTasks(unread);
         } catch (_) {}
       });
     }

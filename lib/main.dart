@@ -14,7 +14,7 @@ import 'services/storage_service.dart';
 import 'services/log_service.dart';
 import 'services/task_service.dart';
 import 'utils/constants.dart';
-import 'package:url_launcher/url_launcher.dart' as launcher;
+import 'services/floating_window_service.dart';
 
 /// 应用入口点
 Future<void> main(List<String> args) async {
@@ -155,6 +155,7 @@ Future<void> _initializeApp() async {
         // 关闭悬浮窗
         if (fromWindowId != 0) {
           await WindowController.fromWindowId(fromWindowId).close();
+          FloatingWindowService.instance.unbindWindowId(fromWindowId);
           await LogService.instance.info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
           print('✓ [WINDOW] 已关闭悬浮窗 $fromWindowId');
         }
@@ -183,7 +184,9 @@ Future<void> _initializeApp() async {
           // 关闭悬浮窗
           if (fromWindowId != 0) {
             await WindowController.fromWindowId(fromWindowId).close();
-            await LogService.instance.info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
+            FloatingWindowService.instance.unbindWindowId(fromWindowId);
+            await LogService.instance
+                .info('已关闭悬浮窗 $fromWindowId', tag: 'WINDOW');
             print('✓ [WINDOW] 已关闭悬浮窗 $fromWindowId');
           }
         } catch (e) {
