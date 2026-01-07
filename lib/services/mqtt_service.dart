@@ -233,28 +233,44 @@ class MqttService {
       print('📡 [MQTT] 正在连接到 $broker:$port...');
       await LogService.instance
           .info('正在连接到MQTT Broker: $broker:$port', tag: 'MQTT');
-      await _client!.connect();
+      final connectFuture = _client!.connect();
+
+      // 尽早挂载消息监听，避免离线队列消息在连接完成瞬间被投递而丢失
+      print('📡 [MQTT] 设置消息监听...');
+      await _messageSubscription?.cancel();
+      _messageSubscription = _client!.updates.listen(
+        _onMessage,
+        onDone: () {
+          print('⚠️ [MQTT] 消息流结束 (onDone)');
+        },
+        onError: (error) {
+          print('❌ [MQTT] 消息流错误: $error');
+        },
+        cancelOnError: false,
+      );
+      print('✓ [MQTT] 消息监听已设置');
+
+      await connectFuture;
 
       if (_client!.connectionStatus!.state == MqttConnectionState.connected) {
         print('✓ [MQTT] 连接成功');
         await LogService.instance.info('MQTT连接成功', tag: 'MQTT');
-        _updateConnectionState(MqttServiceState.connected);
 
-        // ⚠️ 关键：每次连接成功后都需要订阅消息流（因为每次都是新client）
-        if (_client!.updates != null) {
-          print('📡 [MQTT] 设置消息监听...');
-          _messageSubscription = _client!.updates!.listen(
-            _onMessage,
-            onDone: () {
-              print('⚠️ [MQTT] 消息流结束 (onDone)');
-            },
-            onError: (error) {
-              print('❌ [MQTT] 消息流错误: $error');
-            },
-            cancelOnError: false,
+        final connectAck = _client!.connectionStatus?.connectAckMessage;
+        if (connectAck is MqttConnectAckMessage) {
+          final sessionPresent =
+              connectAck.variableHeader?.connectAckFlags.sessionPresent;
+          final sessionExpiryInterval =
+              connectAck.variableHeader?.sessionExpiryInterval;
+          print(
+            '🔎 [MQTT] CONNACK: sessionPresent=$sessionPresent, sessionExpiryInterval=$sessionExpiryInterval',
           );
-          print('✓ [MQTT] 消息监听已设置');
+          await LogService.instance.info(
+            'MQTT CONNACK: sessionPresent=$sessionPresent, sessionExpiryInterval=$sessionExpiryInterval',
+            tag: 'MQTT',
+          );
         }
+        _updateConnectionState(MqttServiceState.connected);
 
         // 订阅Topic
         await _subscribeToTopics(empNo);
@@ -377,14 +393,20 @@ class MqttService {
     for (final message in messages) {
       final topic = message.topic ?? '';
       final payload = message.payload as MqttPublishMessage;
+      final retain = payload.header?.retain;
+      final qos = payload.header?.qos;
       // ⚠️ 使用utf8.decode正确解码中文字符，而不是String.fromCharCodes
       final messageStr = utf8.decode(payload.payload.message!);
 
       print('📨 [MQTT] 收到消息');
       print('   Topic: $topic');
+      print('   Retain: $retain');
+      print('   QoS: $qos');
       print('   Payload: $messageStr');
 
       LogService.instance.info('收到MQTT消息 - Topic: $topic', tag: 'MQTT');
+      LogService.instance
+          .debug('MQTT消息属性 - Retain: $retain, QoS: $qos', tag: 'MQTT');
 
       try {
         final json = jsonDecode(messageStr) as Map<String, dynamic>;
