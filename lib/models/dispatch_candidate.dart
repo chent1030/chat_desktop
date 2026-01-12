@@ -25,8 +25,7 @@ class DispatchCandidate {
       empName: (json['empName'] ?? '').toString(),
       empNo: (json['empNo'] ?? '').toString(),
       workGroup: json['workGroup']?.toString(),
-      accessGroup: json['access_group']?.toString(),
+      accessGroup: json['accessGroup']?.toString(),
     );
   }
 }
-

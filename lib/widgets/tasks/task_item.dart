@@ -137,8 +137,6 @@ class TaskItem extends ConsumerWidget {
   Future<void> _markAsRead(BuildContext context, WidgetRef ref) async {
     try {
       await TaskService.instance.markTaskAsRead(task.id);
-      // 立即刷新列表以获得即时动画反馈
-      // Isar watch 也会触发，但这里主动刷新可更快反馈
       await ref.read(taskListProvider.notifier).loadTasks();
     } catch (_) {}
   }

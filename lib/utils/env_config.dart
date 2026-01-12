@@ -6,9 +6,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// - 所有业务代码不要直接读 `dotenv.env[...]`，统一从这里取，便于改名/加默认值/做校验。
 /// - 变量名在这里集中管理，避免散落在各处导致配置不一致。
 class EnvConfig {
+  // ===== 全局调试开关 =====
+  static const String keyDebug = 'DEBUG';
+
   // ===== Unify API（任务相关） =====
   static const String keyUnifyApiBaseUrl = 'UNIFY_API_BASE_URL';
   static const String keyUnifyCreateTaskPath = 'UNIFY_API_CREATE_TASK_PATH';
+  static const String keyUnifyTaskReadPath = 'UNIFY_API_TASK_READ_PATH';
+  static const String keyUnifyTaskCompletePath = 'UNIFY_API_TASK_COMPLETE_PATH';
+  static const String keyUnifyTaskListPath = 'UNIFY_API_TASK_LIST_PATH';
   static const String keyUnifyDispatchCandidatesPath =
       'UNIFY_API_DISPATCH_CANDIDATES_PATH';
 
@@ -62,6 +68,20 @@ class EnvConfig {
     return int.tryParse(raw) ?? defaultValue;
   }
 
+  static bool _getBool(String key, {bool defaultValue = false}) {
+    final raw = _getString(key).toLowerCase();
+    if (raw.isEmpty) return defaultValue;
+    return raw == 'true' || raw == '1' || raw == 'yes' || raw == 'y';
+  }
+
+  /// 是否启用调试模式：Unify 接口全部使用 Mock 数据
+  static bool get debug => _getBool(keyDebug, defaultValue: false);
+
+  /// 重新加载 `.env`（用于运行时切换 DEBUG 等配置）
+  static Future<void> reload() async {
+    await dotenv.load(fileName: '.env');
+  }
+
   // ===== Unify API（任务相关）=====
   static String get unifyApiBaseUrl => _getString(
         keyUnifyApiBaseUrl,
@@ -69,6 +89,13 @@ class EnvConfig {
       );
 
   static String get unifyCreateTaskPath => _getString(keyUnifyCreateTaskPath);
+
+  static String get unifyTaskReadPath => _getString(keyUnifyTaskReadPath);
+
+  static String get unifyTaskCompletePath =>
+      _getString(keyUnifyTaskCompletePath);
+
+  static String get unifyTaskListPath => _getString(keyUnifyTaskListPath);
 
   static String get unifyDispatchCandidatesPath =>
       _getString(keyUnifyDispatchCandidatesPath);

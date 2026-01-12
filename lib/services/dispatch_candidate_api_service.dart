@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/dispatch_candidate.dart';
 import 'http_client.dart';
 import '../utils/env_config.dart';
+import 'log_service.dart';
 
 /// 派发候选列表 API
 ///
@@ -34,6 +35,25 @@ class DispatchCandidateApiService {
   }
 
   Future<List<DispatchCandidate>> fetchCandidates() async {
+    if (EnvConfig.debug) {
+      await LogService.instance.info('UNIFY DEBUG=true：dispatch candidates 使用 Mock', tag: 'UNIFY');
+      await Future.delayed(const Duration(milliseconds: 120));
+      return const [
+        DispatchCandidate(
+          empName: '张三',
+          empNo: '61002541',
+          workGroup: '运维团队',
+          accessGroup: '运维团队_数字化BP_创新开发',
+        ),
+        DispatchCandidate(
+          empName: '李四',
+          empNo: '61002542',
+          workGroup: '代经理',
+          accessGroup: '运维团队',
+        ),
+      ];
+    }
+
     final path = EnvConfig.unifyDispatchCandidatesPath.trim();
     if (path.isEmpty) {
       throw HttpException(

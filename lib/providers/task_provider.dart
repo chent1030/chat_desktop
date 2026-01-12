@@ -84,33 +84,21 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
   StreamSubscription<void>? _mqttTaskChangeSubscription;
 
   TaskListNotifier(this._taskService) : super(const TaskListState()) {
-    print('🎯 [Provider] TaskListNotifier 初始化');
-
     // 初始化时加载任务
     loadTasks();
 
     // 监听数据库变化，自动刷新任务列表
     _taskWatchSubscription = _taskService.watchTasks().listen((_) {
-      print('📊 [Provider] 检测到数据库变化（Isar Watch），重新加载任务列表');
       loadTasks();
     });
 
     // 监听MQTT任务变更通知
     try {
-      _mqttTaskChangeSubscription =
-          MqttService.instance.taskChangeStream.listen(
-        (_) {
-          print('📊 [Provider] 收到MQTT任务变更通知，重新加载任务列表');
-          loadTasks();
-        },
-        onError: (error) {
-          print('❌ [Provider] MQTT任务变更监听错误: $error');
-        },
+      _mqttTaskChangeSubscription = MqttService.instance.taskChangeStream.listen(
+        (_) => loadTasks(),
+        onError: (_) {},
       );
-      print('✓ [Provider] 已订阅MQTT任务变更通知');
-    } catch (e) {
-      print('❌ [Provider] 订阅MQTT任务变更失败: $e');
-    }
+    } catch (_) {}
   }
 
   @override
@@ -122,13 +110,11 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
 
   /// 加载任务
   Future<void> loadTasks() async {
-    print('📊 [Provider] loadTasks() 被调用');
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       List<Task> tasks;
 
-      // 根据筛选条件获取任务
       switch (state.filter) {
         case TaskFilter.all:
           tasks = await _taskService.getAllTasks();
@@ -150,7 +136,7 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
           break;
       }
 
-      // 应用搜索关键词
+      // 应用搜索关键词（本地）
       if (state.searchKeyword.isNotEmpty) {
         final keyword = state.searchKeyword.toLowerCase();
         tasks = tasks
@@ -160,14 +146,9 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
             .toList();
       }
 
-      // 应用排序
       tasks = _sortTasks(tasks, state.sortOrder);
-
-      print('✓ [Provider] 加载了 ${tasks.length} 个任务');
       state = state.copyWith(tasks: tasks, isLoading: false);
-      print('✓ [Provider] UI状态已更新');
     } catch (e) {
-      print('❌ [Provider] 加载任务失败: $e');
       state = state.copyWith(
         isLoading: false,
         error: '加载任务失败: $e',
@@ -204,7 +185,7 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
     await loadTasks();
   }
 
-  /// 切换任务完成状态
+  /// 切换任务完成状态（本地）
   Future<void> toggleTaskCompletion(int taskId) async {
     try {
       await _taskService.toggleTaskCompletion(taskId);
@@ -214,7 +195,7 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
     }
   }
 
-  /// 删除任务
+  /// 删除任务（本地）
   Future<void> deleteTask(int taskId) async {
     try {
       await _taskService.deleteTask(taskId);
@@ -224,7 +205,7 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
     }
   }
 
-  /// 清除所有已完成任务
+  /// 清除所有已完成任务（本地）
   Future<void> clearCompletedTasks() async {
     try {
       await _taskService.clearCompletedTasks();
@@ -282,7 +263,6 @@ class TaskListNotifier extends StateNotifier<TaskListState> {
 /// 注意：不使用autoDispose，确保provider在应用生命周期内始终存在
 final taskListProvider =
     StateNotifierProvider<TaskListNotifier, TaskListState>((ref) {
-  print('🎯 [Provider] 创建 TaskListProvider');
   final taskService = ref.watch(taskServiceProvider);
   return TaskListNotifier(taskService);
 });
@@ -533,10 +513,11 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
           description:
               state.description.trim().isEmpty ? null : state.description.trim(),
           dueDate: state.dueDate,
-          dispatchNow: dispatchNow,
           assignedTo: state.assignedTo,
           assignedToType: state.assignedToType,
           assignedBy: empNo.trim(),
+          priority: state.priority.index,
+          tags: state.tags,
         );
       }
 

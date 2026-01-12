@@ -6,6 +6,7 @@ import '../widgets/tasks/task_list.dart';
 import '../widgets/tasks/task_form.dart';
 import '../widgets/chat/chat_view.dart';
 import '../widgets/common/emp_no_dialog.dart';
+import '../widgets/tasks/unify_task_list_dialog.dart';
 import '../services/config_service.dart';
 import '../providers/font_provider.dart';
 import '../utils/app_fonts.dart';
@@ -294,6 +295,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _showSearchDialog(context);
             } else if (value == 'clear_completed') {
               await _clearCompletedTasks();
+            } else if (value == 'my_tasks_paged') {
+              await UnifyTaskListDialog.show(
+                context,
+                type: UnifyTaskListDialogType.myTasks,
+              );
+            } else if (value == 'dispatched_tasks_paged') {
+              await UnifyTaskListDialog.show(
+                context,
+                type: UnifyTaskListDialogType.dispatchedByMe,
+              );
             } else if (value == 'change_emp_no') {
               await _showChangeEmpNoDialog();
             }
@@ -316,6 +327,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Icon(Icons.clear_all, size: 18),
                   SizedBox(width: 8),
                   Text('清除已完成任务'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'my_tasks_paged',
+              child: Row(
+                children: [
+                  Icon(Icons.list_alt, size: 18),
+                  SizedBox(width: 8),
+                  Text('我的任务（分页）'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'dispatched_tasks_paged',
+              child: Row(
+                children: [
+                  Icon(Icons.send_outlined, size: 18),
+                  SizedBox(width: 8),
+                  Text('我派发的任务（分页）'),
                 ],
               ),
             ),
