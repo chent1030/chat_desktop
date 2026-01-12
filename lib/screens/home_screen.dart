@@ -133,22 +133,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           child: Column(
             children: [
-              // 新建任务按钮
+              // 顶部操作区
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showTaskFormDialog(context),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('新建任务'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showTaskFormDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('新建任务'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _openPagedTaskDialog(),
+                      icon: const Icon(Icons.table_rows, size: 18),
+                      label: const Text('分页任务'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -295,16 +313,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _showSearchDialog(context);
             } else if (value == 'clear_completed') {
               await _clearCompletedTasks();
-            } else if (value == 'my_tasks_paged') {
-              await UnifyTaskListDialog.show(
-                context,
-                type: UnifyTaskListDialogType.myTasks,
-              );
-            } else if (value == 'dispatched_tasks_paged') {
-              await UnifyTaskListDialog.show(
-                context,
-                type: UnifyTaskListDialogType.dispatchedByMe,
-              );
             } else if (value == 'change_emp_no') {
               await _showChangeEmpNoDialog();
             }
@@ -331,27 +339,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const PopupMenuDivider(),
-            const PopupMenuItem(
-              value: 'my_tasks_paged',
-              child: Row(
-                children: [
-                  Icon(Icons.list_alt, size: 18),
-                  SizedBox(width: 8),
-                  Text('我的任务（分页）'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'dispatched_tasks_paged',
-              child: Row(
-                children: [
-                  Icon(Icons.send_outlined, size: 18),
-                  SizedBox(width: 8),
-                  Text('我派发的任务（分页）'),
-                ],
-              ),
-            ),
-            const PopupMenuDivider(),
             PopupMenuItem(
               value: 'change_emp_no',
               child: Row(
@@ -366,6 +353,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+
+  Future<void> _openPagedTaskDialog() async {
+    await UnifyTaskListDialog.show(
+      context,
+      type: UnifyTaskListDialogType.myTasks,
     );
   }
 
@@ -522,46 +516,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       child: statisticsAsync.when(
-        data: (stats) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        data: (stats) => Column(
           children: [
-            _buildStatItem(
-              icon: Icons.task,
-              label: '总任务',
-              value: stats['total'].toString(),
+            Row(
+              children: [
+                const Text(
+                  '任务概览',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  onPressed: () => _openPagedTaskDialog(),
+                  icon: const Icon(Icons.table_rows, size: 16),
+                  label: const Text('分页任务'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withOpacity(0.6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
-            _buildStatItem(
-              icon: Icons.pending_actions,
-              label: '未完成',
-              value: stats['incomplete'].toString(),
-              isActive: currentFilter == TaskFilter.incomplete,
-              onTap: () {
-                ref
-                    .read(taskListProvider.notifier)
-                    .setFilter(TaskFilter.incomplete);
-              },
-            ),
-            _buildStatItem(
-              icon: Icons.check_circle,
-              label: '已完成',
-              value: stats['completed'].toString(),
-              isActive: currentFilter == TaskFilter.completed,
-              onTap: () {
-                ref
-                    .read(taskListProvider.notifier)
-                    .setFilter(TaskFilter.completed);
-              },
-            ),
-            _buildStatItem(
-              icon: Icons.event_busy,
-              label: '逾期',
-              value: stats['overdue'].toString(),
-              isActive: currentFilter == TaskFilter.overdue,
-              onTap: () {
-                ref
-                    .read(taskListProvider.notifier)
-                    .setFilter(TaskFilter.overdue);
-              },
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                  icon: Icons.task,
+                  label: '总任务',
+                  value: stats['total'].toString(),
+                ),
+                _buildStatItem(
+                  icon: Icons.pending_actions,
+                  label: '未完成',
+                  value: stats['incomplete'].toString(),
+                  isActive: currentFilter == TaskFilter.incomplete,
+                  onTap: () {
+                    ref
+                        .read(taskListProvider.notifier)
+                        .setFilter(TaskFilter.incomplete);
+                  },
+                ),
+                _buildStatItem(
+                  icon: Icons.check_circle,
+                  label: '已完成',
+                  value: stats['completed'].toString(),
+                  isActive: currentFilter == TaskFilter.completed,
+                  onTap: () {
+                    ref
+                        .read(taskListProvider.notifier)
+                        .setFilter(TaskFilter.completed);
+                  },
+                ),
+                _buildStatItem(
+                  icon: Icons.event_busy,
+                  label: '逾期',
+                  value: stats['overdue'].toString(),
+                  isActive: currentFilter == TaskFilter.overdue,
+                  onTap: () {
+                    ref
+                        .read(taskListProvider.notifier)
+                        .setFilter(TaskFilter.overdue);
+                  },
+                ),
+              ],
             ),
           ],
         ),

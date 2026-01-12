@@ -276,7 +276,9 @@ class _UnifyTaskListDialogBodyState extends State<_UnifyTaskListDialogBody> {
   }
 
   Future<void> _openDetail(Task task) async {
-    await _markRead(task);
+    if (_type == UnifyTaskListDialogType.myTasks) {
+      await _markRead(task);
+    }
     if (!mounted) return;
     await showDialog(
       context: context,
@@ -343,6 +345,7 @@ class _UnifyTaskListDialogBodyState extends State<_UnifyTaskListDialogBody> {
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                   child: _TableCard(
                     theme: theme,
+                    type: _type,
                     tasks: _tasks,
                     isLoading: _isLoading,
                     onOpen: _openDetail,
@@ -582,6 +585,7 @@ class _Toolbar extends StatelessWidget {
 
 class _TableCard extends StatelessWidget {
   final ThemeData theme;
+  final UnifyTaskListDialogType type;
   final List<Task> tasks;
   final bool isLoading;
   final Future<void> Function(Task task) onOpen;
@@ -590,6 +594,7 @@ class _TableCard extends StatelessWidget {
 
   const _TableCard({
     required this.theme,
+    required this.type,
     required this.tasks,
     required this.isLoading,
     required this.onOpen,
@@ -615,6 +620,29 @@ class _TableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final headerStyle = theme.textTheme.labelLarge;
+    final isDispatchedByMe = type == UnifyTaskListDialogType.dispatchedByMe;
+
+    final compactFilled = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      minimumSize: const Size(0, 32),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      textStyle: theme.textTheme.labelMedium,
+    );
+    final compactTonal = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      minimumSize: const Size(0, 32),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      textStyle: theme.textTheme.labelMedium,
+    );
+    final compactOutlined = OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      minimumSize: const Size(0, 32),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      textStyle: theme.textTheme.labelMedium,
+    );
 
     return Card(
       elevation: 0,
@@ -628,8 +656,9 @@ class _TableCard extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 860),
-            child: SingleChildScrollView(
-              child: DataTable(
+              child: SingleChildScrollView(
+                child: DataTable(
+                showCheckboxColumn: false,
                 headingRowHeight: 44,
                 dataRowMinHeight: 52,
                 dataRowMaxHeight: 76,
@@ -700,20 +729,25 @@ class _TableCard extends StatelessWidget {
                           children: [
                             FilledButton.tonal(
                               onPressed: isLoading ? null : () => onOpen(task),
+                              style: compactTonal,
                               child: const Text('查看'),
                             ),
-                            OutlinedButton(
-                              onPressed: isLoading || task.isRead
-                                  ? null
-                                  : () => onMarkRead(task),
-                              child: const Text('设为已读'),
-                            ),
-                            FilledButton(
-                              onPressed: isLoading || task.isCompleted
-                                  ? null
-                                  : () => onComplete(task),
-                              child: const Text('完成'),
-                            ),
+                            if (!isDispatchedByMe)
+                              OutlinedButton(
+                                onPressed: isLoading || task.isRead
+                                    ? null
+                                    : () => onMarkRead(task),
+                                style: compactOutlined,
+                                child: const Text('设为已读'),
+                              ),
+                            if (!isDispatchedByMe)
+                              FilledButton(
+                                onPressed: isLoading || task.isCompleted
+                                    ? null
+                                    : () => onComplete(task),
+                                style: compactFilled,
+                                child: const Text('完成'),
+                              ),
                           ],
                         ),
                       ),

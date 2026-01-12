@@ -136,3 +136,37 @@ Errors
   data: {"event": "tts_message_end", "conversation_id": "23dd85f3-1a41-4ea0-b7a9-062734ccfaf9", "message_id": "a8bdc41c-13b2-4c18-bfd9-054b9803038c", "created_at": 1721205487, "task_id": "3bf8a0bb-e73b-4690-9e66-4e429bad8ee7", "audio": ""}
 
 ```
+
+
+```json
+{
+  "totalPages": 10,
+  "totalElements": 99,
+  "numberOfElements": 99,
+  "size": 10,
+  "number": 10,
+  "content": [
+    {
+      "id": 2,
+      "taskUuid": "****-****-****-******",
+      "title": "测试",
+      "description": "## 测试描述",
+      "priority": 1,
+      "isCompleted": true,
+      "isRead": true,
+      "dueDate": "2026-01-15 08:00",
+      "createdAt": "2026-01-15 08:00:00",
+      "updatedAt": "2026-01-15 08:00:00",
+      "source": 1,
+      "createdByAgentId": "email",
+      "completedAt": "",
+      "tags": "",
+      "assignedTo": "",
+      "assignedToType": "",
+      "assignedBy": "",
+      "assignedAt": "",
+      "empNo": "61016968"
+    }
+  ]
+}
+```
