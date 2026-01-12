@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mqtt5_client/mqtt5_client.dart';
 import 'package:mqtt5_client/mqtt5_server_client.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
@@ -9,6 +8,7 @@ import '../models/task.dart';
 import 'task_service.dart';
 import 'log_service.dart';
 import '../utils/constants.dart';
+import '../utils/env_config.dart';
 
 /// MQTT服务连接状态枚举
 enum MqttServiceState {
@@ -295,7 +295,7 @@ class MqttService {
 
   /// 订阅Topic
   Future<void> _subscribeToTopics(String empNo) async {
-    final rawTopics = dotenv.env['MQTT_TOPICS']?.trim() ?? '';
+    final rawTopics = EnvConfig.mqttTopicsRaw;
     final topics = _buildSubscribeTopics(empNo);
     await LogService.instance.info(
       rawTopics.isEmpty
@@ -310,7 +310,7 @@ class MqttService {
   }
 
   List<String> _buildSubscribeTopics(String empNo) {
-    final raw = dotenv.env['MQTT_TOPICS']?.trim() ?? '';
+    final raw = EnvConfig.mqttTopicsRaw;
     if (raw.isEmpty) {
       // 默认：订阅个人所有待办相关消息
       // 注意：当前项目的 topic 规范是 mqtt_app/tasks/{empNo}/{action}，action 只有一段，

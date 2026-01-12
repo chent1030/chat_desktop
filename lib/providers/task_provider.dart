@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task.dart';
+import '../services/config_service.dart';
+import '../services/task_api_service.dart';
 import '../services/task_service.dart';
 import '../services/mqtt_service.dart';
 
@@ -297,6 +299,10 @@ class TaskFormState {
   final DateTime? dueDate;
   final String? tags;
   final bool allowDispatch;
+  final bool dispatchNow; // 是否在创建时立即派发
+  final String? assignedTo; // 用户名称或团队名称
+  final String? assignedToType; // 用户 / 团队
+  final String? assignedToEmpNo; // 用户工号（用于同名消歧与下拉选择）
   final bool isEditing; // true = 编辑模式, false = 创建模式
   final int? editingTaskId; // 正在编辑的任务ID
   final bool isSaving;
@@ -309,6 +315,10 @@ class TaskFormState {
     this.dueDate,
     this.tags,
     this.allowDispatch = false,
+    this.dispatchNow = false,
+    this.assignedTo,
+    this.assignedToType,
+    this.assignedToEmpNo,
     this.isEditing = false,
     this.editingTaskId,
     this.isSaving = false,
@@ -322,6 +332,10 @@ class TaskFormState {
     DateTime? dueDate,
     String? tags,
     bool? allowDispatch,
+    bool? dispatchNow,
+    String? assignedTo,
+    String? assignedToType,
+    String? assignedToEmpNo,
     bool? isEditing,
     int? editingTaskId,
     bool? isSaving,
@@ -334,6 +348,10 @@ class TaskFormState {
       dueDate: dueDate ?? this.dueDate,
       tags: tags ?? this.tags,
       allowDispatch: allowDispatch ?? this.allowDispatch,
+      dispatchNow: dispatchNow ?? this.dispatchNow,
+      assignedTo: assignedTo ?? this.assignedTo,
+      assignedToType: assignedToType ?? this.assignedToType,
+      assignedToEmpNo: assignedToEmpNo ?? this.assignedToEmpNo,
       isEditing: isEditing ?? this.isEditing,
       editingTaskId: editingTaskId ?? this.editingTaskId,
       isSaving: isSaving ?? this.isSaving,
@@ -353,8 +371,11 @@ class TaskFormState {
 /// TaskFormProvider - 管理任务表单的状态和操作
 class TaskFormNotifier extends StateNotifier<TaskFormState> {
   final TaskService _taskService;
+  final TaskApiService _taskApiService;
+  final ConfigService _configService;
 
-  TaskFormNotifier(this._taskService) : super(const TaskFormState());
+  TaskFormNotifier(this._taskService, this._taskApiService, this._configService)
+      : super(const TaskFormState());
 
   /// 设置标题
   void setTitle(String title) {
@@ -386,6 +407,52 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
     state = state.copyWith(allowDispatch: allow);
   }
 
+  /// 设置是否立即派发
+  void setDispatchNow(bool dispatchNow) {
+    if (!dispatchNow) {
+      state = state.copyWith(
+        dispatchNow: false,
+        assignedTo: null,
+        assignedToType: null,
+        assignedToEmpNo: null,
+      );
+      return;
+    }
+    state = state.copyWith(dispatchNow: true);
+  }
+
+  /// 设置派发类型（用户 / 团队）
+  void setAssignedToType(String? assignedToType) {
+    final normalized = assignedToType?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      state = state.copyWith(
+        dispatchNow: false,
+        assignedToType: null,
+        assignedTo: null,
+        assignedToEmpNo: null,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      dispatchNow: true,
+      assignedToType: normalized,
+      assignedTo: null,
+      assignedToEmpNo: null,
+    );
+  }
+
+  /// 设置派发对象
+  void setAssignedTo({
+    required String? assignedTo,
+    String? assignedToEmpNo,
+  }) {
+    state = state.copyWith(
+      assignedTo: assignedTo,
+      assignedToEmpNo: assignedToEmpNo,
+    );
+  }
+
   /// 加载任务到表单 (用于编辑)
   Future<void> loadTask(int taskId) async {
     final task = await _taskService.getTaskById(taskId);
@@ -401,6 +468,10 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
       dueDate: task.dueDate,
       tags: task.tags,
       allowDispatch: task.allowDispatch,
+      dispatchNow: false,
+      assignedTo: task.assignedTo,
+      assignedToType: task.assignedToType,
+      assignedToEmpNo: null,
       isEditing: true,
       editingTaskId: taskId,
     );
@@ -437,16 +508,35 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
 
         await _taskService.updateTask(updatedTask);
       } else {
-        // 创建新任务
-        await _taskService.createTask(
+        // 创建新任务：按需求只走 API，不写本地 Isar
+        final empNo = _configService.empNo;
+        if (empNo == null || empNo.trim().isEmpty) {
+          state = state.copyWith(isSaving: false, error: '未设置登录人工号，无法创建任务');
+          return false;
+        }
+
+        final dispatchNow = (state.assignedToType != null &&
+                state.assignedToType!.trim().isNotEmpty) &&
+            (state.assignedTo != null && state.assignedTo!.trim().isNotEmpty);
+        if (dispatchNow) {
+          // 派发给用户时必须选中 empNo 来消除同名歧义
+          if (state.assignedToType == '用户' &&
+              (state.assignedToEmpNo == null ||
+                  state.assignedToEmpNo!.trim().isEmpty)) {
+            state = state.copyWith(isSaving: false, error: '请选择具体派发用户（工号）');
+            return false;
+          }
+        }
+
+        await _taskApiService.createTask(
           title: state.title.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          priority: state.priority,
+          description:
+              state.description.trim().isEmpty ? null : state.description.trim(),
           dueDate: state.dueDate,
-          tags: state.tags,
-          allowDispatch: state.allowDispatch,
+          dispatchNow: dispatchNow,
+          assignedTo: state.assignedTo,
+          assignedToType: state.assignedToType,
+          assignedBy: empNo.trim(),
         );
       }
 
@@ -477,7 +567,11 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
 final taskFormProvider =
     StateNotifierProvider<TaskFormNotifier, TaskFormState>((ref) {
   final taskService = ref.watch(taskServiceProvider);
-  return TaskFormNotifier(taskService);
+  return TaskFormNotifier(
+    taskService,
+    TaskApiService.instance,
+    ConfigService.instance,
+  );
 });
 
 // ============================================

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/env_config.dart';
 
 /// HTTP客户端工具类
 /// 基于Dio，提供统一的HTTP请求处理、拦截器、错误处理等
@@ -22,7 +22,7 @@ class HttpClient {
 
   /// 基础配置
   BaseOptions _getBaseOptions() {
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000';
+    final baseUrl = EnvConfig.apiBaseUrl;
 
     return BaseOptions(
       baseUrl: baseUrl,
@@ -50,7 +50,7 @@ class HttpClient {
           }
 
           // 添加认证token（如果需要）
-          final token = dotenv.env['API_TOKEN'];
+          final token = EnvConfig.apiToken;
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }

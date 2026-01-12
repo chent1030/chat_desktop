@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../utils/constants.dart';
 import '../utils/app_fonts.dart';
+import '../utils/env_config.dart';
 
 /// 环境配置管理服务
 class ConfigService {
@@ -39,7 +40,7 @@ class ConfigService {
 
     if (deviceId == null || deviceId.isEmpty) {
       // 尝试从环境变量获取
-      deviceId = dotenv.env[AppConstants.envKeyDeviceId];
+      deviceId = EnvConfig.deviceId;
 
       if (deviceId == null || deviceId.isEmpty) {
         // 生成新的设备ID
@@ -58,17 +59,17 @@ class ConfigService {
 
   /// 获取OpenAI API密钥
   String? get openAIApiKey {
-    return dotenv.env[AppConstants.envKeyOpenAIApiKey];
+    return EnvConfig.openAIApiKey;
   }
 
   /// 获取Anthropic API密钥
   String? get anthropicApiKey {
-    return dotenv.env[AppConstants.envKeyAnthropicApiKey];
+    return EnvConfig.anthropicApiKey;
   }
 
   /// 获取WebSocket URL
   String? get webSocketUrl {
-    return dotenv.env[AppConstants.envKeyWebSocketUrl];
+    return EnvConfig.webSocketUrl;
   }
 
   /// 检查API密钥是否已配置

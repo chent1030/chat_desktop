@@ -1,4 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'env_config.dart';
 
 /// 应用程序通用常量定义
 class AppConstants {
@@ -71,21 +71,20 @@ class AppConstants {
   static const String envKeyDeviceId = 'DEVICE_ID';
   static const String envKeyDifyApiUrl = 'DIFY_API_URL';
   static const String envKeyDifyApiKey = 'DIFY_API_KEY';
+  static const String envKeyAiTaskExtractApiKey = 'AI_API_KEY_TASK_EXTRACT';
+  static const String envKeyAiTaskExtractApiUrl = 'AI_API_URL_TASK_EXTRACT';
 
   // MQTT配置 (从环境变量读取)
-  static String get mqttBrokerHost =>
-      dotenv.env['MQTT_BROKER_HOST'] ?? 'localhost';
-  static int get mqttBrokerPort =>
-      int.tryParse(dotenv.env['MQTT_BROKER_PORT'] ?? '1883') ?? 1883;
-  static String? get mqttUsername => dotenv.env['MQTT_USERNAME'];
-  static String? get mqttPassword => dotenv.env['MQTT_PASSWORD'];
+  static String get mqttBrokerHost => EnvConfig.mqttBrokerHost;
+  static int get mqttBrokerPort => EnvConfig.mqttBrokerPort;
+  static String? get mqttUsername => EnvConfig.mqttUsername;
+  static String? get mqttPassword => EnvConfig.mqttPassword;
   // MQTT 会话过期（秒），用于MQTT5持久会话；若未设置，使用Broker默认（例如 EMQX 配置）
-  static int get mqttSessionExpirySeconds =>
-      int.tryParse(dotenv.env['MQTT_SESSION_EXPIRY_SECONDS'] ?? '') ?? 0;
+  static int get mqttSessionExpirySeconds => EnvConfig.mqttSessionExpirySeconds;
 
   // External app paths (Windows overrides)
-  static String? get outlookPathWindows => dotenv.env['OUTLOOK_PATH_WINDOWS'];
-  static String? get dingTalkPathWindows => dotenv.env['DINGTALK_PATH_WINDOWS'];
+  static String? get outlookPathWindows => EnvConfig.outlookPathWindows;
+  static String? get dingTalkPathWindows => EnvConfig.dingTalkPathWindows;
 
   // API端点
   static const String openAIEndpoint =

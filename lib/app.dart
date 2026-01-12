@@ -5,7 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'screens/home_screen.dart';
-import 'providers/window_provider.dart';
+// import 'providers/window_provider.dart'; // 关闭按钮不再创建悬浮窗，暂时不需要未读任务同步
 import 'services/log_service.dart';
 import 'utils/theme.dart';
 import 'providers/font_provider.dart';
@@ -19,11 +19,24 @@ class AppWindowListener extends WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    // 所有平台：关闭按钮创建独立悬浮窗而不是退出
-    await LogService.instance.info('关闭按钮被点击，准备创建独立悬浮窗', tag: 'WINDOW');
-    print('🪟 [WINDOW] 关闭按钮被点击，准备创建独立悬浮窗');
+    // 所有平台：关闭按钮仅隐藏主窗口并进入系统托盘（暂时禁用打开悬浮窗）
+    await LogService.instance
+        .info('关闭按钮被点击，主窗口隐藏并进入系统托盘（已禁用打开悬浮窗）', tag: 'WINDOW');
+    print('🪟 [WINDOW] 关闭按钮被点击，主窗口隐藏并进入系统托盘（已禁用打开悬浮窗）');
 
     try {
+      // 仅隐藏主窗口，进入系统托盘
+      await windowManager.hide();
+      await LogService.instance.info('主窗口已隐藏', tag: 'WINDOW');
+      print('✓ [WINDOW] 主窗口已隐藏');
+
+      /*
+      =========================
+      原逻辑：关闭按钮会创建独立悬浮窗
+      需求变更：点击关闭按钮后只进入系统托盘，不要打开悬浮窗
+      说明：按要求先注释保留，后续如需恢复可再启用
+      =========================
+
       // Windows：同进程多窗口（Flutter 悬浮窗），避免原生 layered window 在部分机器上兼容性问题
       if (Platform.isWindows && FloatingWindowService.instance.isOpen) {
         await windowManager.hide();
@@ -67,9 +80,10 @@ class AppWindowListener extends WindowListener {
       await windowManager.hide();
       await LogService.instance.info('主窗口已隐藏', tag: 'WINDOW');
       print('✓ [WINDOW] 主窗口已隐藏');
+      */
     } catch (e, stackTrace) {
-      await LogService.instance.error('创建悬浮窗失败 - $e', tag: 'WINDOW');
-      print('✗ [WINDOW] 创建悬浮窗失败: $e');
+      await LogService.instance.error('处理关闭按钮失败 - $e', tag: 'WINDOW');
+      print('✗ [WINDOW] 处理关闭按钮失败: $e');
       print('Stack trace: $stackTrace');
     }
   }
