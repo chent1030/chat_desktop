@@ -109,12 +109,13 @@ class TaskItem extends ConsumerWidget {
                         task.description!.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text(
-                        task.description!,
+                        _plainTextPreview(task.description!),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade600,
                           decoration: task.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
+                          height: 1.35,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -411,4 +412,44 @@ class TaskItem extends ConsumerWidget {
 
     return confirmed ?? false;
   }
+}
+
+String _plainTextPreview(String markdown) {
+  var text = markdown.trim();
+  if (text.isEmpty) return '';
+
+  // 只取第一段（遇到空行就截断），避免列表项过长
+  final parts = text.split(RegExp(r'\r?\n\s*\r?\n'));
+  text = parts.isNotEmpty ? parts.first : text;
+
+  // 把换行合并为空格，避免预览出现大段空白
+  text = text.replaceAll(RegExp(r'\r?\n+'), ' ');
+
+  // 常见 Markdown 简化（用于预览显示，不追求完整解析）
+  text = text
+      // 标题
+      .replaceAll(RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true), '')
+      // 引用
+      .replaceAll(RegExp(r'^\s{0,3}>\s?', multiLine: true), '')
+      // 列表符号
+      .replaceAll(RegExp(r'^\s{0,3}([-*+]|\d+\.)\s+', multiLine: true), '')
+      // 行内代码
+      .replaceAll('`', '')
+      // 加粗/斜体
+      .replaceAll(RegExp(r'\*\*([^*]+)\*\*'), r'$1')
+      .replaceAll(RegExp(r'__([^_]+)__'), r'$1')
+      .replaceAll(RegExp(r'\*([^*]+)\*'), r'$1')
+      .replaceAll(RegExp(r'_([^_]+)_'), r'$1')
+      // 链接：[text](url) => text
+      .replaceAll(RegExp(r'\[([^\]]+)\]\(([^)]+)\)'), r'$1')
+      // 多余空白
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+
+  // 进一步截取前面若干字符，避免超长影响性能
+  const maxChars = 160;
+  if (text.length > maxChars) {
+    text = text.substring(0, maxChars);
+  }
+  return text;
 }

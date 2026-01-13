@@ -290,6 +290,18 @@ class _MessageBubbleState extends State<MessageBubble> {
               tableBorder: TableBorder.all(
                 color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
               ),
+              // 水平分割线（---）：默认偏粗，统一变细
+              horizontalRuleDecoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withOpacity(0.25),
+                    width: 1,
+                  ),
+                ),
+              ),
               // 链接样式
               a: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.primary,

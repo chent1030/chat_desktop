@@ -6,6 +6,7 @@ import '../../models/task.dart';
 import '../../services/config_service.dart';
 import '../../services/task_api_service.dart';
 import '../../utils/env_config.dart';
+import '../common/app_markdown.dart';
 
 enum UnifyTaskListDialogType {
   myTasks,
@@ -896,6 +897,12 @@ class _UnifyTaskDetail extends StatelessWidget {
             child: Markdown(
               data: task.description ?? '',
               selectable: true,
+              softLineBreak: true,
+              onTapLink: (text, href, title) async {
+                if (href == null) return;
+                await AppMarkdown.launchLink(href);
+              },
+              styleSheet: AppMarkdown.styleSheet(theme),
             ),
           ),
         ),

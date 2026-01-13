@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../services/task_service.dart';
 import '../../services/external_launcher.dart';
 import '../../models/task.dart';
+import '../common/app_markdown.dart';
 
 class TaskDetailDialog extends StatelessWidget {
   final Task task;
@@ -143,39 +142,13 @@ class TaskDetailDialog extends StatelessWidget {
                   ],
                   // Markdown description
                   if ((task.description ?? '').isNotEmpty)
-                    MarkdownBody(
+                    AppMarkdownBody(
                       data: task.description!,
                       // flutter_markdown 在部分桌面环境下 selectable + 富文本 span 选择会触发异常，
                       // 这里先禁用选择以避免详情页交互被中断（如需可再用其它方案替代）。
                       selectable: false,
                       softLineBreak: true,
-                      onTapLink: (text, href, title) async {
-                        if (href == null) return;
-                        final uri = Uri.parse(href);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        }
-                      },
-                      styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                        h1: theme.textTheme.headlineSmall,
-                        h2: theme.textTheme.titleLarge,
-                        h3: theme.textTheme.titleMedium,
-                        p: theme.textTheme.bodyMedium,
-                        blockquoteDecoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant
-                              .withOpacity(0.35),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border(
-                              left: BorderSide(
-                                  color: priorityColor.withOpacity(0.65),
-                                  width: 4)),
-                        ),
-                        codeblockDecoration: BoxDecoration(
-                          color:
-                              theme.colorScheme.surfaceVariant.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+                      accentColor: priorityColor,
                     )
                   else
                     Text(
