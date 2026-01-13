@@ -17,6 +17,7 @@ class EnvConfig {
   static const String keyUnifyTaskListPath = 'UNIFY_API_TASK_LIST_PATH';
   static const String keyUnifyDispatchCandidatesPath =
       'UNIFY_API_DISPATCH_CANDIDATES_PATH';
+  static const String keyUnifyEmpNoCheckPath = 'UNIFY_API_EMP_NO_CHECK_PATH';
 
   // ===== 通用 HTTP 客户端（旧/通用后端）=====
   static const String keyApiBaseUrl = 'API_BASE_URL';
@@ -99,6 +100,8 @@ class EnvConfig {
 
   static String get unifyDispatchCandidatesPath =>
       _getString(keyUnifyDispatchCandidatesPath);
+
+  static String get unifyEmpNoCheckPath => _getString(keyUnifyEmpNoCheckPath);
 
   // ===== 通用 HTTP 客户端（旧/通用后端）=====
   static String get apiBaseUrl =>

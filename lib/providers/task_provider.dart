@@ -509,15 +509,26 @@ class TaskFormNotifier extends StateNotifier<TaskFormState> {
         }
 
         await _taskApiService.createTask(
-          title: state.title.trim(),
-          description:
-              state.description.trim().isEmpty ? null : state.description.trim(),
-          dueDate: state.dueDate,
-          assignedTo: state.assignedTo,
-          assignedToType: state.assignedToType,
-          assignedBy: empNo.trim(),
-          priority: state.priority.index,
-          tags: state.tags,
+          task: Task(
+            title: state.title.trim(),
+            description: state.description.trim().isEmpty
+                ? null
+                : state.description.trim(),
+            priority: state.priority,
+            dueDate: state.dueDate,
+            tags: state.tags,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            assignedTo: dispatchNow
+                ? (state.assignedToType == '用户'
+                    ? state.assignedToEmpNo
+                    : state.assignedTo)
+                : null,
+            assignedToType: dispatchNow ? state.assignedToType : null,
+            assignedBy: dispatchNow ? empNo.trim() : null,
+            source: TaskSource.manual,
+          ),
+          currentEmpNo: empNo.trim(),
         );
       }
 

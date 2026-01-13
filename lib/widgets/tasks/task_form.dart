@@ -133,6 +133,25 @@ class _TaskFormState extends ConsumerState<TaskForm> {
                       .toList()
                     ..sort();
                   final teamGroup = teams.isEmpty ? '[]' : jsonEncode(teams);
+
+                  // 用户列表：用于大模型把“给张三创建待办”解析为具体工号（empNo）
+                  final users = <Map<String, String>>[];
+                  final seenEmpNo = <String>{};
+                  for (final c in _dispatchCandidates) {
+                    final empNo = c.empNo.trim();
+                    final empName = c.empName.trim();
+                    if (empNo.isEmpty || empName.isEmpty) continue;
+                    if (!seenEmpNo.add(empNo)) continue;
+                    users.add({'empName': empName, 'empNo': empNo});
+                  }
+                  users.sort((a, b) {
+                    final nameA = a['empName'] ?? '';
+                    final nameB = b['empName'] ?? '';
+                    final byName = nameA.compareTo(nameB);
+                    if (byName != 0) return byName;
+                    return (a['empNo'] ?? '').compareTo(b['empNo'] ?? '');
+                  });
+                  final userListJson = users.isEmpty ? '[]' : jsonEncode(users);
                   final systemTime =
                       '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
                       '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
@@ -152,6 +171,7 @@ class _TaskFormState extends ConsumerState<TaskForm> {
                     inputs: {
                       'system_time': systemTime,
                       'team_group': teamGroup,
+                      'user_list': userListJson,
                       'voice_content': transcript.trim(),
                     },
                   )) {

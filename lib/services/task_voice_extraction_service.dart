@@ -30,7 +30,7 @@ class VoiceTaskDraft {
 ///
 /// 说明：
 /// - 优先做可解释的本地规则抽取，用户可在表单里二次修改
-/// - `dueDate` 仅保留日期（yyyy-MM-dd），时间信息会放到 `ignoredTimeHint` 供描述补充
+/// - `dueDate` 保存到分钟（yyyy-MM-dd HH:mm），若语音仅提到日期则时间默认为 00:00
 class TaskVoiceExtractionService {
   static const List<String> _dispatchKeywords = [
     '派发给',
@@ -39,6 +39,14 @@ class TaskVoiceExtractionService {
     '指派给',
     '发给',
     '交给',
+  ];
+
+  // 隐式派发：语音里常见“让张三...”“通知李四...”“提醒运维团队...”
+  static const List<String> _implicitDispatchKeywords = [
+    '让',
+    '通知',
+    '提醒',
+    '叫',
   ];
 
   /// 规则抽取（无网络/大模型失败时兜底）
@@ -57,7 +65,7 @@ class TaskVoiceExtractionService {
     if (ignoredTimeHint != null && ignoredTimeHint.isNotEmpty) {
       if (!description.contains(ignoredTimeHint)) {
         description =
-            '$description\n\n- 截止时间提示：$ignoredTimeHint（当前仅保存日期 `yyyy-MM-dd`）';
+            '$description\n\n- 截止时间提示：$ignoredTimeHint（当前保存格式 `yyyy-MM-dd HH:mm`）';
       }
     }
 
@@ -156,14 +164,21 @@ class TaskVoiceExtractionService {
     if (fields.timeHint != null && fields.timeHint!.isNotEmpty) {
       if (!description.contains(fields.timeHint!)) {
         description =
-            '$description\n\n- 截止时间提示：${fields.timeHint}（当前仅保存日期 `yyyy-MM-dd`）';
+            '$description\n\n- 截止时间提示：${fields.timeHint}（当前保存格式 `yyyy-MM-dd HH:mm`）';
       }
     }
 
-    // 派发对象：如果模型给了派发对象信息，即使 dispatchNow=false 也优先回填，避免 UI 不展示
+    // 派发对象：如果模型给了派发对象信息，即使 dispatchNow=false 也优先回填，避免 UI 不展示；
+    // 另外语音里常见“给张三创建一个待办”这种表达，模型若漏抽取，也应从原文兜底识别派发对象。
+    final fallbackTarget = _extractDispatchTarget(transcript);
+    final fallbackMatch =
+        _matchDispatchTarget(fallbackTarget, candidates: candidates);
     final shouldDispatch = fields.dispatchNow ||
-        ((fields.assignedToType != null && fields.assignedToType!.trim().isNotEmpty) &&
-            (fields.assignedTo != null && fields.assignedTo!.trim().isNotEmpty));
+        ((fields.assignedToType != null &&
+                fields.assignedToType!.trim().isNotEmpty) &&
+            (fields.assignedTo != null &&
+                fields.assignedTo!.trim().isNotEmpty)) ||
+        fallbackMatch.dispatchNow;
 
     // 派发对象：优先使用模型给的 type + target，否则走原先规则抽取
     final dispatchTarget = fields.assignedTo;
@@ -174,7 +189,7 @@ class TaskVoiceExtractionService {
             candidates: candidates,
           )
         : _matchDispatchTarget(
-            _extractDispatchTarget(transcript) ?? dispatchTarget,
+            fallbackTarget ?? dispatchTarget,
             candidates: candidates,
           );
 
@@ -216,6 +231,15 @@ class TaskVoiceExtractionService {
     }
 
     if (type == '用户') {
+      // 兼容：模型可能直接返回工号（empNo）
+      final byEmpNo = candidates.where((e) => e.empNo == t).toList();
+      if (byEmpNo.length == 1) {
+        return _DispatchMatch.user(
+          empName: byEmpNo.first.empName,
+          empNo: byEmpNo.first.empNo,
+        );
+      }
+
       final matched = candidates.where((e) => e.empName == t).toList();
       if (matched.length == 1) {
         return _DispatchMatch.user(empName: matched.first.empName, empNo: matched.first.empNo);
@@ -424,6 +448,34 @@ class TaskVoiceExtractionService {
   }
 
   String? _extractDispatchTarget(String text) {
+    // 常见口语：给/帮某人创建待办（例如“给张三创建一个待办”）
+    final giveCreate = RegExp(
+      r'(给|帮|替)\s*([^\s，。；;,.\\n]{1,20}?)\s*(创建|新建|建|安排)\s*(一个|一条)?\s*(任务|待办|事项)',
+    ).firstMatch(text);
+    if (giveCreate != null) {
+      final token = (giveCreate.group(2) ?? '').trim();
+      if (token.isNotEmpty) return token;
+    }
+    final giveTodo = RegExp(
+      r'(给|帮|替)\s*([^\s，。；;,.\\n]{1,20}?)\s*(一个|一条)?\s*(任务|待办|事项)',
+    ).firstMatch(text);
+    if (giveTodo != null) {
+      final token = (giveTodo.group(2) ?? '').trim();
+      if (token.isNotEmpty) return token;
+    }
+
+    // 隐式派发：让/通知/提醒/叫 + 对象
+    for (final keyword in _implicitDispatchKeywords) {
+      final idx = text.indexOf(keyword);
+      if (idx >= 0) {
+        final rest = text.substring(idx + keyword.length).trim();
+        final token = _takeTargetToken(rest);
+        if (token == null) continue;
+        if (token == '我' || token == '自己' || token == '本人') continue;
+        return token;
+      }
+    }
+
     // 先找明确关键词
     for (final keyword in _dispatchKeywords) {
       final idx = text.indexOf(keyword);
@@ -443,7 +495,10 @@ class TaskVoiceExtractionService {
 
   String? _takeTargetToken(String text) {
     if (text.isEmpty) return null;
-    final stop = RegExp(r'(，|。|；|;|,|\.|\n|截止|到期|完成|描述|内容|备注)');
+    // 截断规则：尽可能只保留“目标对象”（人名/团队名/工号），遇到时间/动作/标点就停止
+    final stop = RegExp(
+      r'(，|。|；|;|,|\.|\n|截止|到期|描述|内容|备注|今天|明天|后天|大后天|本周|这周|下周|周|星期|上午|中午|下午|晚上|凌晨|\d{1,2}\s*(点|:)\s*\d{0,2}|去|来|做|处理|完成|参加|开会|联系|跟进|安排|检查|修复|解决)',
+    );
     final match = stop.firstMatch(text);
     final token = (match == null ? text : text.substring(0, match.start)).trim();
     if (token.isEmpty) return null;
@@ -464,6 +519,13 @@ class TaskVoiceExtractionService {
     final usersByName = <String, List<DispatchCandidate>>{};
     for (final c in candidates) {
       usersByName.putIfAbsent(c.empName, () => []).add(c);
+    }
+
+    // 0) 若目标是工号，优先按 empNo 匹配
+    final byEmpNo = candidates.where((e) => e.empNo == target).toList();
+    if (byEmpNo.length == 1) {
+      final u = byEmpNo.first;
+      return _DispatchMatch.user(empName: u.empName, empNo: u.empNo);
     }
 
     // 1) 先按用户姓名精确匹配

@@ -39,14 +39,8 @@ class TaskApiService {
 
   /// 创建任务（HTTP 204 视为成功）
   Future<void> createTask({
-    required String title,
-    String? description,
-    DateTime? dueDate,
-    String? assignedTo,
-    String? assignedToType, // 用户 / 团队
-    required String assignedBy, // 登录人工号
-    int? priority, // 0/1/2
-    String? tags,
+    required Task task,
+    required String currentEmpNo,
   }) async {
     if (EnvConfig.debug) {
       await LogService.instance.info('UNIFY DEBUG=true：createTask 使用 Mock', tag: 'UNIFY');
@@ -63,24 +57,41 @@ class TaskApiService {
       );
     }
 
+    final normalizedEmpNo = currentEmpNo.trim();
+    if (normalizedEmpNo.isEmpty) {
+      throw HttpException(
+        message: '当前登录工号为空，无法创建任务',
+        statusCode: 0,
+      );
+    }
+
+    final normalizedAssignedToType = task.assignedToType?.trim();
+    final normalizedAssignedTo = task.assignedTo?.trim();
+    final dispatchNow = normalizedAssignedToType != null &&
+        normalizedAssignedToType.isNotEmpty &&
+        normalizedAssignedTo != null &&
+        normalizedAssignedTo.isNotEmpty;
+
     final payload = <String, dynamic>{
-      'title': title,
-      'description': description,
-      'dueDate': dueDate != null
-          ? DateFormat('yyyy-MM-dd HH:mm').format(dueDate)
+      'title': task.title,
+      'description': task.description,
+      'dueDate': task.dueDate != null
+          ? DateFormat('yyyy-MM-dd HH:mm').format(task.dueDate!)
           : null,
-      'priority': priority,
-      'tags': tags,
+      'priority': task.priority.index,
+      'tags': task.tags,
     };
 
-    // 派发：若填写派发对象，则提交派发字段
-    if (assignedTo != null &&
-        assignedTo.trim().isNotEmpty &&
-        assignedToType != null &&
-        assignedToType.trim().isNotEmpty) {
-      payload['assignedTo'] = assignedTo;
-      payload['assignedToType'] = assignedToType;
-      payload['assignedBy'] = assignedBy;
+    if (!dispatchNow) {
+      // 不派发：要求传 empNo=当前工号
+      payload['empNo'] = normalizedEmpNo;
+    } else {
+      // 派发：
+      // - assignedToType=用户 => assignedTo=被派发人工号
+      // - assignedToType=团队 => assignedTo=workGroup
+      payload['assignedToType'] = normalizedAssignedToType;
+      payload['assignedTo'] = normalizedAssignedTo;
+      payload['assignedBy'] = normalizedEmpNo;
     }
 
     // 去掉 null 字段，避免后端对空值敏感

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/config_service.dart';
+import '../../services/emp_no_check_api_service.dart';
 import '../../services/mqtt_service.dart';
 import '../../utils/constants.dart';
 
@@ -34,6 +35,7 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
   final _empNoController = TextEditingController();
   final _configService = ConfigService.instance;
   final _mqttService = MqttService.instance;
+  final _empNoCheckApi = EmpNoCheckApiService.instance;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -92,6 +94,16 @@ class _EmpNoDialogState extends State<EmpNoDialog> {
 
     try {
       final empNo = _empNoController.text.trim();
+
+      // 工号检测：有返回信息才允许保存与使用
+      final ok = await _empNoCheckApi.verifyEmpNo(empNo: empNo);
+      if (!ok) {
+        setState(() {
+          _errorMessage = '工号检测失败：该工号不可用或无权限';
+          _isLoading = false;
+        });
+        return;
+      }
 
       // 保存工号到配置
       await _configService.setEmpNo(empNo);
