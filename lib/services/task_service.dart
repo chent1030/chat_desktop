@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 import '../models/task.dart';
 import '../models/task_action.dart';
 import 'storage_service.dart';
+import 'task_api_service.dart';
 
 /// 任务管理服务 - 负责任务的CRUD操作
 class TaskService {
@@ -171,6 +172,22 @@ class TaskService {
       return;
     }
 
+    // 如果没有UUID，无法调用API，直接返回
+    final taskUuid = task.uuid?.trim();
+    if (taskUuid == null || taskUuid.isEmpty) {
+      print('✗ 任务缺少UUID，无法标记为已完成: ${task.title}');
+      return;
+    }
+
+    // 先调用UNIFY API
+    try {
+      await TaskApiService.instance.completeTask(taskUuid: taskUuid);
+    } catch (e) {
+      print('✗ 调用API标记任务完成失败: $e');
+      rethrow;
+    }
+
+    // API调用成功后，更新本地状态
     task.markAsCompleted();
     task.isSynced = false;
 
@@ -240,6 +257,22 @@ class TaskService {
       return;
     }
 
+    // 如果没有UUID，无法调用API，直接返回
+    final taskUuid = task.uuid?.trim();
+    if (taskUuid == null || taskUuid.isEmpty) {
+      print('✗ 任务缺少UUID，无法标记为已读: ${task.title}');
+      return;
+    }
+
+    // 先调用UNIFY API
+    try {
+      await TaskApiService.instance.markTaskRead(taskUuid: taskUuid);
+    } catch (e) {
+      print('✗ 调用API标记任务已读失败: $e');
+      rethrow;
+    }
+
+    // API调用成功后，更新本地状态
     task.markAsRead();
     task.isSynced = false;
 
