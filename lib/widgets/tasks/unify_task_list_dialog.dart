@@ -584,7 +584,7 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-class _TableCard extends StatelessWidget {
+class _TableCard extends StatefulWidget {
   final ThemeData theme;
   final UnifyTaskListDialogType type;
   final List<Task> tasks;
@@ -603,6 +603,19 @@ class _TableCard extends StatelessWidget {
     required this.onComplete,
   });
 
+  @override
+  State<_TableCard> createState() => _TableCardState();
+}
+
+class _TableCardState extends State<_TableCard> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   Widget _statusChip({required String text, required Color color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -613,50 +626,54 @@ class _TableCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: theme.textTheme.labelMedium?.copyWith(color: color),
+        style: widget.theme.textTheme.labelMedium?.copyWith(color: color),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle = theme.textTheme.labelLarge;
-    final isDispatchedByMe = type == UnifyTaskListDialogType.dispatchedByMe;
+    final headerStyle = widget.theme.textTheme.labelLarge;
+    final isDispatchedByMe = widget.type == UnifyTaskListDialogType.dispatchedByMe;
 
     final compactFilled = FilledButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       minimumSize: const Size(0, 32),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
-      textStyle: theme.textTheme.labelMedium,
+      textStyle: widget.theme.textTheme.labelMedium,
     );
     final compactTonal = FilledButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       minimumSize: const Size(0, 32),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
-      textStyle: theme.textTheme.labelMedium,
+      textStyle: widget.theme.textTheme.labelMedium,
     );
     final compactOutlined = OutlinedButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       minimumSize: const Size(0, 32),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
-      textStyle: theme.textTheme.labelMedium,
+      textStyle: widget.theme.textTheme.labelMedium,
     );
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.12)),
+        side: BorderSide(color: widget.theme.colorScheme.outline.withOpacity(0.12)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 860),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 860),
               child: SingleChildScrollView(
                 child: DataTable(
                 showCheckboxColumn: false,
@@ -672,7 +689,7 @@ class _TableCard extends StatelessWidget {
                   DataColumn(label: Text('派发人')),
                   DataColumn(label: Text('操作')),
                 ],
-                rows: tasks.map((task) {
+                rows: widget.tasks.map((task) {
                   final due = task.dueDate != null
                       ? DateFormat('yyyy-MM-dd HH:mm').format(task.dueDate!)
                       : '-';
@@ -680,23 +697,23 @@ class _TableCard extends StatelessWidget {
                     _statusChip(
                       text: task.isRead ? '已读' : '未读',
                       color: task.isRead
-                          ? theme.colorScheme.secondary
-                          : theme.colorScheme.primary,
+                          ? widget.theme.colorScheme.secondary
+                          : widget.theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     _statusChip(
                       text: task.isCompleted ? '已完成' : '未完成',
                       color: task.isCompleted
-                          ? theme.colorScheme.outline
-                          : theme.colorScheme.tertiary,
+                          ? widget.theme.colorScheme.outline
+                          : widget.theme.colorScheme.tertiary,
                     ),
                   ];
 
                   return DataRow(
-                    onSelectChanged: isLoading
+                    onSelectChanged: widget.isLoading
                         ? null
                         : (_) {
-                            onOpen(task);
+                            widget.onOpen(task);
                           },
                     cells: [
                       DataCell(
@@ -708,7 +725,7 @@ class _TableCard extends StatelessWidget {
                       ),
                       DataCell(
                         SizedBox(
-                          width: 320,
+                          width: 160,
                           child: Text(
                             task.title,
                             maxLines: 2,
@@ -729,23 +746,23 @@ class _TableCard extends StatelessWidget {
                           runSpacing: 8,
                           children: [
                             FilledButton.tonal(
-                              onPressed: isLoading ? null : () => onOpen(task),
+                              onPressed: widget.isLoading ? null : () => widget.onOpen(task),
                               style: compactTonal,
                               child: const Text('查看'),
                             ),
                             if (!isDispatchedByMe)
                               OutlinedButton(
-                                onPressed: isLoading || task.isRead
+                                onPressed: widget.isLoading || task.isRead
                                     ? null
-                                    : () => onMarkRead(task),
+                                    : () => widget.onMarkRead(task),
                                 style: compactOutlined,
                                 child: const Text('设为已读'),
                               ),
                             if (!isDispatchedByMe)
                               FilledButton(
-                                onPressed: isLoading || task.isCompleted
+                                onPressed: widget.isLoading || task.isCompleted
                                     ? null
-                                    : () => onComplete(task),
+                                    : () => widget.onComplete(task),
                                 style: compactFilled,
                                 child: const Text('完成'),
                               ),
@@ -759,6 +776,7 @@ class _TableCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
