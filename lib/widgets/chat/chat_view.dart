@@ -153,6 +153,24 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
 
+    // 监听消息变化,自动滚动到底部
+    ref.listen<ChatState>(chatProvider, (previous, next) {
+      // 当消息列表长度变化或正在流式传输时,滚动到底部
+      if (previous != null) {
+        final messagesChanged = previous.messages.length != next.messages.length;
+        final contentChanged = next.isStreaming &&
+            previous.messages.isNotEmpty &&
+            next.messages.isNotEmpty &&
+            previous.messages.last.content != next.messages.last.content;
+
+        if (messagesChanged || contentChanged) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToBottom();
+          });
+        }
+      }
+    });
+
     return Column(
       children: [
         // 顶部工具栏
