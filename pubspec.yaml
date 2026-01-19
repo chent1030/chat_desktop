@@ -48,7 +48,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
-  flutter_markdown: ^0.6.18
+  flutter_markdown: ^0.7.4
   url_launcher: ^6.2.0
 
   # MQTT 5.0

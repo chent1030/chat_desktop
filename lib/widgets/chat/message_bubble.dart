@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/message.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../common/app_markdown.dart';
 
 /// 消息气泡 Widget
 /// 显示单条对话消息,支持用户消息和AI助手消息的不同样式
@@ -49,17 +48,19 @@ class _MessageBubbleState extends State<MessageBubble> {
                   isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 // 消息气泡
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _getBubbleColor(context),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _getBorderColor(context),
-                      width: 1,
+                SelectionArea(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _getBubbleColor(context),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _getBorderColor(context),
+                        width: 1,
+                      ),
                     ),
+                    child: _buildMessageContent(context),
                   ),
-                  child: _buildMessageContent(context),
                 ),
 
                 // 消息状态和时间
@@ -213,104 +214,17 @@ class _MessageBubbleState extends State<MessageBubble> {
 
         // 用户消息使用纯文本，AI消息使用Markdown渲染
         if (isUser)
-          SelectableText(
+          Text(
             parsed.content,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
           )
         else
-          MarkdownBody(
+          AppMarkdownBody(
             data: parsed.content,
-            selectable: true,
-            onTapLink: (text, href, title) {
-              if (href != null) {
-                _launchURL(href);
-              }
-            },
-            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-              // 段落样式
-              p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.6,
-                  ) ?? const TextStyle(height: 1.6),
-              // 标题样式
-              h1: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    height: 1.4,
-                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 32),
-              h2: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    height: 1.4,
-                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 24),
-              h3: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    height: 1.4,
-                  ) ?? const TextStyle(fontWeight: FontWeight.bold, height: 1.4, fontSize: 20),
-              // 代码样式
-              code: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'Monaco, Menlo, Consolas, monospace',
-                    fontSize: 13,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceVariant,
-                  ) ?? const TextStyle(
-                    fontFamily: 'Monaco, Menlo, Consolas, monospace',
-                    fontSize: 13,
-                  ),
-              codeblockPadding: const EdgeInsets.all(12),
-              codeblockDecoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                ),
-              ),
-              // 引用样式
-              blockquote: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.7),
-                  ) ?? const TextStyle(fontStyle: FontStyle.italic),
-              blockquoteDecoration: BoxDecoration(
-                color:
-                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                border: Border(
-                  left: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 4,
-                  ),
-                ),
-              ),
-              blockquotePadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              // 表格样式
-              tableBorder: TableBorder.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-              // 水平分割线（---）：默认偏粗，统一变细
-              horizontalRuleDecoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withOpacity(0.25),
-                    width: 1,
-                  ),
-                ),
-              ),
-              // 链接样式
-              a: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ) ?? TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-            ),
+            selectable: false, // SelectionArea 会处理选择
+            softLineBreak: true,
           ),
 
         // 失败消息显示错误信息和重试按钮
@@ -438,7 +352,7 @@ class _MessageBubbleState extends State<MessageBubble> {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: SelectableText(
+              child: Text(
                 thinking,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context)
@@ -545,13 +459,5 @@ class _MessageBubbleState extends State<MessageBubble> {
         duration: Duration(seconds: 1),
       ),
     );
-  }
-
-  /// 打开URL
-  void _launchURL(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
   }
 }
