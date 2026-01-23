@@ -45,29 +45,24 @@ public partial class App : Application
         var messageRepository = new MessageRepository(connectionFactory);
         var conversationService = new ConversationService(conversationRepository, messageRepository);
 
-        var window = new MainWindow
-        {
-            Visibility = Visibility.Hidden
-        };
-        window.Show();
-
         while (string.IsNullOrWhiteSpace(empNo))
         {
             var empVm = new EmpNoViewModel(remoteService, settingsStore);
             var empWindow = new EmpNoWindow(empVm)
             {
-                Owner = window,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                Owner = null,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
             empWindow.ShowDialog();
             settings = settingsService.LoadAsync().GetAwaiter().GetResult();
             empNo = settings.EmpNo ?? string.Empty;
         }
 
+        var window = new MainWindow();
         var viewModel = MainViewModel.CreateDefault(taskService, remoteService, empNo, conversationService);
         _mainViewModel = viewModel;
         window.DataContext = viewModel;
-        window.Visibility = Visibility.Visible;
+        window.Show();
         window.Activate();
         _ = viewModel.TaskList.LoadAsync();
         _ = viewModel.Chat.LoadConversationsAsync();
