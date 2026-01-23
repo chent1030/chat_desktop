@@ -30,7 +30,7 @@ public sealed class TaskListViewModel : ViewModelBase
         OpenPagedCommand = new RelayCommand(_ => PagedRequested?.Invoke());
         ClearCompletedCommand = new RelayCommand(_ => ClearCompletedRequested?.Invoke());
         ToggleCompletionCommand = new AsyncRelayCommand<TaskItem>(ToggleCompletionAsync);
-        OpenDetailCommand = new RelayCommand(OpenDetail);
+        OpenDetailCommand = new AsyncRelayCommand<TaskItem>(OpenDetailAsync);
         OpenEditCommand = new RelayCommand(OpenEdit);
         OpenVoiceCreateCommand = new RelayCommand(_ => VoiceCreateRequested?.Invoke());
         OpenChangeEmpNoCommand = new RelayCommand(_ => ChangeEmpNoRequested?.Invoke());
@@ -149,7 +149,7 @@ public sealed class TaskListViewModel : ViewModelBase
     public RelayCommand ClearCompletedCommand { get; }
 
     public AsyncRelayCommand<TaskItem> ToggleCompletionCommand { get; }
-    public RelayCommand OpenDetailCommand { get; }
+    public AsyncRelayCommand<TaskItem> OpenDetailCommand { get; }
     public RelayCommand OpenEditCommand { get; }
     public RelayCommand OpenVoiceCreateCommand { get; }
     public RelayCommand OpenChangeEmpNoCommand { get; }
@@ -224,12 +224,26 @@ public sealed class TaskListViewModel : ViewModelBase
         await LoadAsync();
     }
 
-    private void OpenDetail(object? parameter)
+    private async Task OpenDetailAsync(TaskItem? task)
     {
-        if (parameter is TaskItem task)
+        if (task == null)
         {
-            DetailRequested?.Invoke(task);
+            return;
         }
+
+        if (!task.IsRead)
+        {
+            try
+            {
+                await _taskService.MarkReadAsync(task.Id);
+                task.IsRead = true;
+            }
+            catch
+            {
+            }
+        }
+
+        DetailRequested?.Invoke(task);
     }
 
     private void OpenEdit(object? parameter)

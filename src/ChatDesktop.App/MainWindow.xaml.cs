@@ -1,4 +1,7 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Infrastructure.Config;
@@ -60,6 +63,26 @@ public partial class MainWindow : Window
             Owner = this
         };
         window.ShowDialog();
+    }
+
+    private void OnTaskItemClicked(object sender, MouseButtonEventArgs e)
+    {
+        if (IsClickFromCheckBox(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
+        if (sender is not Border border || border.DataContext is not Core.Models.TaskItem task)
+        {
+            return;
+        }
+
+        if (DataContext is not MainViewModel mainViewModel)
+        {
+            return;
+        }
+
+        mainViewModel.TaskList.OpenDetailCommand.Execute(task);
     }
 
     private void OnVoiceCreateRequested()
@@ -184,5 +207,20 @@ public partial class MainWindow : Window
                 _ = app.InitializeMqttAsync(settings.EmpNo);
             }
         }
+    }
+
+    private static bool IsClickFromCheckBox(DependencyObject? source)
+    {
+        while (source != null)
+        {
+            if (source is CheckBox)
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 }

@@ -178,14 +178,15 @@
             <ListView.ItemTemplate>
               <DataTemplate>
                 <Border CornerRadius="12" Padding="14" Margin="12,6"
+                        Width="320" HorizontalAlignment="Center"
                         Background="White"
                         BorderBrush="#E5E8F0" BorderThickness="1"
-                        materialDesign:ShadowAssist.ShadowDepth="Depth1">
+                        materialDesign:ShadowAssist.ShadowDepth="Depth1"
+                        MouseLeftButtonUp="OnTaskItemClicked">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="Auto" />
                       <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted}" VerticalAlignment="Top" Margin="0,2,12,0" />
@@ -225,8 +226,9 @@
                         </Ellipse>
                       </Grid>
 
-                      <TextBlock Text="{Binding Description}" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="42"
-                                 Visibility="{Binding Description, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+                      <md:MarkdownViewer Markdown="{Binding Description}" Background="Transparent" Margin="0,6,0,0"
+                                         MaxHeight="60"
+                                         Visibility="{Binding Description, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
 
                       <WrapPanel Margin="0,8,0,0">
                         <materialDesign:Chip Content="{Binding DueDate, StringFormat=截止 {0:MM-dd HH:mm}}"
@@ -272,18 +274,6 @@
                       </WrapPanel>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0,0,0">
-                      <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                              Command="{Binding DataContext.TaskList.OpenDetailCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                              CommandParameter="{Binding}" Margin="0,0,0,6">
-                        <TextBlock Text="详情" />
-                      </Button>
-                      <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                              Command="{Binding DataContext.TaskList.OpenEditCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                              CommandParameter="{Binding}">
-                        <TextBlock Text="编辑" />
-                      </Button>
-                    </StackPanel>
                   </Grid>
                 </Border>
               </DataTemplate>
