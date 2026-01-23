@@ -177,7 +177,7 @@
         <ListBox Grid.Row="1" ItemsSource="{Binding Chat.Messages}" Background="#FAFAFA" BorderThickness="0" Margin="0,12,0,12">
           <ListBox.ItemTemplate>
             <DataTemplate>
-              <Border Padding="10" Margin="0,0,0,8" CornerRadius="6" Background="#FFFFFF" BorderBrush="#E5E5E5" BorderThickness="1" MaxWidth="520">
+              <Border x:Name="MessageCard" Padding="10" Margin="0,0,0,8" CornerRadius="6" Background="#FFFFFF" BorderBrush="#E5E5E5" BorderThickness="1" MaxWidth="520">
                 <StackPanel>
                   <TextBlock Text="{Binding RoleLabel}" Foreground="#666" FontSize="11" />
                   <md:MarkdownViewer Markdown="{Binding Content}" Background="Transparent" />
@@ -185,9 +185,9 @@
               </Border>
               <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsUser}" Value="True">
-                  <Setter Property="HorizontalAlignment" Value="Right" />
-                  <Setter Property="Background" Value="#E6F2FF" />
-                  <Setter Property="BorderBrush" Value="#C5D9F2" />
+                  <Setter TargetName="MessageCard" Property="HorizontalAlignment" Value="Right" />
+                  <Setter TargetName="MessageCard" Property="Background" Value="#E6F2FF" />
+                  <Setter TargetName="MessageCard" Property="BorderBrush" Value="#C5D9F2" />
                 </DataTrigger>
               </DataTemplate.Triggers>
             </DataTemplate>
