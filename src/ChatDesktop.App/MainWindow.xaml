@@ -4,10 +4,45 @@
         xmlns:md="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:coreEnums="clr-namespace:ChatDesktop.Core.Enums;assembly=ChatDesktop.Core"
+        xmlns:coreModels="clr-namespace:ChatDesktop.Core.Models;assembly=ChatDesktop.Core"
+        xmlns:scm="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6FA"
         Loaded="OnLoaded">
+  <Window.Resources>
+    <Style x:Key="AssistantToggleButtonStyle" TargetType="ToggleButton">
+      <Setter Property="Foreground" Value="#5C6BC0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#C5CAE9" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ToggleButton">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="8">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="#5C6BC0" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="BorderBrush" Value="#5C6BC0" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.6" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
   <Grid Margin="12">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="360" />
@@ -278,18 +313,84 @@
 
         <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="12"
                 BorderBrush="#E6E9F0" BorderThickness="1">
-          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <ComboBox Width="160"
-                      ItemsSource="{Binding Chat.AssistantOptions}"
-                      DisplayMemberPath="Label"
-                      SelectedValuePath="Value"
-                      SelectedValue="{Binding Chat.AssistantKey, Mode=TwoWay}"
-                      materialDesign:HintAssist.Hint="AI 助手" />
-            <TextBlock Text="AI 正在输出..." Margin="12,0,0,0" Foreground="#5C6BC0"
-                       Visibility="{Binding Chat.IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}" />
-            <TextBlock Text="{Binding Chat.Error}" Foreground="#C62828" Margin="12,0,0,0"
-                       Visibility="{Binding Chat.Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
-          </StackPanel>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
+                    HorizontalContentAlignment="Stretch">
+              <Button.ContextMenu>
+                <ContextMenu>
+                  <ContextMenu.Resources>
+                    <DataTemplate DataType="{x:Type coreModels:Conversation}">
+                      <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding LastMessageContent}" FontSize="11" Foreground="#7A808A"
+                                     Visibility="{Binding LastMessageContent, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource MaterialDesignFlatButton}" Padding="4"
+                                Command="{Binding DataContext.Chat.DeleteConversationByIdCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                CommandParameter="{Binding}">
+                          <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ContextMenu.Resources>
+                  <ContextMenu.ItemsSource>
+                    <scm:CompositeCollection>
+                      <MenuItem Header="新会话" Command="{Binding Chat.NewConversationCommand}" />
+                      <Separator />
+                      <scm:CollectionContainer Collection="{Binding Chat.Conversations}" />
+                    </scm:CompositeCollection>
+                  </ContextMenu.ItemsSource>
+                  <ContextMenu.ItemContainerStyle>
+                    <Style TargetType="MenuItem">
+                      <Setter Property="Command"
+                              Value="{Binding DataContext.Chat.SelectConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      <Setter Property="CommandParameter" Value="{Binding}" />
+                    </Style>
+                  </ContextMenu.ItemContainerStyle>
+                </ContextMenu>
+              </Button.ContextMenu>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                  <TextBlock Text="{Binding Chat.CurrentConversationTitle}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding Chat.CurrentConversationSubtitle}" Foreground="#7A808A" FontSize="11"
+                             Visibility="{Binding Chat.CurrentConversationSubtitle, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+                </StackPanel>
+                <materialDesign:PackIcon Kind="MenuDown" Width="18" Height="18" Foreground="#6B7280"
+                                         Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" />
+              </Grid>
+            </Button>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+              <Border Background="#EEF1FF" CornerRadius="10" Padding="2">
+                <StackPanel Orientation="Horizontal">
+                  <ToggleButton Content="芯服务" Style="{StaticResource AssistantToggleButtonStyle}"
+                                IsChecked="{Binding Chat.IsXinServiceSelected, Mode=TwoWay}" />
+                  <ToggleButton Content="本地问答" Style="{StaticResource AssistantToggleButtonStyle}" Margin="6,0,0,0"
+                                IsChecked="{Binding Chat.IsLocalQaSelected, Mode=TwoWay}" />
+                </StackPanel>
+              </Border>
+              <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="AI 正在输出..." Foreground="#5C6BC0"
+                           Visibility="{Binding Chat.IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBlock Text="{Binding Chat.Error}" Foreground="#C62828" Margin="12,0,0,0"
+                           Visibility="{Binding Chat.Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
         </Border>
 
         <ListBox Grid.Row="1" ItemsSource="{Binding Chat.Messages}" Background="Transparent" BorderThickness="0" Margin="0,12,0,12">

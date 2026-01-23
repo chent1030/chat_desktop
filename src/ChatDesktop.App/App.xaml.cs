@@ -30,7 +30,7 @@ public partial class App : Application
             var connectionFactory = new SqliteConnectionFactory(AppPaths.DatabasePath);
             var schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Schema.sql");
             var schemaInitializer = new SchemaInitializer(connectionFactory, schemaPath);
-            _ = schemaInitializer.InitializeAsync();
+            schemaInitializer.InitializeAsync().GetAwaiter().GetResult();
 
             var settingsStore = new LocalSettingsStore();
             var settingsService = new AppSettingsService(settingsStore);

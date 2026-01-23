@@ -23,7 +23,7 @@
             materialDesign:ShadowAssist.ShadowDepth="Depth1">
       <ScrollViewer>
         <StackPanel>
-          <TextBox Text="{Binding Transcript}" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
+          <TextBox Text="{Binding Transcript, Mode=OneWay}" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
                    materialDesign:HintAssist.Hint="识别文本" />
 
           <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Margin="0,12,0,0"

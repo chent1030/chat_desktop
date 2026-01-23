@@ -43,6 +43,8 @@ public sealed class ChatViewModel : ViewModelBase
         LoadConversationsCommand = new AsyncRelayCommand(LoadConversationsAsync);
         SaveTitleCommand = new AsyncRelayCommand(SaveTitleAsync, () => SelectedConversation != null);
         DeleteConversationCommand = new AsyncRelayCommand(DeleteConversationAsync, () => SelectedConversation != null);
+        SelectConversationCommand = new AsyncRelayCommand<Conversation>(SelectConversationAsync);
+        DeleteConversationByIdCommand = new AsyncRelayCommand<Conversation>(DeleteConversationByIdAsync);
 
         AssistantOptions = new List<EnumOption<string>>
         {
@@ -119,6 +121,8 @@ public sealed class ChatViewModel : ViewModelBase
             _ = LoadMessagesAsync();
             SaveTitleCommand.RaiseCanExecuteChanged();
             DeleteConversationCommand.RaiseCanExecuteChanged();
+            RaisePropertyChanged(nameof(CurrentConversationTitle));
+            RaisePropertyChanged(nameof(CurrentConversationSubtitle));
         }
     }
 
@@ -149,6 +153,66 @@ public sealed class ChatViewModel : ViewModelBase
 
             _assistantKey = value;
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(IsXinServiceSelected));
+            RaisePropertyChanged(nameof(IsLocalQaSelected));
+        }
+    }
+
+    public bool IsXinServiceSelected
+    {
+        get => AssistantKey == "xin_service";
+        set
+        {
+            if (!value)
+            {
+                return;
+            }
+
+            AssistantKey = "xin_service";
+        }
+    }
+
+    public bool IsLocalQaSelected
+    {
+        get => AssistantKey == "local_qa";
+        set
+        {
+            if (!value)
+            {
+                return;
+            }
+
+            AssistantKey = "local_qa";
+        }
+    }
+
+    public string CurrentConversationTitle
+    {
+        get
+        {
+            if (SelectedConversation == null)
+            {
+                return "新会话";
+            }
+
+            return string.IsNullOrWhiteSpace(SelectedConversation.Title)
+                ? $"会话 {SelectedConversation.Id}"
+                : SelectedConversation.Title;
+        }
+    }
+
+    public string? CurrentConversationSubtitle
+    {
+        get
+        {
+            if (SelectedConversation == null)
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(SelectedConversation.LastMessageContent)
+                ? null
+                : SelectedConversation.LastMessageContent;
         }
     }
 
@@ -157,6 +221,8 @@ public sealed class ChatViewModel : ViewModelBase
     public AsyncRelayCommand LoadConversationsCommand { get; }
     public AsyncRelayCommand SaveTitleCommand { get; }
     public AsyncRelayCommand DeleteConversationCommand { get; }
+    public AsyncRelayCommand<Conversation> SelectConversationCommand { get; }
+    public AsyncRelayCommand<Conversation> DeleteConversationByIdCommand { get; }
 
     public async Task LoadConversationsAsync()
     {
@@ -170,6 +236,14 @@ public sealed class ChatViewModel : ViewModelBase
         if (_currentConversationId != null)
         {
             SelectedConversation = Conversations.FirstOrDefault(c => c.Id == _currentConversationId);
+            return;
+        }
+
+        if (SelectedConversation != null && Conversations.All(c => c.Id != SelectedConversation.Id))
+        {
+            SelectedConversation = null;
+            RaisePropertyChanged(nameof(CurrentConversationTitle));
+            RaisePropertyChanged(nameof(CurrentConversationSubtitle));
         }
     }
 
@@ -322,6 +396,43 @@ public sealed class ChatViewModel : ViewModelBase
         _currentConversationId = null;
         _backendConversationId = null;
         Messages.Clear();
+        await LoadConversationsAsync();
+    }
+
+    private Task SelectConversationAsync(Conversation? conversation)
+    {
+        if (conversation == null)
+        {
+            SelectedConversation = null;
+            _currentConversationId = null;
+            _backendConversationId = null;
+            Messages.Clear();
+            RaisePropertyChanged(nameof(CurrentConversationTitle));
+            RaisePropertyChanged(nameof(CurrentConversationSubtitle));
+            return Task.CompletedTask;
+        }
+
+        SelectedConversation = conversation;
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteConversationByIdAsync(Conversation? conversation)
+    {
+        if (conversation == null)
+        {
+            return;
+        }
+
+        await _conversationService.SoftDeleteAsync(conversation.Id);
+
+        if (_currentConversationId == conversation.Id)
+        {
+            _currentConversationId = null;
+            _backendConversationId = null;
+            SelectedConversation = null;
+            Messages.Clear();
+        }
+
         await LoadConversationsAsync();
     }
 }
