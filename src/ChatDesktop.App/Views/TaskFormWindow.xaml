@@ -1,7 +1,9 @@
 <Window x:Class="ChatDesktop.App.Views.TaskFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="任务表单" Height="720" Width="640" WindowStartupLocation="CenterOwner"
+        Background="#F4F6FA"
         Loaded="OnLoaded">
   <Grid Margin="16">
     <Grid.RowDefinitions>
@@ -10,7 +12,7 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <TextBlock Grid.Row="0" FontSize="16" FontWeight="Bold">
+    <TextBlock Grid.Row="0" FontSize="16" FontWeight="SemiBold">
       <TextBlock.Style>
         <Style TargetType="TextBlock">
           <Setter Property="Text" Value="创建新任务" />
@@ -23,27 +25,30 @@
       </TextBlock.Style>
     </TextBlock>
 
-    <ScrollViewer Grid.Row="1" Margin="0,12,0,12">
-      <StackPanel>
-        <TextBlock Text="任务标题" FontWeight="Bold" />
-        <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,12" />
+    <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="16" Margin="0,12,0,12"
+            BorderBrush="#E6E9F0" BorderThickness="1"
+            materialDesign:ShadowAssist.ShadowDepth="Depth1">
+      <ScrollViewer>
+        <StackPanel>
+          <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                   materialDesign:HintAssist.Hint="任务标题" Margin="0,0,0,12" />
 
-        <TextBlock Text="任务描述" FontWeight="Bold" />
-        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="120" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,6,0,12" />
+          <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="120"
+                   TextWrapping="Wrap" AcceptsReturn="True"
+                   materialDesign:HintAssist.Hint="任务描述" Margin="0,0,0,12" />
 
-        <TextBlock Text="优先级" FontWeight="Bold" />
-        <ComboBox Margin="0,6,0,12"
-                  ItemsSource="{Binding PriorityOptions}"
-                  DisplayMemberPath="Label"
-                  SelectedValuePath="Value"
-                  SelectedValue="{Binding SelectedPriority, Mode=TwoWay}" />
+          <ComboBox Margin="0,0,0,12"
+                    ItemsSource="{Binding PriorityOptions}"
+                    DisplayMemberPath="Label"
+                    SelectedValuePath="Value"
+                    SelectedValue="{Binding SelectedPriority, Mode=TwoWay}"
+                    materialDesign:HintAssist.Hint="优先级" />
 
-        <TextBlock Text="截止时间" FontWeight="Bold" />
-        <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
-          <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="160" />
-          <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="8,0,0,0" />
-          <TextBlock Text="(HH:mm)" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="#666" />
-        </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+            <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="180" />
+            <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" Width="90" Margin="8,0,0,0"
+                     materialDesign:HintAssist.Hint="HH:mm" />
+          </StackPanel>
 
         <StackPanel>
           <StackPanel.Style>
@@ -57,12 +62,13 @@
             </Style>
           </StackPanel.Style>
 
-          <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="6" Padding="12">
+          <Border BorderBrush="#E6E9F0" BorderThickness="1" CornerRadius="10" Padding="12">
             <StackPanel>
-              <TextBlock Text="派发（可选）" FontWeight="Bold" />
+              <TextBlock Text="派发（可选）" FontWeight="SemiBold" />
               <ComboBox Margin="0,6,0,12"
                         ItemsSource="{Binding DispatchTypeOptions}"
-                        SelectedItem="{Binding AssignedToType, Mode=TwoWay}" />
+                        SelectedItem="{Binding AssignedToType, Mode=TwoWay}"
+                        materialDesign:HintAssist.Hint="派发类型" />
 
               <StackPanel>
                 <StackPanel.Style>
@@ -76,11 +82,12 @@
                   </Style>
                 </StackPanel.Style>
 
-                <TextBlock Text="派发给（用户）" FontWeight="Bold" />
+                <TextBlock Text="派发给（用户）" FontWeight="SemiBold" />
                 <ComboBox Margin="0,6,0,12"
                           ItemsSource="{Binding UserOptions}"
                           SelectedValuePath="EmpNo"
-                          SelectedValue="{Binding SelectedUserEmpNo, Mode=TwoWay}">
+                          SelectedValue="{Binding SelectedUserEmpNo, Mode=TwoWay}"
+                          materialDesign:HintAssist.Hint="选择用户">
                   <ComboBox.ItemTemplate>
                     <DataTemplate>
                       <TextBlock>
@@ -106,10 +113,11 @@
                   </Style>
                 </StackPanel.Style>
 
-                <TextBlock Text="派发给（团队）" FontWeight="Bold" />
+                <TextBlock Text="派发给（团队）" FontWeight="SemiBold" />
                 <ComboBox Margin="0,6,0,12"
                           ItemsSource="{Binding TeamOptions}"
-                          SelectedItem="{Binding SelectedTeam, Mode=TwoWay}" />
+                          SelectedItem="{Binding SelectedTeam, Mode=TwoWay}"
+                          materialDesign:HintAssist.Hint="选择团队" />
               </StackPanel>
             </StackPanel>
           </Border>
@@ -130,17 +138,18 @@
           <CheckBox Content="允许派发（详情页显示派发按钮）" IsChecked="{Binding AllowDispatch, Mode=TwoWay}" Margin="0,12,0,12" />
         </StackPanel>
 
-        <TextBlock Text="标签" FontWeight="Bold" />
-        <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,12" />
+        <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"
+                 materialDesign:HintAssist.Hint="标签 (可选)" Margin="0,0,0,12" />
 
         <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,8,0,0"
                    Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
       </StackPanel>
-    </ScrollViewer>
+      </ScrollViewer>
+    </Border>
 
     <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
-      <Button Content="取消" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
-      <Button Content="保存" Command="{Binding SaveCommand}" />
+      <Button Style="{StaticResource MaterialDesignFlatButton}" Content="取消" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
+      <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="保存" Command="{Binding SaveCommand}" />
     </StackPanel>
   </Grid>
 </Window>
