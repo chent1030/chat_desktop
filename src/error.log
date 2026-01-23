@@ -1,4 +1,2 @@
-﻿1>ChatDesktop.App.csproj: Error NU1605 : Warning As Error: Detected package downgrade: MaterialDesignColors from 2.1.4 to 2.0.0. Reference the package directly from the project to select a different version. 
- ChatDesktop.App -> MaterialDesignThemes 4.9.0 -> MaterialDesignColors (>= 2.1.4) 
- ChatDesktop.App -> MaterialDesignColors (>= 2.0.0)
+﻿1>MainWindow.xaml(385,18): Error MC3015 : “Grid”或其一个基类上未定义附加属性“DataTemplate.Triggers”。.
 1>------- Finished building project: ChatDesktop.App. Succeeded: False. Errors: 1. Warnings: 0
