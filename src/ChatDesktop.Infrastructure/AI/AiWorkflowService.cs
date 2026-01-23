@@ -52,6 +52,9 @@ public sealed class AiWorkflowService
                 continue;
             }
 
+            string? output = null;
+            var shouldComplete = false;
+
             try
             {
                 using var document = JsonDocument.Parse(data);
@@ -65,15 +68,11 @@ public sealed class AiWorkflowService
 
                 if (eventType is "message" or "agent_message" or "message_replace")
                 {
-                    var answer = root.TryGetProperty("answer", out var answerProp) ? answerProp.GetString() : null;
-                    if (!string.IsNullOrWhiteSpace(answer))
-                    {
-                        yield return answer;
-                    }
+                    output = root.TryGetProperty("answer", out var answerProp) ? answerProp.GetString() : null;
                 }
                 else if (eventType == "message_end")
                 {
-                    yield break;
+                    shouldComplete = true;
                 }
                 else if (eventType == "error")
                 {
@@ -83,7 +82,17 @@ public sealed class AiWorkflowService
             }
             catch (JsonException)
             {
-                yield return data;
+                output = data;
+            }
+
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                yield return output;
+            }
+
+            if (shouldComplete)
+            {
+                yield break;
             }
         }
     }

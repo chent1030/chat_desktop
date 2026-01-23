@@ -95,7 +95,10 @@ public static class ExternalLauncher
 
             if (args.Length > 1)
             {
-                psi.ArgumentList.AddRange(args.Skip(1));
+                foreach (var arg in args.Skip(1))
+                {
+                    psi.ArgumentList.Add(arg);
+                }
             }
 
             Process.Start(psi);

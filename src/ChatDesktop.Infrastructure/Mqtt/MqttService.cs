@@ -118,7 +118,11 @@ public sealed class MqttService : IMqttService
             .Select(t => new MqttTopicFilterBuilder().WithTopic(t).Build())
             .ToList();
 
-        await _client.SubscribeAsync(filters, cancellationToken);
+        var options = new MqttClientSubscribeOptionsBuilder()
+            .WithTopicFilters(filters)
+            .Build();
+
+        await _client.SubscribeAsync(options, cancellationToken);
     }
 
     private static List<string> BuildTopics(string empNo)
@@ -145,13 +149,13 @@ public sealed class MqttService : IMqttService
             return;
         }
 
-        var payload = args.ApplicationMessage?.PayloadSegment;
-        if (payload == null || payload.Value.IsEmpty)
+        var payload = args.ApplicationMessage?.PayloadSegment ?? default;
+        if (payload.Array == null || payload.Count == 0)
         {
             return;
         }
 
-        var text = Encoding.UTF8.GetString(payload.Value.Span);
+        var text = Encoding.UTF8.GetString(payload.Array, payload.Offset, payload.Count);
         if (string.IsNullOrWhiteSpace(text))
         {
             return;
