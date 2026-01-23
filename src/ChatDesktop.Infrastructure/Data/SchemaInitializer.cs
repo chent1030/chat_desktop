@@ -23,11 +23,12 @@ public sealed class SchemaInitializer
             throw new FileNotFoundException("未找到 Schema.sql", _schemaPath);
         }
 
-        var sql = await File.ReadAllTextAsync(_schemaPath, Encoding.UTF8, cancellationToken);
+        var sql = await File.ReadAllTextAsync(_schemaPath, Encoding.UTF8, cancellationToken)
+            .ConfigureAwait(false);
         await using var connection = _factory.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }
