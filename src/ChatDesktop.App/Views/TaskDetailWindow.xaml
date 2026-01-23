@@ -29,27 +29,116 @@
         <StackPanel Grid.Column="1">
           <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
           <WrapPanel Margin="0,10,0,0">
-            <Border Background="#EEF2FF" CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
-              <TextBlock Text="{Binding IsRead, StringFormat=已读: {0}}" Foreground="#5C6BC0" />
-            </Border>
-            <Border Background="#FFF3E0" CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
-              <TextBlock Text="{Binding IsCompleted, StringFormat=完成: {0}}" Foreground="#FB8C00" />
-            </Border>
-            <Border Background="#E8F5E9" CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
-              <TextBlock Text="{Binding Task.Source}" Foreground="#43A047" />
-            </Border>
-            <Border Background="#ECEFF1" CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
-              <TextBlock Text="{Binding DueDate, StringFormat=截止 {0:yyyy-MM-dd HH:mm}}" Foreground="#607D8B" />
+            <Border CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
               <Border.Style>
                 <Style TargetType="Border">
-                  <Setter Property="Visibility" Value="Visible" />
+                  <Setter Property="Background" Value="#FFEBEE" />
                   <Style.Triggers>
-                    <DataTrigger Binding="{Binding DueDate}" Value="{x:Null}">
-                      <Setter Property="Visibility" Value="Collapsed" />
+                    <DataTrigger Binding="{Binding IsRead}" Value="True">
+                      <Setter Property="Background" Value="#E8F5E9" />
                     </DataTrigger>
                   </Style.Triggers>
                 </Style>
               </Border.Style>
+              <TextBlock>
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="未读" />
+                    <Setter Property="Foreground" Value="#C62828" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsRead}" Value="True">
+                        <Setter Property="Text" Value="已读" />
+                        <Setter Property="Foreground" Value="#2E7D32" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Border>
+            <Border CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="#FFF3E0" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                      <Setter Property="Background" Value="#E8F5E9" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <TextBlock>
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="未完成" />
+                    <Setter Property="Foreground" Value="#EF6C00" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                        <Setter Property="Text" Value="已完成" />
+                        <Setter Property="Foreground" Value="#2E7D32" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Border>
+            <Border CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="#FFF3E0" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding Task.Priority}" Value="{x:Static coreEnums:Priority.High}">
+                      <Setter Property="Background" Value="#FFEBEE" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Task.Priority}" Value="{x:Static coreEnums:Priority.Low}">
+                      <Setter Property="Background" Value="#E8F5E9" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <TextBlock>
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="中" />
+                    <Setter Property="Foreground" Value="#EF6C00" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding Task.Priority}" Value="{x:Static coreEnums:Priority.High}">
+                        <Setter Property="Text" Value="高" />
+                        <Setter Property="Foreground" Value="#C62828" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding Task.Priority}" Value="{x:Static coreEnums:Priority.Low}">
+                        <Setter Property="Text" Value="低" />
+                        <Setter Property="Foreground" Value="#2E7D32" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Border>
+            <Border CornerRadius="8" Padding="8,2" Margin="0,0,6,6">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="#ECEFF1" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding DueDate}" Value="{x:Null}">
+                      <Setter Property="Background" Value="#F3F4F6" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <TextBlock>
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="{Binding DueDate, StringFormat=截止 {0:yyyy-MM-dd HH:mm}}" />
+                    <Setter Property="Foreground" Value="#607D8B" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding DueDate}" Value="{x:Null}">
+                        <Setter Property="Text" Value="无截止" />
+                        <Setter Property="Foreground" Value="#9AA1AE" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
             </Border>
           </WrapPanel>
           <WrapPanel Margin="0,8,0,0">
