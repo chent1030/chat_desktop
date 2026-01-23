@@ -1,2 +1,2 @@
-﻿1>MqttService.cs(122,14): Error CS1061 : “MqttClientSubscribeOptionsBuilder”未包含“WithTopicFilters”的定义，并且找不到可接受第一个“MqttClientSubscribeOptionsBuilder”类型参数的可访问扩展方法“WithTopicFilters”(是否缺少 using 指令或程序集引用?)
-1>------- Finished building project: ChatDesktop.Infrastructure. Succeeded: False. Errors: 1. Warnings: 0
+﻿2>MainWindow.xaml(189,27): Error MC4109 : 无法在类型“System.Windows.Controls.ContentPresenter”上找到模板属性“Background”。 行 189 位置 27.
+2>------- Finished building project: ChatDesktop.App. Succeeded: False. Errors: 1. Warnings: 0
