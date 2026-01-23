@@ -139,24 +139,21 @@
               BorderBrush="#E6E9F0" BorderThickness="1">
         <StackPanel>
           <StackPanel Orientation="Horizontal">
-            <ComboBox Width="140"
+            <ComboBox Width="110"
                       ItemsSource="{Binding TaskList.FilterOptions}"
                       DisplayMemberPath="Label"
                       SelectedValuePath="Value"
                       SelectedValue="{Binding TaskList.SelectedFilter, Mode=TwoWay}"
                       materialDesign:HintAssist.Hint="筛选" />
-            <ComboBox Width="160" Margin="8,0,0,0"
+            <ComboBox Width="120" Margin="8,0,0,0"
                       ItemsSource="{Binding TaskList.SortOptions}"
                       DisplayMemberPath="Label"
                       SelectedValuePath="Value"
                       SelectedValue="{Binding TaskList.SelectedSort, Mode=TwoWay}"
                       materialDesign:HintAssist.Hint="排序" />
             <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0"
-                    Command="{Binding TaskList.RefreshCommand}">
-              <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,6,0" />
-                <TextBlock Text="刷新" />
-              </StackPanel>
+                    Command="{Binding TaskList.RefreshCommand}" Padding="8">
+              <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" />
             </Button>
           </StackPanel>
         </StackPanel>
