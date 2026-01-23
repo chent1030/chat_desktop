@@ -185,7 +185,7 @@ public sealed class TaskDispatchViewModel : ViewModelBase
             Error = null;
             await _remoteService.CreateTaskAsync(_task, _currentEmpNo);
             await _taskService.UpdateAsync(_task);
-            DispatchSucceeded?.Invoke(\"任务派发成功\");
+            DispatchSucceeded?.Invoke("任务派发成功");
             RefreshRequested?.Invoke();
             CloseRequested?.Invoke();
         }
