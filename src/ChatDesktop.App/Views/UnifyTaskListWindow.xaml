@@ -89,7 +89,7 @@
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate>
                 <StackPanel Orientation="Horizontal">
-                  <Border Style="{StaticResource StatusChipStyle}">
+                  <Border>
                     <Border.Style>
                       <Style TargetType="Border" BasedOn="{StaticResource StatusChipStyle}">
                         <Setter Property="BorderBrush" Value="#90CAF9" />
@@ -115,7 +115,7 @@
                       </TextBlock.Style>
                     </TextBlock>
                   </Border>
-                  <Border Style="{StaticResource StatusChipStyle}">
+                  <Border>
                     <Border.Style>
                       <Style TargetType="Border" BasedOn="{StaticResource StatusChipStyle}">
                         <Setter Property="BorderBrush" Value="#FFE0B2" />

@@ -45,8 +45,7 @@
         </TextBlock.Style>
       </TextBlock>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Padding="10,4"
-                Click="OnVoiceCreateClicked">
+        <Button Margin="0,0,10,0" Padding="10,4" Click="OnVoiceCreateClicked">
           <Button.Style>
             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
               <Setter Property="Visibility" Value="Visible" />
