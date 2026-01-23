@@ -45,15 +45,19 @@ public partial class App : Application
         var messageRepository = new MessageRepository(connectionFactory);
         var conversationService = new ConversationService(conversationRepository, messageRepository);
 
-        var window = new MainWindow();
+        var window = new MainWindow
+        {
+            Visibility = Visibility.Hidden
+        };
+        window.Show();
 
         while (string.IsNullOrWhiteSpace(empNo))
         {
             var empVm = new EmpNoViewModel(remoteService, settingsStore);
             var empWindow = new EmpNoWindow(empVm)
             {
-                Owner = window.IsVisible ? window : null,
-                WindowStartupLocation = window.IsVisible ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen
+                Owner = window,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             empWindow.ShowDialog();
             settings = settingsService.LoadAsync().GetAwaiter().GetResult();
@@ -63,7 +67,8 @@ public partial class App : Application
         var viewModel = MainViewModel.CreateDefault(taskService, remoteService, empNo, conversationService);
         _mainViewModel = viewModel;
         window.DataContext = viewModel;
-        window.Show();
+        window.Visibility = Visibility.Visible;
+        window.Activate();
         _ = viewModel.TaskList.LoadAsync();
         _ = viewModel.Chat.LoadConversationsAsync();
         _ = InitializeMqttAsync(empNo);
