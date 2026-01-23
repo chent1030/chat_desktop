@@ -12,6 +12,7 @@ public sealed class LocalSettingsStore
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
+        PropertyNameCaseInsensitive = true,
     };
 
     public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)

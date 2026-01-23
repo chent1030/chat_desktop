@@ -23,50 +23,63 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        EnvConfig.Load();
-
-        var connectionFactory = new SqliteConnectionFactory(AppPaths.DatabasePath);
-        var schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Schema.sql");
-        var schemaInitializer = new SchemaInitializer(connectionFactory, schemaPath);
-        _ = schemaInitializer.InitializeAsync();
-
-        var settingsStore = new LocalSettingsStore();
-        var settingsService = new AppSettingsService(settingsStore);
-        var settings = settingsService.LoadAsync().GetAwaiter().GetResult();
-        var empNo = settings.EmpNo ?? string.Empty;
-
-        var remoteService = new UnifyTaskApiService();
-        var taskRepository = new TaskRepository(connectionFactory);
-        var taskActionRepository = new TaskActionRepository(connectionFactory);
-        var taskService = new TaskService(taskRepository, taskActionRepository, remoteService);
-        _taskService = taskService;
-
-        var conversationRepository = new ConversationRepository(connectionFactory);
-        var messageRepository = new MessageRepository(connectionFactory);
-        var conversationService = new ConversationService(conversationRepository, messageRepository);
-
-        while (string.IsNullOrWhiteSpace(empNo))
+        try
         {
-            var empVm = new EmpNoViewModel(remoteService, settingsStore);
-            var empWindow = new EmpNoWindow(empVm)
+            EnvConfig.Load();
+
+            var connectionFactory = new SqliteConnectionFactory(AppPaths.DatabasePath);
+            var schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Schema.sql");
+            var schemaInitializer = new SchemaInitializer(connectionFactory, schemaPath);
+            _ = schemaInitializer.InitializeAsync();
+
+            var settingsStore = new LocalSettingsStore();
+            var settingsService = new AppSettingsService(settingsStore);
+            var settings = settingsService.LoadAsync().GetAwaiter().GetResult();
+            var empNo = settings.EmpNo ?? string.Empty;
+
+            var remoteService = new UnifyTaskApiService();
+            var taskRepository = new TaskRepository(connectionFactory);
+            var taskActionRepository = new TaskActionRepository(connectionFactory);
+            var taskService = new TaskService(taskRepository, taskActionRepository, remoteService);
+            _taskService = taskService;
+
+            var conversationRepository = new ConversationRepository(connectionFactory);
+            var messageRepository = new MessageRepository(connectionFactory);
+            var conversationService = new ConversationService(conversationRepository, messageRepository);
+
+            while (string.IsNullOrWhiteSpace(empNo))
             {
-                Owner = null,
+                var empVm = new EmpNoViewModel(remoteService, settingsStore);
+                var empWindow = new EmpNoWindow(empVm)
+                {
+                    Owner = null,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    Topmost = true,
+                    ShowInTaskbar = true
+                };
+                empWindow.ShowDialog();
+                settings = settingsService.LoadAsync().GetAwaiter().GetResult();
+                empNo = settings.EmpNo ?? string.Empty;
+            }
+
+            var window = new MainWindow
+            {
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
-            empWindow.ShowDialog();
-            settings = settingsService.LoadAsync().GetAwaiter().GetResult();
-            empNo = settings.EmpNo ?? string.Empty;
+            var viewModel = MainViewModel.CreateDefault(taskService, remoteService, empNo, conversationService);
+            _mainViewModel = viewModel;
+            window.DataContext = viewModel;
+            window.Show();
+            window.Activate();
+            _ = viewModel.TaskList.LoadAsync();
+            _ = viewModel.Chat.LoadConversationsAsync();
+            _ = InitializeMqttAsync(empNo);
         }
-
-        var window = new MainWindow();
-        var viewModel = MainViewModel.CreateDefault(taskService, remoteService, empNo, conversationService);
-        _mainViewModel = viewModel;
-        window.DataContext = viewModel;
-        window.Show();
-        window.Activate();
-        _ = viewModel.TaskList.LoadAsync();
-        _ = viewModel.Chat.LoadConversationsAsync();
-        _ = InitializeMqttAsync(empNo);
+        catch (Exception ex)
+        {
+            MessageBox.Show($"启动失败：{ex}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
     }
 
     public Task InitializeMqttAsync(string empNo)

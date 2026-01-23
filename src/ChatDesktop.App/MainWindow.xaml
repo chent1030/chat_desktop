@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="600" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
         Loaded="OnLoaded">
   <Grid>
     <Grid.ColumnDefinitions>
