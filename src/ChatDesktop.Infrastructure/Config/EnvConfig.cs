@@ -19,8 +19,8 @@ public static class EnvConfig
             return;
         }
 
-        var path = string.IsNullOrWhiteSpace(envPath) ? ".env" : envPath;
-        if (File.Exists(path))
+        var path = ResolveEnvPath(envPath);
+        if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
         {
             foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
             {
@@ -46,6 +46,44 @@ public static class EnvConfig
         }
 
         _loaded = true;
+    }
+
+    private static string? ResolveEnvPath(string? envPath)
+    {
+        if (!string.IsNullOrWhiteSpace(envPath) && File.Exists(envPath))
+        {
+            return envPath;
+        }
+
+        var candidates = new List<string>
+        {
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env"),
+            Path.Combine(Environment.CurrentDirectory, ".env"),
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        // 开发环境：从输出目录向上查找项目根目录的 .env
+        var baseDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+        var current = baseDir;
+        for (var i = 0; i < 5 && current != null; i++)
+        {
+            var candidate = Path.Combine(current.FullName, ".env");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
     }
 
     public static bool Debug => GetBool(ConfigKeys.Debug, false);
