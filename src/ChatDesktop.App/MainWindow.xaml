@@ -381,21 +381,20 @@
                   <TextBlock Text="我" FontWeight="SemiBold" Foreground="#1E88E5"
                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-
-                <DataTemplate.Triggers>
-                  <DataTrigger Binding="{Binding IsUser}" Value="True">
-                    <Setter TargetName="LeftAvatar" Property="Visibility" Value="Collapsed" />
-                    <Setter TargetName="RightAvatar" Property="Visibility" Value="Visible" />
-                    <Setter TargetName="Bubble" Property="HorizontalAlignment" Value="Right" />
-                    <Setter TargetName="Bubble" Property="Background" Value="#E3F2FD" />
-                    <Setter TargetName="Bubble" Property="BorderBrush" Value="#BBDEFB" />
-                  </DataTrigger>
-                  <DataTrigger Binding="{Binding IsUser}" Value="False">
-                    <Setter TargetName="LeftAvatar" Property="Visibility" Value="Visible" />
-                    <Setter TargetName="RightAvatar" Property="Visibility" Value="Collapsed" />
-                  </DataTrigger>
-                </DataTemplate.Triggers>
               </Grid>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsUser}" Value="True">
+                  <Setter TargetName="LeftAvatar" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="RightAvatar" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="Bubble" Property="HorizontalAlignment" Value="Right" />
+                  <Setter TargetName="Bubble" Property="Background" Value="#E3F2FD" />
+                  <Setter TargetName="Bubble" Property="BorderBrush" Value="#BBDEFB" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsUser}" Value="False">
+                  <Setter TargetName="LeftAvatar" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="RightAvatar" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
