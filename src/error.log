@@ -1,0 +1,8 @@
+﻿1>ExternalLauncher.cs(98,34): Error CS1061 : “Collection<string>”未包含“AddRange”的定义，并且找不到可接受第一个“Collection<string>”类型参数的可访问扩展方法“AddRange”(是否缺少 using 指令或程序集引用?)
+1>AiWorkflowService.cs(71,25): Error CS1626 : 无法在包含 catch 子句的 Try 块体中生成值
+1>AiWorkflowService.cs(86,17): Error CS1631 : 无法在 catch 子句体中生成值
+1>MqttService.cs(121,38): Error CS1503 : 参数 1: 无法从“System.Collections.Generic.List<MQTTnet.Packets.MqttTopicFilter>”转换为“MQTTnet.Client.MqttClientSubscribeOptions”
+1>MqttService.cs(149,46): Error CS1061 : “ArraySegment<byte>”未包含“IsEmpty”的定义，并且找不到可接受第一个“ArraySegment<byte>”类型参数的可访问扩展方法“IsEmpty”(是否缺少 using 指令或程序集引用?)
+1>MqttService.cs(154,58): Error CS1061 : “ArraySegment<byte>”未包含“Span”的定义，并且找不到可接受第一个“ArraySegment<byte>”类型参数的可访问扩展方法“Span”(是否缺少 using 指令或程序集引用?)
+1>MqttService.cs(154,44): Warning CS8629 : 可为 null 的值类型可为 null。
+1>------- Finished building project: ChatDesktop.Infrastructure. Succeeded: False. Errors: 6. Warnings: 1
