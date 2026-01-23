@@ -34,6 +34,7 @@ public sealed class TaskListViewModel : ViewModelBase
         OpenEditCommand = new RelayCommand(OpenEdit);
         OpenVoiceCreateCommand = new RelayCommand(_ => VoiceCreateRequested?.Invoke());
         OpenChangeEmpNoCommand = new RelayCommand(_ => ChangeEmpNoRequested?.Invoke());
+        SelectFilterCommand = new RelayCommand(SelectFilter);
 
         FilterOptions = new List<EnumOption<TaskFilter>>
         {
@@ -152,6 +153,7 @@ public sealed class TaskListViewModel : ViewModelBase
     public RelayCommand OpenEditCommand { get; }
     public RelayCommand OpenVoiceCreateCommand { get; }
     public RelayCommand OpenChangeEmpNoCommand { get; }
+    public RelayCommand SelectFilterCommand { get; }
 
     public event Action<TaskItem>? DetailRequested;
     public event Action<TaskItem>? EditRequested;
@@ -235,6 +237,14 @@ public sealed class TaskListViewModel : ViewModelBase
         if (parameter is TaskItem task)
         {
             EditRequested?.Invoke(task);
+        }
+    }
+
+    private void SelectFilter(object? parameter)
+    {
+        if (parameter is TaskFilter filter)
+        {
+            SelectedFilter = filter;
         }
     }
 }

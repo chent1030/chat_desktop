@@ -21,6 +21,7 @@ public sealed class VoiceTaskViewModel : ViewModelBase
     private readonly AiConfigService _configService;
     private readonly ITaskRemoteService _remoteService;
     private readonly string _currentEmpNo;
+    private readonly bool _isDraftMode;
     private IReadOnlyList<DispatchCandidate> _candidates = Array.Empty<DispatchCandidate>();
 
     private string _transcript = string.Empty;
@@ -38,7 +39,8 @@ public sealed class VoiceTaskViewModel : ViewModelBase
         AiWorkflowService workflowService,
         AiConfigService configService,
         ITaskRemoteService remoteService,
-        string currentEmpNo)
+        string currentEmpNo,
+        bool isDraftMode = false)
     {
         _recorder = recorder;
         _speechService = speechService;
@@ -48,6 +50,7 @@ public sealed class VoiceTaskViewModel : ViewModelBase
         _configService = configService;
         _remoteService = remoteService;
         _currentEmpNo = currentEmpNo;
+        _isDraftMode = isDraftMode;
 
         StartRecordCommand = new AsyncRelayCommand(StartRecordAsync, () => !IsRecording && !IsProcessing);
         StopRecordCommand = new AsyncRelayCommand(StopRecordAsync, () => IsRecording);
@@ -56,6 +59,9 @@ public sealed class VoiceTaskViewModel : ViewModelBase
     }
 
     public event Action? CloseRequested;
+    public event Action<VoiceTaskDraft>? DraftApplied;
+
+    public bool IsDraftMode => _isDraftMode;
 
     public string Transcript
     {
@@ -220,6 +226,14 @@ public sealed class VoiceTaskViewModel : ViewModelBase
 
     private async Task SaveAsync()
     {
+        if (_isDraftMode)
+        {
+            var draft = BuildDraftFromForm();
+            DraftApplied?.Invoke(draft);
+            CloseRequested?.Invoke();
+            return;
+        }
+
         var task = new TaskItem
         {
             Title = Title.Trim(),
@@ -276,4 +290,17 @@ public sealed class VoiceTaskViewModel : ViewModelBase
     public bool DispatchNow { get; private set; }
     public string? AssignedToType { get; private set; }
     public string? AssignedTo { get; private set; }
+
+    private VoiceTaskDraft BuildDraftFromForm()
+    {
+        return new VoiceTaskDraft
+        {
+            Title = Title.Trim(),
+            Description = Description.Trim(),
+            DueDate = DueDate,
+            DispatchNow = DispatchNow,
+            AssignedToType = AssignedToType,
+            AssignedTo = AssignedTo
+        };
+    }
 }

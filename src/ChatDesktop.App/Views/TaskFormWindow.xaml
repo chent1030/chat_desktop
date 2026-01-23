@@ -4,6 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="任务表单" Height="720" Width="640" WindowStartupLocation="CenterOwner"
         Background="#F4F6FA"
+        Language="zh-CN"
         Loaded="OnLoaded">
   <Window.Resources>
     <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
@@ -43,7 +44,26 @@
           </Style>
         </TextBlock.Style>
       </TextBlock>
-      <TextBlock Grid.Column="1" Text="任务表单" Foreground="#6B7280" VerticalAlignment="Center" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" Padding="10,4"
+                Click="OnVoiceCreateClicked">
+          <Button.Style>
+            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+              <Setter Property="Visibility" Value="Visible" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Button.Style>
+          <StackPanel Orientation="Horizontal">
+            <materialDesign:PackIcon Kind="Microphone" Width="16" Height="16" Margin="0,0,6,0" />
+            <TextBlock Text="语音创建" />
+          </StackPanel>
+        </Button>
+        <TextBlock Text="任务表单" Foreground="#6B7280" VerticalAlignment="Center" />
+      </StackPanel>
     </Grid>
 
     <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="16" Margin="0,12,0,12"
@@ -52,13 +72,33 @@
       <ScrollViewer>
         <StackPanel>
           <TextBlock Text="任务标题 *" Style="{StaticResource FieldLabelStyle}" />
-          <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                   materialDesign:HintAssist.Hint="输入任务标题" Margin="0,0,0,16" />
+          <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="输入任务标题" />
+            <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0" Padding="8"
+                    Click="OnVoiceTitleClicked">
+              <materialDesign:PackIcon Kind="Microphone" Width="16" Height="16" />
+            </Button>
+          </Grid>
 
           <TextBlock Text="任务描述 (可选)" Style="{StaticResource FieldLabelStyle}" />
-          <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="120"
-                   TextWrapping="Wrap" AcceptsReturn="True"
-                   materialDesign:HintAssist.Hint="输入任务描述" Margin="0,0,0,16" />
+          <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="120"
+                     TextWrapping="Wrap" AcceptsReturn="True"
+                     materialDesign:HintAssist.Hint="输入任务描述" />
+            <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0" Padding="8"
+                    Click="OnVoiceDescriptionClicked">
+              <materialDesign:PackIcon Kind="Microphone" Width="16" Height="16" />
+            </Button>
+          </Grid>
 
           <TextBlock Text="优先级" Style="{StaticResource SectionTitleStyle}" />
           <ListBox ItemsSource="{Binding PriorityOptions}"
@@ -106,9 +146,11 @@
           <TextBlock Text="截止日期" Style="{StaticResource SectionTitleStyle}" />
           <Border Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal">
-              <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="200" />
+              <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="200" Language="zh-CN" />
               <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="8,0,0,0"
-                       materialDesign:HintAssist.Hint="HH:mm" />
+                       IsReadOnly="True" materialDesign:HintAssist.Hint="HH:mm" />
+              <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="选择时间" Margin="8,0,0,0"
+                      Padding="8,2" Click="OnPickDueTimeClicked" />
             </StackPanel>
           </Border>
 

@@ -41,7 +41,20 @@
 
     <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
       <Button Style="{StaticResource MaterialDesignFlatButton}" Content="取消" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
-      <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="保存任务" Command="{Binding SaveCommand}" />
+      <Button Style="{StaticResource MaterialDesignRaisedButton}" Command="{Binding SaveCommand}">
+        <TextBlock>
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Text" Value="保存任务" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDraftMode}" Value="True">
+                  <Setter Property="Text" Value="应用到表单" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </Button>
     </StackPanel>
   </Grid>
 </Window>

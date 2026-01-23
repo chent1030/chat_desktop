@@ -62,6 +62,12 @@ public sealed class TaskFormViewModel : ViewModelBase
 
     public ObservableCollection<string> TeamOptions { get; } = new();
 
+    public TaskService TaskService => _taskService;
+
+    public ITaskRemoteService RemoteService => _remoteService;
+
+    public string CurrentEmpNo => _currentEmpNo;
+
     public string Title
     {
         get => _title;
@@ -360,7 +366,7 @@ public sealed class TaskFormViewModel : ViewModelBase
                 AssignedTo = assignedTo
             };
 
-            await _remoteService.CreateTaskAsync(taskItem, _currentEmpNo);
+            await _taskService.CreateAndSyncAsync(taskItem, _currentEmpNo);
             CloseRequested?.Invoke();
         }
         catch (Exception ex)

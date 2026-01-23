@@ -1,5 +1,9 @@
 using System.Windows;
 using ChatDesktop.App.ViewModels;
+using ChatDesktop.Core.Services.Voice;
+using ChatDesktop.Infrastructure.AI;
+using ChatDesktop.Infrastructure.Http;
+using ChatDesktop.Infrastructure.Voice;
 
 namespace ChatDesktop.App.Views;
 
@@ -26,5 +30,118 @@ public partial class TaskFormWindow : Window
     private void OnCloseRequested()
     {
         Close();
+    }
+
+    private async void OnVoiceTitleClicked(object sender, RoutedEventArgs e)
+    {
+        await ApplyVoiceInputAsync(isTitle: true);
+    }
+
+    private async void OnVoiceDescriptionClicked(object sender, RoutedEventArgs e)
+    {
+        await ApplyVoiceInputAsync(isTitle: false);
+    }
+
+    private async Task ApplyVoiceInputAsync(bool isTitle)
+    {
+        if (DataContext is not TaskFormViewModel viewModel)
+        {
+            return;
+        }
+
+        var recorder = new AudioRecorderService();
+        var speechService = new SpeechToTextService();
+        var inputVm = new VoiceInputViewModel(recorder, speechService);
+        var window = new VoiceInputWindow(inputVm)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+
+        if (!string.IsNullOrWhiteSpace(inputVm.ResultText))
+        {
+            if (isTitle)
+            {
+                viewModel.Title = inputVm.ResultText!;
+            }
+            else
+            {
+                viewModel.Description = inputVm.ResultText!;
+            }
+        }
+    }
+
+    private void OnPickDueTimeClicked(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TaskFormViewModel viewModel)
+        {
+            return;
+        }
+
+        var window = new TimePickerWindow(viewModel.DueTimeText)
+        {
+            Owner = this
+        };
+        if (window.ShowDialog() == true && !string.IsNullOrWhiteSpace(window.SelectedTimeText))
+        {
+            viewModel.DueTimeText = window.SelectedTimeText!;
+        }
+    }
+
+    private void OnVoiceCreateClicked(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TaskFormViewModel viewModel || viewModel.IsEditing)
+        {
+            return;
+        }
+
+        var recorder = new AudioRecorderService();
+        var speechService = new SpeechToTextService();
+        var extractor = new TaskVoiceExtractionService();
+        var workflowService = new AiWorkflowService(new SseClient());
+        var configService = new AiConfigService();
+
+        var draftVm = new VoiceTaskViewModel(
+            recorder,
+            speechService,
+            viewModel.TaskService,
+            extractor,
+            workflowService,
+            configService,
+            viewModel.RemoteService,
+            viewModel.CurrentEmpNo,
+            isDraftMode: true);
+
+        VoiceTaskDraft? appliedDraft = null;
+        draftVm.DraftApplied += draft => appliedDraft = draft;
+
+        var window = new VoiceTaskWindow(draftVm)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+
+        if (appliedDraft == null)
+        {
+            return;
+        }
+
+        viewModel.Title = appliedDraft.Title;
+        viewModel.Description = appliedDraft.Description;
+        viewModel.DueDate = appliedDraft.DueDate;
+
+        if (!string.IsNullOrWhiteSpace(appliedDraft.AssignedToType))
+        {
+            viewModel.AssignedToType = appliedDraft.AssignedToType;
+        }
+
+        if (appliedDraft.AssignedToType == "用户")
+        {
+            viewModel.SelectedUserEmpNo = appliedDraft.AssignedToEmpNo ?? appliedDraft.AssignedTo;
+        }
+        else if (appliedDraft.AssignedToType == "团队")
+        {
+            viewModel.SelectedTeam = appliedDraft.AssignedTo;
+        }
     }
 }

@@ -1,0 +1,45 @@
+<Window x:Class="ChatDesktop.App.Views.VoiceInputWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="语音输入" Height="360" Width="520" WindowStartupLocation="CenterOwner"
+        Background="#F4F6FA">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <StackPanel>
+      <TextBlock Text="点击开始录音，完成后自动识别为文字。" Foreground="#6B7280" />
+      <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+        <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="开始录音"
+                Command="{Binding StartRecordCommand}" Margin="0,0,8,0" />
+        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="停止录音"
+                Command="{Binding StopRecordCommand}" Margin="0,0,8,0" />
+        <TextBlock Text="处理中..." Foreground="#5C6BC0" VerticalAlignment="Center"
+                   Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+      </StackPanel>
+    </StackPanel>
+
+    <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="12" Margin="0,12,0,12"
+            BorderBrush="#E6E9F0" BorderThickness="1"
+            materialDesign:ShadowAssist.ShadowDepth="Depth1">
+      <StackPanel>
+        <TextBlock Text="识别结果" FontWeight="SemiBold" Margin="0,0,0,8" />
+        <TextBox Text="{Binding Transcript}" Height="120" TextWrapping="Wrap" AcceptsReturn="True"
+                 IsReadOnly="True" />
+        <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,8,0,0"
+                   Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+      </StackPanel>
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Style="{StaticResource MaterialDesignFlatButton}" Content="取消" Margin="0,0,8,0"
+              Command="{Binding CancelCommand}" />
+      <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="应用"
+              Command="{Binding ConfirmCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

@@ -5,6 +5,14 @@
         Title="分页任务" Height="720" Width="960" WindowStartupLocation="CenterOwner"
         Background="#F4F6FA"
         Loaded="OnLoaded">
+  <Window.Resources>
+    <Style x:Key="StatusChipStyle" TargetType="Border">
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+  </Window.Resources>
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -23,29 +31,44 @@
 
     <Border Grid.Row="1" BorderBrush="#E6E9F0" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,12,0,12"
             Background="White" materialDesign:ShadowAssist.ShadowDepth="Depth1">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="160" />
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+      <StackPanel>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
 
-        <ComboBox Grid.Column="0" Margin="0,0,12,0"
-                  ItemsSource="{Binding TypeOptions}"
-                  DisplayMemberPath="Label"
-                  SelectedValuePath="Value"
-                  SelectedValue="{Binding SelectedType, Mode=TwoWay}"
-                  materialDesign:HintAssist.Hint="类型" />
+          <ComboBox Grid.Column="0" Margin="0,0,12,0"
+                    ItemsSource="{Binding TypeOptions}"
+                    DisplayMemberPath="Label"
+                    SelectedValuePath="Value"
+                    SelectedValue="{Binding SelectedType, Mode=TwoWay}"
+                    materialDesign:HintAssist.Hint="任务类型" />
 
-        <TextBox Grid.Column="1" Margin="0,0,12,0"
-                 Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
-                 materialDesign:HintAssist.Hint="搜索标题" />
+          <TextBox Grid.Column="1" Margin="0,0,12,0"
+                   Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
+                   materialDesign:HintAssist.Hint="任务名称" />
 
-        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="查询" Command="{Binding SearchCommand}" Margin="0,0,8,0" />
-          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="刷新" Command="{Binding RefreshCommand}" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="查询" Command="{Binding SearchCommand}" Margin="0,0,8,0" />
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="刷新" Command="{Binding RefreshCommand}" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <TextBlock Text="到期开始" VerticalAlignment="Center" />
+          <DatePicker SelectedDate="{Binding DueStartDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" Language="zh-CN" />
+          <TextBox Text="{Binding DueStartTimeText}" Width="70" IsReadOnly="True" />
+          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="时间" Width="60" Margin="6,0,16,0" Click="OnPickStartTime" />
+
+          <TextBlock Text="到期结束" VerticalAlignment="Center" />
+          <DatePicker SelectedDate="{Binding DueEndDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" Language="zh-CN" />
+          <TextBox Text="{Binding DueEndTimeText}" Width="70" IsReadOnly="True" />
+          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="时间" Width="60" Margin="6,0,8,0" Click="OnPickEndTime" />
+          <TextBlock Text="(HH:mm)" Foreground="#666" VerticalAlignment="Center" />
         </StackPanel>
-      </Grid>
+      </StackPanel>
     </Border>
 
     <Grid Grid.Row="2">
@@ -54,75 +77,100 @@
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
-      <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
-        <TextBlock Text="到期开始" VerticalAlignment="Center" />
-        <DatePicker SelectedDate="{Binding DueStartDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" />
-        <TextBox Text="{Binding DueStartTimeText}" Width="70" IsReadOnly="True" />
-        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="选择" Width="50" Margin="6,0,16,0" Click="OnPickStartTime" />
+      <TextBlock Grid.Row="0" Text="{Binding Error}" Foreground="#C62828" Margin="0,0,0,8"
+                 Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
 
-        <TextBlock Text="到期结束" VerticalAlignment="Center" />
-        <DatePicker SelectedDate="{Binding DueEndDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" />
-        <TextBox Text="{Binding DueEndTimeText}" Width="70" IsReadOnly="True" />
-        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="选择" Width="50" Margin="6,0,8,0" Click="OnPickEndTime" />
-        <TextBlock Text="(HH:mm)" Foreground="#666" VerticalAlignment="Center" />
-      </StackPanel>
+      <DataGrid Grid.Row="1" ItemsSource="{Binding Tasks}" AutoGenerateColumns="False"
+                HeadersVisibility="Column" CanUserAddRows="False" CanUserDeleteRows="False"
+                IsReadOnly="True" Background="White" BorderBrush="#E6E9F0" BorderThickness="1"
+                RowBackground="White" AlternatingRowBackground="#F8FAFF">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="状态" Width="180">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                  <Border Style="{StaticResource StatusChipStyle}">
+                    <Border.Style>
+                      <Style TargetType="Border" BasedOn="{StaticResource StatusChipStyle}">
+                        <Setter Property="BorderBrush" Value="#90CAF9" />
+                        <Setter Property="Background" Value="#E3F2FD" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsRead}" Value="True">
+                            <Setter Property="BorderBrush" Value="#A5D6A7" />
+                            <Setter Property="Background" Value="#E8F5E9" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
+                    <TextBlock>
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Text" Value="未读" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRead}" Value="True">
+                              <Setter Property="Text" Value="已读" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </Border>
+                  <Border Style="{StaticResource StatusChipStyle}">
+                    <Border.Style>
+                      <Style TargetType="Border" BasedOn="{StaticResource StatusChipStyle}">
+                        <Setter Property="BorderBrush" Value="#FFE0B2" />
+                        <Setter Property="Background" Value="#FFF3E0" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                            <Setter Property="BorderBrush" Value="#C8E6C9" />
+                            <Setter Property="Background" Value="#E8F5E9" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
+                    <TextBlock>
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="Text" Value="未完成" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                              <Setter Property="Text" Value="已完成" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </Border>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="*" />
+          <DataGridTextColumn Header="截止时间" Binding="{Binding DueDate, StringFormat=yyyy-MM-dd HH:mm, TargetNullValue=-}" Width="160" />
+          <DataGridTextColumn Header="派发给" Binding="{Binding AssignedTo, TargetNullValue=-}" Width="140" />
+          <DataGridTextColumn Header="派发人" Binding="{Binding AssignedBy, TargetNullValue=-}" Width="140" />
+          <DataGridTemplateColumn Header="操作" Width="260">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                  <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="查看"
+                          Command="{Binding DataContext.OpenDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                          CommandParameter="{Binding}" Margin="0,0,6,0" />
+                  <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="设为已读"
+                          Command="{Binding DataContext.MarkReadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                          CommandParameter="{Binding}" Margin="0,0,6,0" />
+                  <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="完成"
+                          Command="{Binding DataContext.CompleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                          CommandParameter="{Binding}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
 
-      <Grid Grid.Row="1">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,0,0,8"
-                   Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
-
-        <ListView Grid.Row="1" ItemsSource="{Binding Tasks}" Background="Transparent" BorderThickness="0">
-          <ListView.ItemTemplate>
-            <DataTemplate>
-              <Border BorderBrush="#E6E9F0" BorderThickness="1" CornerRadius="10" Margin="0,0,0,8" Padding="12"
-                      Background="White" materialDesign:ShadowAssist.ShadowDepth="Depth1">
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="1.5*" />
-                    <ColumnDefinition Width="1.2*" />
-                    <ColumnDefinition Width="1.2*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-
-                  <StackPanel Grid.Column="0">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding DueDate}" Foreground="#666" />
-                  </StackPanel>
-
-                  <TextBlock Grid.Column="1" Text="{Binding AssignedTo}" Foreground="#666" TextTrimming="CharacterEllipsis" />
-                  <TextBlock Grid.Column="2" Text="{Binding AssignedBy}" Foreground="#666" TextTrimming="CharacterEllipsis" />
-
-                  <StackPanel Grid.Column="3">
-                    <TextBlock Text="{Binding IsRead, StringFormat=已读: {0}}" Foreground="#666" />
-                    <TextBlock Text="{Binding IsCompleted, StringFormat=完成: {0}}" Foreground="#666" />
-                  </StackPanel>
-
-                  <StackPanel Grid.Column="4" Orientation="Horizontal">
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="详情"
-                            Command="{Binding DataContext.OpenDetailCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                            CommandParameter="{Binding}" Margin="0,0,6,0" />
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="已读"
-                            Command="{Binding DataContext.MarkReadCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                            CommandParameter="{Binding}" Margin="0,0,6,0" />
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="完成"
-                            Command="{Binding DataContext.CompleteCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                            CommandParameter="{Binding}" />
-                  </StackPanel>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ListView.ItemTemplate>
-        </ListView>
-
-        <TextBlock Text="加载中..." HorizontalAlignment="Center" VerticalAlignment="Center"
-                   Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
-      </Grid>
+      <TextBlock Grid.Row="1" Text="加载中..." HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
     </Grid>
 
     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
