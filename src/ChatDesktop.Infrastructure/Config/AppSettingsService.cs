@@ -17,7 +17,7 @@ public sealed class AppSettingsService
 
     public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
-        _cached = await _store.LoadAsync(cancellationToken);
+        _cached = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
         return _cached;
     }
 

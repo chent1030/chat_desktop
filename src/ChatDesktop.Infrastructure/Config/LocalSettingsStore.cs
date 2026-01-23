@@ -23,7 +23,7 @@ public sealed class LocalSettingsStore
             return new AppSettings();
         }
 
-        var json = await File.ReadAllTextAsync(path, cancellationToken);
+        var json = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
         var settings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
         return settings ?? new AppSettings();
     }
@@ -32,6 +32,6 @@ public sealed class LocalSettingsStore
     {
         var path = AppPaths.SettingsPath;
         var json = JsonSerializer.Serialize(settings, _jsonOptions);
-        await File.WriteAllTextAsync(path, json, cancellationToken);
+        await File.WriteAllTextAsync(path, json, cancellationToken).ConfigureAwait(false);
     }
 }
