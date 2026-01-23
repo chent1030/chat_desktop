@@ -398,7 +398,7 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(timeText))
         {
-            value = date.Value.Date;
+            value = date.Value;
             return true;
         }
 

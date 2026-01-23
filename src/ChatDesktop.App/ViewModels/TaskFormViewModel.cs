@@ -381,23 +381,7 @@ public sealed class TaskFormViewModel : ViewModelBase
 
     private DateTime? BuildDueDate()
     {
-        if (!DueDate.HasValue)
-        {
-            return null;
-        }
-
-        var baseDate = DueDate.Value.Date;
-        if (string.IsNullOrWhiteSpace(DueTimeText))
-        {
-            return baseDate;
-        }
-
-        if (TimeSpan.TryParse(DueTimeText.Trim(), out var time))
-        {
-            return baseDate.Add(time);
-        }
-
-        return baseDate;
+        return DueDate;
     }
 
     private async Task LoadDispatchCandidatesAsync()

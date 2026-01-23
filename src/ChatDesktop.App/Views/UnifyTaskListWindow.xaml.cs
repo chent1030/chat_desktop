@@ -44,40 +44,6 @@ public partial class UnifyTaskListWindow : Window
         await viewModel.LoadAsync();
     }
 
-    private void OnPickStartTime(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is not UnifyTaskListViewModel viewModel)
-        {
-            return;
-        }
-
-        var window = new TimePickerWindow(viewModel.DueStartTimeText)
-        {
-            Owner = this
-        };
-        if (window.ShowDialog() == true)
-        {
-            viewModel.DueStartTimeText = window.SelectedTimeText ?? string.Empty;
-        }
-    }
-
-    private void OnPickEndTime(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is not UnifyTaskListViewModel viewModel)
-        {
-            return;
-        }
-
-        var window = new TimePickerWindow(viewModel.DueEndTimeText)
-        {
-            Owner = this
-        };
-        if (window.ShowDialog() == true)
-        {
-            viewModel.DueEndTimeText = window.SelectedTimeText ?? string.Empty;
-        }
-    }
-
     private void OnCloseClicked(object sender, RoutedEventArgs e)
     {
         Close();

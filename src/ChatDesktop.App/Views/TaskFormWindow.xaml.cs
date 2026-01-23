@@ -71,23 +71,6 @@ public partial class TaskFormWindow : Window
         }
     }
 
-    private void OnPickDueTimeClicked(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is not TaskFormViewModel viewModel)
-        {
-            return;
-        }
-
-        var window = new TimePickerWindow(viewModel.DueTimeText)
-        {
-            Owner = this
-        };
-        if (window.ShowDialog() == true && !string.IsNullOrWhiteSpace(window.SelectedTimeText))
-        {
-            viewModel.DueTimeText = window.SelectedTimeText!;
-        }
-    }
-
     private void OnVoiceCreateClicked(object sender, RoutedEventArgs e)
     {
         if (DataContext is not TaskFormViewModel viewModel || viewModel.IsEditing)

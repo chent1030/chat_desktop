@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="分页任务" Height="720" Width="960" WindowStartupLocation="CenterOwner"
         Background="#F4F6FA"
         Loaded="OnLoaded">
@@ -58,15 +59,12 @@
 
         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
           <TextBlock Text="到期开始" VerticalAlignment="Center" />
-          <DatePicker SelectedDate="{Binding DueStartDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" Language="zh-CN" />
-          <TextBox Text="{Binding DueStartTimeText}" Width="70" IsReadOnly="True" />
-          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="时间" Width="60" Margin="6,0,16,0" Click="OnPickStartTime" />
+          <xctk:DateTimePicker Value="{Binding DueStartDate, Mode=TwoWay}" Width="220" Margin="8,0,16,0"
+                               Format="Custom" FormatString="yyyy-MM-dd HH:mm" />
 
           <TextBlock Text="到期结束" VerticalAlignment="Center" />
-          <DatePicker SelectedDate="{Binding DueEndDate, Mode=TwoWay}" Width="140" Margin="8,0,8,0" Language="zh-CN" />
-          <TextBox Text="{Binding DueEndTimeText}" Width="70" IsReadOnly="True" />
-          <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="时间" Width="60" Margin="6,0,8,0" Click="OnPickEndTime" />
-          <TextBlock Text="(HH:mm)" Foreground="#666" VerticalAlignment="Center" />
+          <xctk:DateTimePicker Value="{Binding DueEndDate, Mode=TwoWay}" Width="220" Margin="8,0,0,0"
+                               Format="Custom" FormatString="yyyy-MM-dd HH:mm" />
         </StackPanel>
       </StackPanel>
     </Border>

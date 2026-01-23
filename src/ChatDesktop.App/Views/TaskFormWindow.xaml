@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="任务表单" Height="720" Width="640" WindowStartupLocation="CenterOwner"
         Background="#F4F6FA"
         Language="zh-CN"
@@ -145,11 +146,8 @@
           <TextBlock Text="截止日期" Style="{StaticResource SectionTitleStyle}" />
           <Border Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal">
-              <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="200" Language="zh-CN" />
-              <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="8,0,0,0"
-                       IsReadOnly="True" materialDesign:HintAssist.Hint="HH:mm" />
-              <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="选择时间" Margin="8,0,0,0"
-                      Padding="8,2" Click="OnPickDueTimeClicked" />
+              <xctk:DateTimePicker Value="{Binding DueDate, Mode=TwoWay}" Width="260"
+                                   Format="Custom" FormatString="yyyy-MM-dd HH:mm" />
             </StackPanel>
           </Border>
 
