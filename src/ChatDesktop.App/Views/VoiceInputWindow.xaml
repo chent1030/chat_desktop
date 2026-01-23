@@ -28,7 +28,7 @@
             materialDesign:ShadowAssist.ShadowDepth="Depth1">
       <StackPanel>
         <TextBlock Text="识别结果" FontWeight="SemiBold" Margin="0,0,0,8" />
-        <TextBox Text="{Binding Transcript}" Height="120" TextWrapping="Wrap" AcceptsReturn="True"
+        <TextBox Text="{Binding Transcript, Mode=OneWay}" Height="120" TextWrapping="Wrap" AcceptsReturn="True"
                  IsReadOnly="True" />
         <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,8,0,0"
                    Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
