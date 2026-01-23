@@ -52,7 +52,8 @@ public partial class App : Application
             var empVm = new EmpNoViewModel(remoteService, settingsStore);
             var empWindow = new EmpNoWindow(empVm)
             {
-                Owner = window
+                Owner = window.IsVisible ? window : null,
+                WindowStartupLocation = window.IsVisible ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen
             };
             empWindow.ShowDialog();
             settings = settingsService.LoadAsync().GetAwaiter().GetResult();
