@@ -44,6 +44,40 @@ public partial class UnifyTaskListWindow : Window
         await viewModel.LoadAsync();
     }
 
+    private void OnPickStartDateTime(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not UnifyTaskListViewModel viewModel)
+        {
+            return;
+        }
+
+        var window = new DateTimePickerWindow(viewModel.DueStartDate, "选择到期开始")
+        {
+            Owner = this
+        };
+        if (window.ShowDialog() == true)
+        {
+            viewModel.DueStartDate = window.SelectedDateTime;
+        }
+    }
+
+    private void OnPickEndDateTime(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not UnifyTaskListViewModel viewModel)
+        {
+            return;
+        }
+
+        var window = new DateTimePickerWindow(viewModel.DueEndDate, "选择到期结束")
+        {
+            Owner = this
+        };
+        if (window.ShowDialog() == true)
+        {
+            viewModel.DueEndDate = window.SelectedDateTime;
+        }
+    }
+
     private void OnCloseClicked(object sender, RoutedEventArgs e)
     {
         Close();

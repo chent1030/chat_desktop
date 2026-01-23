@@ -71,6 +71,23 @@ public partial class TaskFormWindow : Window
         }
     }
 
+    private void OnPickDueDateTimeClicked(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not TaskFormViewModel viewModel)
+        {
+            return;
+        }
+
+        var window = new DateTimePickerWindow(viewModel.DueDate, "选择截止时间")
+        {
+            Owner = this
+        };
+        if (window.ShowDialog() == true)
+        {
+            viewModel.DueDate = window.SelectedDateTime;
+        }
+    }
+
     private void OnVoiceCreateClicked(object sender, RoutedEventArgs e)
     {
         if (DataContext is not TaskFormViewModel viewModel || viewModel.IsEditing)

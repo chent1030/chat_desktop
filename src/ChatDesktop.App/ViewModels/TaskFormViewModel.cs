@@ -126,6 +126,7 @@ public sealed class TaskFormViewModel : ViewModelBase
 
             _dueDate = value;
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(DueDateDisplay));
         }
     }
 
@@ -143,6 +144,10 @@ public sealed class TaskFormViewModel : ViewModelBase
             RaisePropertyChanged();
         }
     }
+
+    public string DueDateDisplay => DueDate.HasValue
+        ? DueDate.Value.ToString("yyyy-MM-dd HH:mm")
+        : "选择截止日期(可选)";
 
     public string Tags
     {

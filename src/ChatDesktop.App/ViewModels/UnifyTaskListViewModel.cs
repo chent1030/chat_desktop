@@ -101,6 +101,7 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
 
             _dueStartDate = value;
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(DueStartDisplay));
         }
     }
 
@@ -116,6 +117,7 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
 
             _dueEndDate = value;
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(DueEndDisplay));
         }
     }
 
@@ -148,6 +150,14 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
             RaisePropertyChanged();
         }
     }
+
+    public string DueStartDisplay => DueStartDate.HasValue
+        ? DueStartDate.Value.ToString("yyyy-MM-dd HH:mm")
+        : "开始时间(可选)";
+
+    public string DueEndDisplay => DueEndDate.HasValue
+        ? DueEndDate.Value.ToString("yyyy-MM-dd HH:mm")
+        : "结束时间(可选)";
 
     public bool IsLoading
     {
@@ -271,13 +281,6 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
             return;
         }
 
-        if (!TryBuildDateTime(DueStartDate, DueStartTimeText, out var dueStart) ||
-            !TryBuildDateTime(DueEndDate, DueEndTimeText, out var dueEnd))
-        {
-            Error = "到期时间格式错误，请使用 HH:mm";
-            return;
-        }
-
         Error = null;
         IsLoading = true;
         try
@@ -289,8 +292,8 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
                 EmpNo = SelectedType == UnifyTaskListType.MyTasks ? _currentEmpNo : null,
                 AssignedBy = SelectedType == UnifyTaskListType.DispatchedByMe ? _currentEmpNo : null,
                 Title = string.IsNullOrWhiteSpace(Keyword) ? null : Keyword.Trim(),
-                DueDateStart = dueStart,
-                DueDateEnd = dueEnd
+                DueDateStart = DueStartDate,
+                DueDateEnd = DueEndDate
             };
 
             TaskPageResult result = await _remoteService.FetchTaskPageAsync(query);
@@ -388,28 +391,7 @@ public sealed class UnifyTaskListViewModel : ViewModelBase
         RaisePropertyChanged(nameof(Title));
     }
 
-    private static bool TryBuildDateTime(DateTime? date, string timeText, out DateTime? value)
-    {
-        value = null;
-        if (!date.HasValue)
-        {
-            return string.IsNullOrWhiteSpace(timeText);
-        }
-
-        if (string.IsNullOrWhiteSpace(timeText))
-        {
-            value = date.Value;
-            return true;
-        }
-
-        if (TimeSpan.TryParse(timeText.Trim(), out var time))
-        {
-            value = date.Value.Date.Add(time);
-            return true;
-        }
-
-        return false;
-    }
+    
 }
 
 public enum UnifyTaskListType
