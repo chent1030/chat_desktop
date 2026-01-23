@@ -24,6 +24,10 @@
       <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
       <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter" />
       <converters:PriorityToBrushConverter x:Key="PriorityToBrushConverter" />
+
+      <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" />
+      <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}" />
+      <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>
