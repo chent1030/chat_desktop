@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "dgSpecHash": "mWiE3frL+7s=",
+  "success": true,
+  "projectFilePath": "/Users/csai/project/chat_desktop/src/ChatDesktop.App/ChatDesktop.App.csproj",
+  "expectedPackageFiles": [
+    "/Users/csai/.nuget/packages/dapper/2.1.35/dapper.2.1.35.nupkg.sha512",
+    "/Users/csai/.nuget/packages/markdig/0.22.0/markdig.0.22.0.nupkg.sha512",
+    "/Users/csai/.nuget/packages/markdig.wpf/0.5.0.1/markdig.wpf.0.5.0.1.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.data.sqlite/8.0.8/microsoft.data.sqlite.8.0.8.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.data.sqlite.core/8.0.8/microsoft.data.sqlite.core.8.0.8.nupkg.sha512",
+    "/Users/csai/.nuget/packages/mqttnet/4.3.7.1207/mqttnet.4.3.7.1207.nupkg.sha512",
+    "/Users/csai/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.6/sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",
+    "/Users/csai/.nuget/packages/sqlitepclraw.core/2.1.6/sqlitepclraw.core.2.1.6.nupkg.sha512",
+    "/Users/csai/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.6/sqlitepclraw.lib.e_sqlite3.2.1.6.nupkg.sha512",
+    "/Users/csai/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.6/sqlitepclraw.provider.e_sqlite3.2.1.6.nupkg.sha512",
+    "/Users/csai/.nuget/packages/system.memory/4.5.3/system.memory.4.5.3.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.23/microsoft.aspnetcore.app.ref.8.0.23.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.23/microsoft.netcore.app.host.osx-arm64.8.0.23.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.netcore.app.ref/8.0.23/microsoft.netcore.app.ref.8.0.23.nupkg.sha512",
+    "/Users/csai/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.23/microsoft.windowsdesktop.app.ref.8.0.23.nupkg.sha512"
+  ],
+  "logs": []
+}

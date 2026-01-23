@@ -1,0 +1,122 @@
+using System.Collections.Concurrent;
+using System.Text;
+using ChatDesktop.Core.Constants;
+
+namespace ChatDesktop.Infrastructure.Config;
+
+/// <summary>
+/// .env 配置读取
+/// </summary>
+public static class EnvConfig
+{
+    private static readonly ConcurrentDictionary<string, string> Values = new();
+    private static bool _loaded;
+
+    public static void Load(string? envPath = null)
+    {
+        if (_loaded)
+        {
+            return;
+        }
+
+        var path = string.IsNullOrWhiteSpace(envPath) ? ".env" : envPath;
+        if (File.Exists(path))
+        {
+            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#"))
+                {
+                    continue;
+                }
+
+                var idx = trimmed.IndexOf('=');
+                if (idx <= 0)
+                {
+                    continue;
+                }
+
+                var key = trimmed[..idx].Trim();
+                var value = trimmed[(idx + 1)..].Trim().Trim('"');
+                if (!string.IsNullOrEmpty(key))
+                {
+                    Values[key] = value;
+                }
+            }
+        }
+
+        _loaded = true;
+    }
+
+    public static bool Debug => GetBool(ConfigKeys.Debug, false);
+
+    public static string UnifyApiBaseUrl => GetString(ConfigKeys.UnifyApiBaseUrl, "https://cshzeroapi.uabcbattery.com/unify/v1/0");
+    public static string UnifyCreateTaskPath => GetString(ConfigKeys.UnifyCreateTaskPath, string.Empty);
+    public static string UnifyTaskReadPath => GetString(ConfigKeys.UnifyTaskReadPath, string.Empty);
+    public static string UnifyTaskCompletePath => GetString(ConfigKeys.UnifyTaskCompletePath, string.Empty);
+    public static string UnifyTaskListPath => GetString(ConfigKeys.UnifyTaskListPath, string.Empty);
+    public static string UnifyDispatchCandidatesPath => GetString(ConfigKeys.UnifyDispatchCandidatesPath, string.Empty);
+    public static string UnifyEmpNoCheckPath => GetString(ConfigKeys.UnifyEmpNoCheckPath, string.Empty);
+
+    public static string ApiBaseUrl => GetString(ConfigKeys.ApiBaseUrl, "http://localhost:3000");
+    public static string? ApiToken => GetNullableString(ConfigKeys.ApiToken);
+
+    public static string AiApiUrl => GetString(ConfigKeys.AiApiUrl, string.Empty);
+    public static string? AiSseUrl => GetNullableString(ConfigKeys.AiSseUrl);
+    public static string AiApiKey => GetString(ConfigKeys.AiApiKey, string.Empty);
+    public static string AiApiKeyXinService => GetString(ConfigKeys.AiApiKeyXinService, AiApiKey);
+    public static string AiApiKeyLocalQa => GetString(ConfigKeys.AiApiKeyLocalQa, AiApiKey);
+
+    public static string AiTaskExtractApiUrl => GetString(ConfigKeys.AiTaskExtractApiUrl, AiApiUrl);
+    public static string? AiTaskExtractSseUrl => GetNullableString(ConfigKeys.AiTaskExtractSseUrl) ?? AiSseUrl;
+    public static string AiTaskExtractApiKey => GetString(ConfigKeys.AiTaskExtractApiKey, string.Empty);
+
+    public static string MqttBrokerHost => GetString(ConfigKeys.MqttBrokerHost, "localhost");
+    public static int MqttBrokerPort => GetInt(ConfigKeys.MqttBrokerPort, 1883);
+    public static string? MqttUsername => GetNullableString(ConfigKeys.MqttUsername);
+    public static string? MqttPassword => GetNullableString(ConfigKeys.MqttPassword);
+    public static int MqttSessionExpirySeconds => GetInt(ConfigKeys.MqttSessionExpirySeconds, 0);
+    public static string MqttTopics => GetString(ConfigKeys.MqttTopics, string.Empty);
+
+    public static string? DeviceId => GetNullableString(ConfigKeys.DeviceId);
+    public static string? WebSocketUrl => GetNullableString(ConfigKeys.WebSocketUrl);
+    public static string? OutlookPathWindows => GetNullableString(ConfigKeys.OutlookPathWindows);
+    public static string? DingTalkPathWindows => GetNullableString(ConfigKeys.DingTalkPathWindows);
+    public static string? OpenAiApiKey => GetNullableString(ConfigKeys.OpenAiApiKey);
+    public static string? AnthropicApiKey => GetNullableString(ConfigKeys.AnthropicApiKey);
+
+    public static string GetString(string key, string defaultValue)
+    {
+        var value = GetNullableString(key);
+        return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+    }
+
+    public static string? GetNullableString(string key)
+    {
+        if (Values.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+
+        var envValue = Environment.GetEnvironmentVariable(key);
+        return string.IsNullOrWhiteSpace(envValue) ? null : envValue.Trim();
+    }
+
+    public static int GetInt(string key, int defaultValue)
+    {
+        var raw = GetNullableString(key);
+        return int.TryParse(raw, out var value) ? value : defaultValue;
+    }
+
+    public static bool GetBool(string key, bool defaultValue)
+    {
+        var raw = GetNullableString(key);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return defaultValue;
+        }
+
+        var normalized = raw.Trim().ToLowerInvariant();
+        return normalized is "true" or "1" or "yes" or "y";
+    }
+}

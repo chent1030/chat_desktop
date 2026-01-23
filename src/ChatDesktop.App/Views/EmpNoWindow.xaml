@@ -1,0 +1,20 @@
+<Window x:Class="ChatDesktop.App.Views.EmpNoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="设置工号" Height="200" Width="360" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Text="请输入工号" FontWeight="Bold" Grid.Row="0" />
+    <TextBox Text="{Binding EmpNo, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Margin="0,8,0,0" />
+    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,0,8,0"
+                 Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+      <Button Content="确认" Command="{Binding ConfirmCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

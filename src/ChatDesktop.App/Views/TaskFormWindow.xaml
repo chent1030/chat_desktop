@@ -1,0 +1,146 @@
+<Window x:Class="ChatDesktop.App.Views.TaskFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="任务表单" Height="720" Width="640" WindowStartupLocation="CenterOwner"
+        Loaded="OnLoaded">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0" FontSize="16" FontWeight="Bold">
+      <TextBlock.Style>
+        <Style TargetType="TextBlock">
+          <Setter Property="Text" Value="创建新任务" />
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding IsEditing}" Value="True">
+              <Setter Property="Text" Value="编辑任务" />
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </TextBlock.Style>
+    </TextBlock>
+
+    <ScrollViewer Grid.Row="1" Margin="0,12,0,12">
+      <StackPanel>
+        <TextBlock Text="任务标题" FontWeight="Bold" />
+        <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,12" />
+
+        <TextBlock Text="任务描述" FontWeight="Bold" />
+        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="120" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,6,0,12" />
+
+        <TextBlock Text="优先级" FontWeight="Bold" />
+        <ComboBox Margin="0,6,0,12"
+                  ItemsSource="{Binding PriorityOptions}"
+                  DisplayMemberPath="Label"
+                  SelectedValuePath="Value"
+                  SelectedValue="{Binding SelectedPriority, Mode=TwoWay}" />
+
+        <TextBlock Text="截止时间" FontWeight="Bold" />
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
+          <DatePicker SelectedDate="{Binding DueDate, Mode=TwoWay}" Width="160" />
+          <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="8,0,0,0" />
+          <TextBlock Text="(HH:mm)" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="#666" />
+        </StackPanel>
+
+        <StackPanel>
+          <StackPanel.Style>
+            <Style TargetType="StackPanel">
+              <Setter Property="Visibility" Value="Visible" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </StackPanel.Style>
+
+          <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="6" Padding="12">
+            <StackPanel>
+              <TextBlock Text="派发（可选）" FontWeight="Bold" />
+              <ComboBox Margin="0,6,0,12"
+                        ItemsSource="{Binding DispatchTypeOptions}"
+                        SelectedItem="{Binding AssignedToType, Mode=TwoWay}" />
+
+              <StackPanel>
+                <StackPanel.Style>
+                  <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding AssignedToType}" Value="用户">
+                        <Setter Property="Visibility" Value="Visible" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </StackPanel.Style>
+
+                <TextBlock Text="派发给（用户）" FontWeight="Bold" />
+                <ComboBox Margin="0,6,0,12"
+                          ItemsSource="{Binding UserOptions}"
+                          SelectedValuePath="EmpNo"
+                          SelectedValue="{Binding SelectedUserEmpNo, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock>
+                        <Run Text="{Binding EmpName}" />
+                        <Run Text=" (" />
+                        <Run Text="{Binding EmpNo}" />
+                        <Run Text=")" />
+                      </TextBlock>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+
+              <StackPanel>
+                <StackPanel.Style>
+                  <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding AssignedToType}" Value="团队">
+                        <Setter Property="Visibility" Value="Visible" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </StackPanel.Style>
+
+                <TextBlock Text="派发给（团队）" FontWeight="Bold" />
+                <ComboBox Margin="0,6,0,12"
+                          ItemsSource="{Binding TeamOptions}"
+                          SelectedItem="{Binding SelectedTeam, Mode=TwoWay}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <StackPanel>
+          <StackPanel.Style>
+            <Style TargetType="StackPanel">
+              <Setter Property="Visibility" Value="Collapsed" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                  <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </StackPanel.Style>
+
+          <CheckBox Content="允许派发（详情页显示派发按钮）" IsChecked="{Binding AllowDispatch, Mode=TwoWay}" Margin="0,12,0,12" />
+        </StackPanel>
+
+        <TextBlock Text="标签" FontWeight="Bold" />
+        <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,12" />
+
+        <TextBlock Text="{Binding Error}" Foreground="#C62828" Margin="0,8,0,0"
+                   Visibility="{Binding Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
+      <Button Content="取消" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
+      <Button Content="保存" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </Grid>
+</Window>

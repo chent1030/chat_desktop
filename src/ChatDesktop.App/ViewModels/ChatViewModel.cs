@@ -1,0 +1,327 @@
+using System.Collections.ObjectModel;
+using System.Linq;
+using ChatDesktop.Core.Enums;
+using ChatDesktop.Core.Models;
+using ChatDesktop.Core.Services;
+using ChatDesktop.Core.Services.AI;
+
+namespace ChatDesktop.App.ViewModels;
+
+/// <summary>
+/// AI 对话 ViewModel
+/// </summary>
+public sealed class ChatViewModel : ViewModelBase
+{
+    private readonly ConversationService _conversationService;
+    private readonly AiChatService _aiChatService;
+    private readonly AiConfigService _configService;
+
+    private int? _currentConversationId;
+    private string? _backendConversationId;
+    private string _inputText = string.Empty;
+    private bool _isLoading;
+    private bool _isStreaming;
+    private string? _error;
+    private Conversation? _selectedConversation;
+    private string _selectedConversationTitle = string.Empty;
+    private string _assistantKey = "xin_service";
+
+    public ChatViewModel(
+        ConversationService conversationService,
+        AiChatService aiChatService,
+        AiConfigService configService)
+    {
+        _conversationService = conversationService;
+        _aiChatService = aiChatService;
+        _configService = configService;
+
+        Messages = new ObservableCollection<ChatMessageViewModel>();
+        Conversations = new ObservableCollection<Conversation>();
+
+        SendCommand = new AsyncRelayCommand(SendAsync, () => !IsStreaming && !IsLoading);
+        NewConversationCommand = new AsyncRelayCommand(CreateConversationAsync);
+        LoadConversationsCommand = new AsyncRelayCommand(LoadConversationsAsync);
+        SaveTitleCommand = new AsyncRelayCommand(SaveTitleAsync, () => SelectedConversation != null);
+        DeleteConversationCommand = new AsyncRelayCommand(DeleteConversationAsync, () => SelectedConversation != null);
+
+        AssistantOptions = new List<EnumOption<string>>
+        {
+            new("xin_service", "芯服务"),
+            new("local_qa", "本地问答"),
+        };
+    }
+
+    public ObservableCollection<ChatMessageViewModel> Messages { get; }
+    public ObservableCollection<Conversation> Conversations { get; }
+    public IReadOnlyList<EnumOption<string>> AssistantOptions { get; }
+
+    public string InputText
+    {
+        get => _inputText;
+        set
+        {
+            if (_inputText == value)
+            {
+                return;
+            }
+
+            _inputText = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set
+        {
+            _isLoading = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public bool IsStreaming
+    {
+        get => _isStreaming;
+        private set
+        {
+            _isStreaming = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public string? Error
+    {
+        get => _error;
+        private set
+        {
+            _error = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public Conversation? SelectedConversation
+    {
+        get => _selectedConversation;
+        set
+        {
+            if (_selectedConversation == value)
+            {
+                return;
+            }
+
+            _selectedConversation = value;
+            RaisePropertyChanged();
+
+            _currentConversationId = value?.Id;
+            _backendConversationId = null;
+            SelectedConversationTitle = value?.Title ?? string.Empty;
+            _ = LoadMessagesAsync();
+            SaveTitleCommand.RaiseCanExecuteChanged();
+            DeleteConversationCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public string SelectedConversationTitle
+    {
+        get => _selectedConversationTitle;
+        set
+        {
+            if (_selectedConversationTitle == value)
+            {
+                return;
+            }
+
+            _selectedConversationTitle = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public string AssistantKey
+    {
+        get => _assistantKey;
+        set
+        {
+            if (_assistantKey == value)
+            {
+                return;
+            }
+
+            _assistantKey = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public AsyncRelayCommand SendCommand { get; }
+    public AsyncRelayCommand NewConversationCommand { get; }
+    public AsyncRelayCommand LoadConversationsCommand { get; }
+    public AsyncRelayCommand SaveTitleCommand { get; }
+    public AsyncRelayCommand DeleteConversationCommand { get; }
+
+    public async Task LoadConversationsAsync()
+    {
+        var list = await _conversationService.GetActiveAsync();
+        Conversations.Clear();
+        foreach (var conversation in list)
+        {
+            Conversations.Add(conversation);
+        }
+
+        if (_currentConversationId != null)
+        {
+            SelectedConversation = Conversations.FirstOrDefault(c => c.Id == _currentConversationId);
+        }
+    }
+
+    public async Task CreateConversationAsync()
+    {
+        var conversation = new Conversation
+        {
+            AgentId = "default",
+            Title = "新对话",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
+        };
+
+        _currentConversationId = await _conversationService.CreateAsync(conversation);
+        _backendConversationId = null;
+        Messages.Clear();
+        await LoadConversationsAsync();
+        SelectedConversation = Conversations.FirstOrDefault(c => c.Id == _currentConversationId);
+    }
+
+    public async Task SendAsync()
+    {
+        if (string.IsNullOrWhiteSpace(InputText))
+        {
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            Error = null;
+
+            if (_currentConversationId == null)
+            {
+                await CreateConversationAsync();
+            }
+
+            var content = InputText.Trim();
+            InputText = string.Empty;
+
+            var userMessage = new Message
+            {
+                ConversationId = _currentConversationId!.Value,
+                AgentId = "default",
+                Role = MessageRole.User,
+                Content = content,
+                Status = MessageStatus.Sent,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+            };
+
+            var userMessageId = await _conversationService.AddMessageAsync(userMessage);
+            var userVm = new ChatMessageViewModel(userMessageId, userMessage.Role, userMessage.Content, userMessage.Status);
+            Messages.Add(userVm);
+
+            var assistantMessage = new Message
+            {
+                ConversationId = _currentConversationId.Value,
+                AgentId = "default",
+                Role = MessageRole.Assistant,
+                Content = string.Empty,
+                Status = MessageStatus.Streaming,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+            };
+
+            var assistantMessageId = await _conversationService.AddMessageAsync(assistantMessage);
+            assistantMessage.Id = assistantMessageId;
+            var assistantVm = new ChatMessageViewModel(assistantMessageId, assistantMessage.Role, assistantMessage.Content, assistantMessage.Status);
+            Messages.Add(assistantVm);
+
+            IsStreaming = true;
+
+            var config = _configService.GetChatConfig(AssistantKey);
+            await foreach (var response in _aiChatService.SendStreamingAsync(
+                config,
+                content,
+                _backendConversationId,
+                "unknown",
+                CancellationToken.None))
+            {
+                if (!string.IsNullOrWhiteSpace(response.ConversationId))
+                {
+                    _backendConversationId ??= response.ConversationId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(response.Content))
+                {
+                    assistantMessage.Content += response.Content;
+                    assistantMessage.UpdatedAt = DateTime.Now;
+                    assistantVm.Content = assistantMessage.Content;
+                }
+
+                if (response.IsDone)
+                {
+                    break;
+                }
+            }
+
+            assistantMessage.Status = MessageStatus.Sent;
+            await _conversationService.UpdateMessageAsync(assistantMessage);
+            assistantVm.Status = assistantMessage.Status;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+            IsStreaming = false;
+        }
+    }
+
+    private async Task LoadMessagesAsync()
+    {
+        Messages.Clear();
+        if (_currentConversationId == null)
+        {
+            return;
+        }
+
+        var list = await _conversationService.GetMessagesAsync(_currentConversationId.Value);
+        foreach (var message in list)
+        {
+            Messages.Add(new ChatMessageViewModel(message.Id, message.Role, message.Content, message.Status));
+        }
+    }
+
+    private async Task SaveTitleAsync()
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        SelectedConversation.Title = SelectedConversationTitle;
+        await _conversationService.UpdateAsync(SelectedConversation);
+        await LoadConversationsAsync();
+    }
+
+    private async Task DeleteConversationAsync()
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        await _conversationService.SoftDeleteAsync(SelectedConversation.Id);
+        _currentConversationId = null;
+        _backendConversationId = null;
+        Messages.Clear();
+        await LoadConversationsAsync();
+    }
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChatDesktop.App/ChatDesktop.App.csproj" />
+    <Project Path="src/ChatDesktop.Core/ChatDesktop.Core.csproj" />
+    <Project Path="src/ChatDesktop.Infrastructure/ChatDesktop.Infrastructure.csproj" />
+  </Folder>
+</Solution>
