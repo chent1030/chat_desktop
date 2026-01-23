@@ -1,6 +1,6 @@
 using ChatDesktop.Core.Interfaces;
 using ChatDesktop.Core.Services;
-using ChatDesktop.Core.Services.AI;
+using ChatDesktop.Infrastructure.AI;
 using ChatDesktop.Infrastructure.Http;
 
 namespace ChatDesktop.App.ViewModels;

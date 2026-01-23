@@ -2,7 +2,7 @@ using System.Text.Json;
 using ChatDesktop.Core.Interfaces;
 using ChatDesktop.Core.Models;
 using ChatDesktop.Core.Services;
-using ChatDesktop.Core.Services.AI;
+using ChatDesktop.Infrastructure.AI;
 using ChatDesktop.Core.Services.Voice;
 using ChatDesktop.Infrastructure.Voice;
 

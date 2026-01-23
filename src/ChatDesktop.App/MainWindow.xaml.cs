@@ -72,8 +72,8 @@ public partial class MainWindow : Window
         var recorder = new Infrastructure.Voice.AudioRecorderService();
         var speechService = new Infrastructure.Voice.SpeechToTextService();
         var extractor = new Core.Services.Voice.TaskVoiceExtractionService();
-        var workflowService = new Core.Services.AI.AiWorkflowService(new Infrastructure.Http.SseClient());
-        var configService = new Core.Services.AI.AiConfigService();
+        var workflowService = new Infrastructure.AI.AiWorkflowService(new Infrastructure.Http.SseClient());
+        var configService = new Infrastructure.AI.AiConfigService();
         var vm = new VoiceTaskViewModel(
             recorder,
             speechService,

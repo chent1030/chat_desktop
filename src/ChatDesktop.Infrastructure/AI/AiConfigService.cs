@@ -1,7 +1,7 @@
 using ChatDesktop.Core.Models;
 using ChatDesktop.Infrastructure.Config;
 
-namespace ChatDesktop.Core.Services.AI;
+namespace ChatDesktop.Infrastructure.AI;
 
 /// <summary>
 /// AI 配置服务

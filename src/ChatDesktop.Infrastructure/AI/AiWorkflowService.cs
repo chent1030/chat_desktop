@@ -2,7 +2,7 @@ using System.Text.Json;
 using ChatDesktop.Core.Models;
 using ChatDesktop.Infrastructure.Http;
 
-namespace ChatDesktop.Core.Services.AI;
+namespace ChatDesktop.Infrastructure.AI;
 
 /// <summary>
 /// AI 工作流服务

@@ -3,7 +3,7 @@ using System.Linq;
 using ChatDesktop.Core.Enums;
 using ChatDesktop.Core.Models;
 using ChatDesktop.Core.Services;
-using ChatDesktop.Core.Services.AI;
+using ChatDesktop.Infrastructure.AI;
 
 namespace ChatDesktop.App.ViewModels;
 

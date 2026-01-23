@@ -1,4 +1,4 @@
-namespace ChatDesktop.Core.Services.AI;
+namespace ChatDesktop.Infrastructure.AI;
 
 /// <summary>
 /// AI 流式响应
