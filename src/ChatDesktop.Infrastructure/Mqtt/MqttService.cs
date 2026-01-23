@@ -118,9 +118,12 @@ public sealed class MqttService : IMqttService
             .Select(t => new MqttTopicFilterBuilder().WithTopic(t).Build())
             .ToList();
 
-        var options = new MqttClientSubscribeOptionsBuilder()
-            .WithTopicFilters(filters)
-            .Build();
+        var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
+        foreach (var filter in filters)
+        {
+            optionsBuilder.WithTopicFilter(filter);
+        }
+        var options = optionsBuilder.Build();
 
         await _client.SubscribeAsync(options, cancellationToken);
     }
