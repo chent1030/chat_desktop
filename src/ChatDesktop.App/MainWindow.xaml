@@ -301,8 +301,8 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
-                    HorizontalContentAlignment="Stretch">
+            <Button x:Name="ConversationMenuButton" Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
+                    HorizontalContentAlignment="Stretch" Click="OnConversationMenuClicked">
               <Button.ContextMenu>
                 <ContextMenu>
                   <ContextMenu.Resources>

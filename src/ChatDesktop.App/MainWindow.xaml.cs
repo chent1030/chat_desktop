@@ -85,6 +85,17 @@ public partial class MainWindow : Window
         mainViewModel.TaskList.OpenDetailCommand.Execute(task);
     }
 
+    private void OnConversationMenuClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.ContextMenu == null)
+        {
+            return;
+        }
+
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+    }
+
     private void OnVoiceCreateRequested()
     {
         if (DataContext is not MainViewModel mainViewModel)
