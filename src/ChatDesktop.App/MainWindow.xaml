@@ -6,6 +6,7 @@
         xmlns:coreEnums="clr-namespace:ChatDesktop.Core.Enums;assembly=ChatDesktop.Core"
         xmlns:coreModels="clr-namespace:ChatDesktop.Core.Models;assembly=ChatDesktop.Core"
         xmlns:scm="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
+        xmlns:selectors="clr-namespace:ChatDesktop.App.Selectors"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6FA"
@@ -42,6 +43,13 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <Style x:Key="ConversationMenuItemStyle" TargetType="MenuItem">
+      <Setter Property="Command"
+              Value="{Binding DataContext.Chat.SelectConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+      <Setter Property="CommandParameter" Value="{Binding}" />
+    </Style>
+    <selectors:ConversationMenuItemStyleSelector x:Key="ConversationMenuItemStyleSelector"
+                                                 ConversationStyle="{StaticResource ConversationMenuItemStyle}" />
   </Window.Resources>
   <Grid Margin="12">
     <Grid.ColumnDefinitions>
@@ -332,13 +340,9 @@
                       <scm:CollectionContainer Collection="{Binding Chat.Conversations}" />
                     </scm:CompositeCollection>
                   </ContextMenu.ItemsSource>
-                  <ContextMenu.ItemContainerStyle>
-                    <Style TargetType="MenuItem">
-                      <Setter Property="Command"
-                              Value="{Binding DataContext.Chat.SelectConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                      <Setter Property="CommandParameter" Value="{Binding}" />
-                    </Style>
-                  </ContextMenu.ItemContainerStyle>
+                  <ContextMenu.ItemContainerStyleSelector>
+                    <StaticResource ResourceKey="ConversationMenuItemStyleSelector" />
+                  </ContextMenu.ItemContainerStyleSelector>
                 </ContextMenu>
               </Button.ContextMenu>
               <Grid>
