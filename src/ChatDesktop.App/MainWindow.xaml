@@ -101,7 +101,7 @@
             <Button Style="{StaticResource MaterialDesignFlatButton}" Padding="6" Margin="0,0,0,0">
               <materialDesign:PackIcon Kind="DotsVertical" Width="18" Height="18" />
               <Button.ContextMenu>
-                <ContextMenu>
+                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                   <MenuItem Header="清除已完成任务" Command="{Binding TaskList.ClearCompletedCommand}" />
                   <MenuItem Header="修改工号" Command="{Binding TaskList.OpenChangeEmpNoCommand}" />
                 </ContextMenu>

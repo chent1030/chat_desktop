@@ -445,7 +445,12 @@ public partial class MainWindow : Window
         var sb = new StringBuilder();
         sb.Append("<!doctype html><html><head><meta charset=\"utf-8\" />");
         sb.Append("<style>");
-        sb.Append("body{font-family:'Segoe UI',sans-serif;background:#F4F6FA;margin:0;padding:12px;}");
+        sb.Append("body{font-family:'Segoe UI',sans-serif;background:#F4F6FA;margin:0;padding:12px;");
+        sb.Append("scrollbar-width:thin;scrollbar-color:#C2C9D6 transparent;}");
+        sb.Append("body::-webkit-scrollbar{width:10px;}");
+        sb.Append("body::-webkit-scrollbar-track{background:transparent;}");
+        sb.Append("body::-webkit-scrollbar-thumb{background:#C2C9D6;border-radius:8px;border:2px solid transparent;background-clip:content-box;}");
+        sb.Append("body::-webkit-scrollbar-thumb:hover{background:#9AA3B2;background-clip:content-box;}");
         sb.Append(".msg{display:flex;margin:10px 0;}");
         sb.Append(".bubble{max-width:560px;padding:10px 12px;border-radius:12px;border:1px solid #E5E8F0;background:#fff;}");
         sb.Append(".user{justify-content:flex-end;}");
