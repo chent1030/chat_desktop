@@ -4,6 +4,7 @@ using ChatDesktop.Core.Enums;
 using ChatDesktop.Core.Models;
 using ChatDesktop.Core.Services;
 using ChatDesktop.Infrastructure.AI;
+using ChatDesktop.Infrastructure.Logging;
 
 namespace ChatDesktop.App.ViewModels;
 
@@ -15,6 +16,7 @@ public sealed class ChatViewModel : ViewModelBase
     private readonly ConversationService _conversationService;
     private readonly AiChatService _aiChatService;
     private readonly AiConfigService _configService;
+    private readonly LogService _logService = new();
 
     private int? _currentConversationId;
     private string? _backendConversationId;
@@ -22,6 +24,7 @@ public sealed class ChatViewModel : ViewModelBase
     private bool _isLoading;
     private bool _isStreaming;
     private string? _error;
+    private string? _requestStatus;
     private Conversation? _selectedConversation;
     private string _selectedConversationTitle = string.Empty;
     private string _assistantKey = "xin_service";
@@ -98,6 +101,16 @@ public sealed class ChatViewModel : ViewModelBase
         private set
         {
             _error = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public string? RequestStatus
+    {
+        get => _requestStatus;
+        private set
+        {
+            _requestStatus = value;
             RaisePropertyChanged();
         }
     }
@@ -275,6 +288,7 @@ public sealed class ChatViewModel : ViewModelBase
         {
             IsLoading = true;
             Error = null;
+            RequestStatus = "请求已发送";
 
             if (_currentConversationId == null)
             {
@@ -283,6 +297,7 @@ public sealed class ChatViewModel : ViewModelBase
 
             var content = InputText.Trim();
             InputText = string.Empty;
+            _logService.Info($"开始请求 AI，对话={_currentConversationId}，助手={AssistantKey}，内容长度={content.Length}", "CHAT");
 
             var userMessage = new Message
             {
@@ -318,6 +333,7 @@ public sealed class ChatViewModel : ViewModelBase
             IsStreaming = true;
 
             var config = _configService.GetChatConfig(AssistantKey);
+            var hasResponse = false;
             await foreach (var response in _aiChatService.SendStreamingAsync(
                 config,
                 content,
@@ -332,6 +348,11 @@ public sealed class ChatViewModel : ViewModelBase
 
                 if (!string.IsNullOrWhiteSpace(response.Content))
                 {
+                    if (!hasResponse)
+                    {
+                        hasResponse = true;
+                        RequestStatus = "收到响应";
+                    }
                     assistantMessage.Content += response.Content;
                     assistantMessage.UpdatedAt = DateTime.Now;
                     assistantVm.Content = assistantMessage.Content;
@@ -346,10 +367,21 @@ public sealed class ChatViewModel : ViewModelBase
             assistantMessage.Status = MessageStatus.Sent;
             await _conversationService.UpdateMessageAsync(assistantMessage);
             assistantVm.Status = assistantMessage.Status;
+            if (!hasResponse)
+            {
+                RequestStatus = "无响应";
+                _logService.Warning($"AI 无响应，对话={_currentConversationId}，助手={AssistantKey}", "CHAT");
+            }
+            else
+            {
+                _logService.Info($"AI 响应完成，对话={_currentConversationId}", "CHAT");
+            }
         }
         catch (Exception ex)
         {
             Error = ex.Message;
+            RequestStatus = "请求失败";
+            _logService.Error($"AI 请求失败：{ex}", "CHAT");
         }
         finally
         {

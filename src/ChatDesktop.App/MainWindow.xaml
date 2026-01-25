@@ -372,6 +372,8 @@
               <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                 <TextBlock Text="AI 正在输出..." Foreground="#5C6BC0"
                            Visibility="{Binding Chat.IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBlock Text="{Binding Chat.RequestStatus}" Foreground="#5C6BC0" Margin="12,0,0,0"
+                           Visibility="{Binding Chat.RequestStatus, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
                 <TextBlock Text="{Binding Chat.Error}" Foreground="#C62828" Margin="12,0,0,0"
                            Visibility="{Binding Chat.Error, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
               </StackPanel>
