@@ -107,7 +107,8 @@ public sealed class AiChatService
                         {
                             Content = answer,
                             ConversationId = conversation,
-                            IsDone = false
+                            IsDone = false,
+                            IsReplace = true
                         };
                     }
                 }

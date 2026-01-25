@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,9 @@ namespace ChatDesktop.App;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private INotifyCollectionChanged? _chatMessages;
+    private ScrollViewer? _chatScrollViewer;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -45,6 +49,8 @@ public partial class MainWindow : Window
 
         mainViewModel.TaskList.ChangeEmpNoRequested -= OnChangeEmpNoRequested;
         mainViewModel.TaskList.ChangeEmpNoRequested += OnChangeEmpNoRequested;
+
+        AttachChatAutoScroll(mainViewModel);
     }
 
     private void OnTaskDetailRequested(Core.Models.TaskItem task)
@@ -233,5 +239,67 @@ public partial class MainWindow : Window
         }
 
         return false;
+    }
+
+    private void AttachChatAutoScroll(MainViewModel viewModel)
+    {
+        if (_chatMessages != null)
+        {
+            _chatMessages.CollectionChanged -= OnChatMessagesChanged;
+        }
+
+        if (viewModel.Chat.Messages is INotifyCollectionChanged messages)
+        {
+            _chatMessages = messages;
+            messages.CollectionChanged += OnChatMessagesChanged;
+        }
+
+        _chatScrollViewer = FindDescendantScrollViewer(ChatListBox);
+    }
+
+    private void OnChatMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (ChatListBox.Items.Count == 0)
+        {
+            return;
+        }
+
+        if (_chatScrollViewer != null)
+        {
+            var nearBottom = _chatScrollViewer.VerticalOffset >= _chatScrollViewer.ScrollableHeight - 40;
+            if (!nearBottom)
+            {
+                return;
+            }
+        }
+
+        var last = ChatListBox.Items[ChatListBox.Items.Count - 1];
+        ChatListBox.ScrollIntoView(last);
+    }
+
+    private static ScrollViewer? FindDescendantScrollViewer(DependencyObject? root)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        if (root is ScrollViewer viewer)
+        {
+            return viewer;
+        }
+
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            var result = FindDescendantScrollViewer(child);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null;
     }
 }

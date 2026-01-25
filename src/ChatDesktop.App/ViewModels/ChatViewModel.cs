@@ -17,6 +17,7 @@ public sealed class ChatViewModel : ViewModelBase
     private readonly AiChatService _aiChatService;
     private readonly AiConfigService _configService;
     private readonly LogService _logService = new();
+    private CancellationTokenSource? _chatCts;
 
     private int? _currentConversationId;
     private string? _backendConversationId;
@@ -334,13 +335,20 @@ public sealed class ChatViewModel : ViewModelBase
 
             var config = _configService.GetChatConfig(AssistantKey);
             var hasResponse = false;
+            _chatCts?.Cancel();
+            _chatCts?.Dispose();
+            _chatCts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+            var token = _chatCts.Token;
+            var lastFlush = DateTime.UtcNow;
+            var pendingText = string.Empty;
             await foreach (var response in _aiChatService.SendStreamingAsync(
                 config,
                 content,
                 _backendConversationId,
                 "unknown",
-                CancellationToken.None))
+                token))
             {
+                token.ThrowIfCancellationRequested();
                 if (!string.IsNullOrWhiteSpace(response.ConversationId))
                 {
                     _backendConversationId ??= response.ConversationId;
@@ -353,9 +361,21 @@ public sealed class ChatViewModel : ViewModelBase
                         hasResponse = true;
                         RequestStatus = "收到响应";
                     }
-                    assistantMessage.Content += response.Content;
+                    if (response.IsReplace)
+                    {
+                        assistantMessage.Content = response.Content;
+                    }
+                    else
+                    {
+                        assistantMessage.Content += response.Content;
+                    }
                     assistantMessage.UpdatedAt = DateTime.Now;
-                    assistantVm.Content = assistantMessage.Content;
+                    pendingText = assistantMessage.Content;
+                    if ((DateTime.UtcNow - lastFlush).TotalMilliseconds >= 120)
+                    {
+                        assistantVm.Content = pendingText;
+                        lastFlush = DateTime.UtcNow;
+                    }
                 }
 
                 if (response.IsDone)
@@ -367,6 +387,10 @@ public sealed class ChatViewModel : ViewModelBase
             assistantMessage.Status = MessageStatus.Sent;
             await _conversationService.UpdateMessageAsync(assistantMessage);
             assistantVm.Status = assistantMessage.Status;
+            if (!string.IsNullOrWhiteSpace(pendingText))
+            {
+                assistantVm.Content = pendingText;
+            }
             if (!hasResponse)
             {
                 RequestStatus = "无响应";
@@ -376,6 +400,11 @@ public sealed class ChatViewModel : ViewModelBase
             {
                 _logService.Info($"AI 响应完成，对话={_currentConversationId}", "CHAT");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            RequestStatus = "请求取消";
+            _logService.Warning("AI 请求已取消或超时", "CHAT");
         }
         catch (Exception ex)
         {
@@ -387,6 +416,8 @@ public sealed class ChatViewModel : ViewModelBase
         {
             IsLoading = false;
             IsStreaming = false;
+            _chatCts?.Dispose();
+            _chatCts = null;
         }
     }
 
