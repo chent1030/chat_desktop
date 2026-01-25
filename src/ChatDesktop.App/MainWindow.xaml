@@ -398,7 +398,8 @@
             <TextBox Grid.Column="0" Height="64"
                      Text="{Binding Chat.InputText, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True" TextWrapping="Wrap"
-                     materialDesign:HintAssist.Hint="输入消息... (Enter发送，Shift+Enter换行)" />
+                     materialDesign:HintAssist.Hint="输入消息... (Enter发送，Shift+Enter换行)"
+                     PreviewKeyDown="OnChatInputKeyDown" />
             <Button Grid.Column="1" Style="{StaticResource MaterialDesignRaisedButton}" Margin="12,0,0,0"
                     Command="{Binding Chat.SendCommand}" Padding="12,8">
               <StackPanel Orientation="Horizontal">

@@ -1,6 +1,8 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
+using ChatDesktop.Core.Enums;
 using ChatDesktop.Infrastructure.Config;
 using Markdig;
 using System.Linq;
@@ -20,20 +23,23 @@ namespace ChatDesktop.App;
 public partial class MainWindow : Window
 {
     private INotifyCollectionChanged? _chatMessages;
-    private bool _chatRenderPending;
-    private bool _chatNeedsScroll;
-    private readonly DispatcherTimer _chatRenderTimer = new();
+    private readonly DispatcherTimer _chatUpdateTimer = new();
+    private readonly HashSet<int> _pendingUpdateIds = new();
+    private bool _chatPendingFullRender;
+    private bool _chatReady;
     private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+    private static readonly Regex ThinkingRegex = new(
+        "<think(?:ing)?>(.*?)</think(?:ing)?>",
+        RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
     public MainWindow()
     {
         InitializeComponent();
-        _chatRenderTimer.Interval = TimeSpan.FromMilliseconds(200);
-        _chatRenderTimer.Tick += (_, _) =>
+        _chatUpdateTimer.Interval = TimeSpan.FromMilliseconds(120);
+        _chatUpdateTimer.Tick += (_, _) =>
         {
-            _chatRenderTimer.Stop();
-            _chatRenderPending = false;
-            RenderChatHtml();
+            _chatUpdateTimer.Stop();
+            FlushChatUpdates();
         };
     }
 
@@ -115,6 +121,30 @@ public partial class MainWindow : Window
 
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
+    }
+
+    private void OnChatInputKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            return;
+        }
+
+        if (DataContext is not MainViewModel mainViewModel)
+        {
+            return;
+        }
+
+        if (mainViewModel.Chat.SendCommand.CanExecute(null))
+        {
+            mainViewModel.Chat.SendCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     private void OnVoiceCreateRequested()
@@ -278,7 +308,7 @@ public partial class MainWindow : Window
         ChatWebView.NavigationCompleted += OnChatWebNavigationCompleted;
 
         await ChatWebView.EnsureCoreWebView2Async();
-        RenderChatHtml();
+        InitializeChatHtml();
     }
 
     private void OnChatMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -299,37 +329,119 @@ public partial class MainWindow : Window
             }
         }
 
-        ScheduleChatRender();
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            _chatPendingFullRender = true;
+        }
+        else if (e.NewItems != null)
+        {
+            foreach (var item in e.NewItems.OfType<ChatMessageViewModel>())
+            {
+                _pendingUpdateIds.Add(item.Id);
+            }
+        }
+        else
+        {
+            _chatPendingFullRender = true;
+        }
+
+        ScheduleChatUpdate();
     }
 
     private void OnChatMessagePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ChatMessageViewModel.Content))
         {
-            ScheduleChatRender();
+            if (sender is ChatMessageViewModel message)
+            {
+                _pendingUpdateIds.Add(message.Id);
+            }
+            ScheduleChatUpdate();
         }
     }
 
-    private void ScheduleChatRender()
+    private void ScheduleChatUpdate()
     {
-        _chatNeedsScroll = true;
-        if (_chatRenderPending)
+        if (!_chatReady)
         {
             return;
         }
 
-        _chatRenderPending = true;
-        _chatRenderTimer.Stop();
-        _chatRenderTimer.Start();
+        _chatUpdateTimer.Stop();
+        _chatUpdateTimer.Start();
     }
 
-    private void RenderChatHtml()
+    private void FlushChatUpdates()
+    {
+        if (!_chatReady)
+        {
+            return;
+        }
+
+        if (_chatPendingFullRender)
+        {
+            _chatPendingFullRender = false;
+            RenderChatAll();
+            return;
+        }
+
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        if (_pendingUpdateIds.Count == 0)
+        {
+            return;
+        }
+
+        var ids = _pendingUpdateIds.ToArray();
+        _pendingUpdateIds.Clear();
+
+        foreach (var id in ids)
+        {
+            var message = viewModel.Chat.Messages.FirstOrDefault(m => m.Id == id);
+            if (message == null)
+            {
+                continue;
+            }
+
+            var html = BuildMessageHtml(message);
+            ExecuteChatScript("window.updateMessage", message.Id, html, message.IsUser);
+        }
+    }
+
+    private void InitializeChatHtml()
+    {
+        var html = BuildChatShellHtml();
+        _chatReady = false;
+        ChatWebView.NavigateToString(html);
+    }
+
+    private async void OnChatWebNavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+    {
+        _chatReady = true;
+        RenderChatAll();
+        await ScrollChatToBottom();
+    }
+
+    private void RenderChatAll()
     {
         if (DataContext is not MainViewModel viewModel)
         {
             return;
         }
 
+        ExecuteChatScriptRaw("window.clearMessages();");
+        foreach (var message in viewModel.Chat.Messages)
+        {
+            var html = BuildMessageHtml(message);
+            ExecuteChatScript("window.appendMessage", message.Id, html, message.IsUser);
+        }
+    }
+
+    private string BuildChatShellHtml()
+    {
         var sb = new StringBuilder();
         sb.Append("<!doctype html><html><head><meta charset=\"utf-8\" />");
         sb.Append("<style>");
@@ -339,29 +451,100 @@ public partial class MainWindow : Window
         sb.Append(".user{justify-content:flex-end;}");
         sb.Append(".user .bubble{background:#E3F2FD;border-color:#BBDEFB;}");
         sb.Append(".role{font-size:11px;color:#8A9099;margin-bottom:6px;}");
+        sb.Append(".thinking{background:#F5F7FB;border:1px solid #E3E8F3;border-radius:8px;margin-bottom:10px;}");
+        sb.Append(".thinking summary{cursor:pointer;padding:6px 8px;color:#5C6BC0;font-weight:600;}");
+        sb.Append(".thinking-body{padding:8px 10px;color:#4B5563;font-style:italic;white-space:pre-wrap;}");
+        sb.Append(".divider{height:1px;background:#E5E7EB;margin:8px 0;}");
+        sb.Append(".loading{color:#9CA3AF;font-style:italic;}");
         sb.Append("</style></head><body>");
-
-        foreach (var message in viewModel.Chat.Messages)
-        {
-            var css = message.IsUser ? "msg user" : "msg";
-            var markdown = message.Content ?? string.Empty;
-            var html = Markdown.ToHtml(markdown, _markdownPipeline);
-            sb.Append($"<div class=\"{css}\"><div class=\"bubble\"><div class=\"role\">{message.RoleLabel}</div>{html}</div></div>");
-        }
-
+        sb.Append("<div id=\"chat\"></div>");
+        sb.Append("<script>");
+        sb.Append("function isNearBottom(){return (window.innerHeight+window.scrollY)>=(document.body.scrollHeight-80);}");
+        sb.Append("function scrollBottom(){window.scrollTo(0, document.body.scrollHeight);}");
+        sb.Append("window.clearMessages=function(){document.getElementById('chat').innerHTML='';};");
+        sb.Append("window.appendMessage=function(id, html, isUser){");
+        sb.Append("var c=document.getElementById('chat');var near=isNearBottom();");
+        sb.Append("var wrap=document.createElement('div');wrap.className='msg'+(isUser?' user':'');wrap.id='msg-'+id;");
+        sb.Append("wrap.innerHTML=html;c.appendChild(wrap);if(near){scrollBottom();}};");
+        sb.Append("window.updateMessage=function(id, html, isUser){");
+        sb.Append("var el=document.getElementById('msg-'+id);var near=isNearBottom();");
+        sb.Append("if(!el){window.appendMessage(id, html, isUser);return;}");
+        sb.Append("el.className='msg'+(isUser?' user':'');el.innerHTML=html;if(near){scrollBottom();}};");
+        sb.Append("</script>");
         sb.Append("</body></html>");
-        _chatNeedsScroll = true;
-        ChatWebView.NavigateToString(sb.ToString());
+        return sb.ToString();
     }
 
-    private async void OnChatWebNavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+    private string BuildMessageHtml(ChatMessageViewModel message)
     {
-        if (!_chatNeedsScroll)
+        var content = message.Content ?? string.Empty;
+        var thinkingMatch = ThinkingRegex.Match(content);
+        string? thinking = null;
+        if (thinkingMatch.Success)
+        {
+            thinking = thinkingMatch.Groups[1].Value.Trim();
+            content = ThinkingRegex.Replace(content, string.Empty).Trim();
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("<div class=\"bubble\">");
+        sb.Append($"<div class=\"role\">{HtmlEncode(message.RoleLabel)}</div>");
+
+        if (!string.IsNullOrWhiteSpace(thinking))
+        {
+            var thinkingHtml = HtmlEncode(thinking).Replace("\n", "<br/>");
+            sb.Append("<details class=\"thinking\"><summary>思维链</summary>");
+            sb.Append($"<div class=\"thinking-body\">{thinkingHtml}</div></details>");
+            sb.Append("<div class=\"divider\"></div>");
+        }
+
+        if (message.Role == MessageRole.Assistant)
+        {
+            if (message.Status == MessageStatus.Streaming && string.IsNullOrWhiteSpace(content))
+            {
+                sb.Append("<div class=\"loading\">正在思考...</div>");
+            }
+            else
+            {
+                var html = Markdown.ToHtml(content, _markdownPipeline);
+                sb.Append(html);
+            }
+        }
+        else
+        {
+            var html = HtmlEncode(content).Replace("\n", "<br/>");
+            sb.Append($"<div>{html}</div>");
+        }
+
+        sb.Append("</div>");
+        return sb.ToString();
+    }
+
+    private void ExecuteChatScript(string functionName, int id, string html, bool isUser)
+    {
+        var htmlArg = JsonSerializer.Serialize(html);
+        var script = $"{functionName}({id},{htmlArg},{isUser.ToString().ToLowerInvariant()});";
+        ExecuteChatScriptRaw(script);
+    }
+
+    private void ExecuteChatScriptRaw(string script)
+    {
+        if (!_chatReady)
         {
             return;
         }
 
-        _chatNeedsScroll = false;
+        try
+        {
+            _ = ChatWebView.ExecuteScriptAsync(script);
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task ScrollChatToBottom()
+    {
         try
         {
             await ChatWebView.ExecuteScriptAsync("window.scrollTo(0, document.body.scrollHeight);");
@@ -369,5 +552,10 @@ public partial class MainWindow : Window
         catch
         {
         }
+    }
+
+    private static string HtmlEncode(string input)
+    {
+        return System.Net.WebUtility.HtmlEncode(input);
     }
 }
