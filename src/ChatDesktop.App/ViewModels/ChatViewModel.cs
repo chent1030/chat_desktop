@@ -5,6 +5,7 @@ using ChatDesktop.Core.Models;
 using ChatDesktop.Core.Services;
 using ChatDesktop.Infrastructure.AI;
 using ChatDesktop.Infrastructure.Logging;
+using System.Windows;
 
 namespace ChatDesktop.App.ViewModels;
 
@@ -339,56 +340,86 @@ public sealed class ChatViewModel : ViewModelBase
             _chatCts?.Dispose();
             _chatCts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
             var token = _chatCts.Token;
+            var dispatcher = Application.Current?.Dispatcher;
             var lastFlush = DateTime.UtcNow;
             var pendingText = string.Empty;
-            await foreach (var response in _aiChatService.SendStreamingAsync(
-                config,
-                content,
-                _backendConversationId,
-                "unknown",
-                token))
+            var chunkCount = 0;
+            await Task.Run(async () =>
             {
-                token.ThrowIfCancellationRequested();
-                if (!string.IsNullOrWhiteSpace(response.ConversationId))
+                await foreach (var response in _aiChatService.SendStreamingAsync(
+                                   config,
+                                   content,
+                                   _backendConversationId,
+                                   "unknown",
+                                   token))
                 {
-                    _backendConversationId ??= response.ConversationId;
-                }
+                    token.ThrowIfCancellationRequested();
+                    if (!string.IsNullOrWhiteSpace(response.ConversationId))
+                    {
+                        _backendConversationId ??= response.ConversationId;
+                    }
 
-                if (!string.IsNullOrWhiteSpace(response.Content))
-                {
-                    if (!hasResponse)
+                    if (!string.IsNullOrWhiteSpace(response.Content))
                     {
-                        hasResponse = true;
-                        RequestStatus = "收到响应";
-                    }
-                    if (response.IsReplace)
-                    {
-                        assistantMessage.Content = response.Content;
-                    }
-                    else
-                    {
-                        assistantMessage.Content += response.Content;
-                    }
-                    assistantMessage.UpdatedAt = DateTime.Now;
-                    pendingText = assistantMessage.Content;
-                    if ((DateTime.UtcNow - lastFlush).TotalMilliseconds >= 120)
-                    {
-                        assistantVm.Content = pendingText;
-                        lastFlush = DateTime.UtcNow;
-                    }
-                }
+                        chunkCount++;
+                        if (!hasResponse)
+                        {
+                            hasResponse = true;
+                            if (dispatcher != null)
+                            {
+                                await dispatcher.InvokeAsync(() => RequestStatus = "收到响应");
+                            }
+                            else
+                            {
+                                RequestStatus = "收到响应";
+                            }
+                        }
 
-                if (response.IsDone)
-                {
-                    break;
+                        if (response.IsReplace)
+                        {
+                            pendingText = response.Content;
+                        }
+                        else
+                        {
+                            pendingText += response.Content;
+                        }
+
+                        if ((DateTime.UtcNow - lastFlush).TotalMilliseconds >= 120)
+                        {
+                            var snapshot = pendingText;
+                            if (dispatcher != null)
+                            {
+                                await dispatcher.InvokeAsync(() =>
+                                {
+                                    assistantMessage.Content = snapshot;
+                                    assistantMessage.UpdatedAt = DateTime.Now;
+                                    assistantVm.Content = snapshot;
+                                });
+                            }
+                            else
+                            {
+                                assistantMessage.Content = snapshot;
+                                assistantMessage.UpdatedAt = DateTime.Now;
+                                assistantVm.Content = snapshot;
+                            }
+                            lastFlush = DateTime.UtcNow;
+                        }
+                    }
+
+                    if (response.IsDone)
+                    {
+                        break;
+                    }
                 }
-            }
+            }, token);
 
             assistantMessage.Status = MessageStatus.Sent;
             await _conversationService.UpdateMessageAsync(assistantMessage);
             assistantVm.Status = assistantMessage.Status;
             if (!string.IsNullOrWhiteSpace(pendingText))
             {
+                assistantMessage.Content = pendingText;
+                assistantMessage.UpdatedAt = DateTime.Now;
                 assistantVm.Content = pendingText;
             }
             if (!hasResponse)
@@ -398,7 +429,7 @@ public sealed class ChatViewModel : ViewModelBase
             }
             else
             {
-                _logService.Info($"AI 响应完成，对话={_currentConversationId}", "CHAT");
+                _logService.Info($"AI 响应完成，对话={_currentConversationId}，分片={chunkCount}", "CHAT");
             }
         }
         catch (OperationCanceledException)

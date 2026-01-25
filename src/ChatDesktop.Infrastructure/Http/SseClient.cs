@@ -61,6 +61,11 @@ public sealed class SseClient
             if (line.StartsWith("data:", StringComparison.Ordinal))
             {
                 var payload = line[5..].TrimStart();
+                if (dataBuffer.Length == 0 && payload.StartsWith("{", StringComparison.Ordinal) && payload.EndsWith("}", StringComparison.Ordinal))
+                {
+                    yield return payload;
+                    continue;
+                }
                 if (dataBuffer.Length > 0)
                 {
                     dataBuffer.Append('\n');
