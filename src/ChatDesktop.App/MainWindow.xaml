@@ -7,6 +7,7 @@
         xmlns:coreModels="clr-namespace:ChatDesktop.Core.Models;assembly=ChatDesktop.Core"
         xmlns:scm="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
         xmlns:selectors="clr-namespace:ChatDesktop.App.Selectors"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6FA"
@@ -381,55 +382,11 @@
           </Grid>
         </Border>
 
-        <ListBox x:Name="ChatListBox" Grid.Row="1" ItemsSource="{Binding Chat.Messages}" Background="Transparent" BorderThickness="0" Margin="0,12,0,12"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                 ScrollViewer.CanContentScroll="False">
-          <ListBox.ItemTemplate>
-            <DataTemplate>
-              <Grid Margin="0,6">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <Border x:Name="LeftAvatar" Width="36" Height="36" CornerRadius="18"
-                        Background="#E8EAF6" VerticalAlignment="Top" Margin="0,4,8,0">
-                  <TextBlock Text="AI" FontWeight="SemiBold" Foreground="#5C6BC0"
-                             HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-
-                <Border x:Name="Bubble" Grid.Column="1" Padding="12" CornerRadius="12"
-                        Background="White" BorderBrush="#E5E8F0" BorderThickness="1"
-                        MaxWidth="560">
-                  <StackPanel>
-                    <TextBlock Text="{Binding RoleLabel}" Foreground="#8A9099" FontSize="11" />
-                    <md:MarkdownViewer Markdown="{Binding Content}" Background="Transparent" />
-                  </StackPanel>
-                </Border>
-
-                <Border x:Name="RightAvatar" Grid.Column="2" Width="36" Height="36" CornerRadius="18"
-                        Background="#E3F2FD" VerticalAlignment="Top" Margin="8,4,0,0">
-                  <TextBlock Text="我" FontWeight="SemiBold" Foreground="#1E88E5"
-                             HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-              </Grid>
-              <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsUser}" Value="True">
-                  <Setter TargetName="LeftAvatar" Property="Visibility" Value="Collapsed" />
-                  <Setter TargetName="RightAvatar" Property="Visibility" Value="Visible" />
-                  <Setter TargetName="Bubble" Property="HorizontalAlignment" Value="Right" />
-                  <Setter TargetName="Bubble" Property="Background" Value="#E3F2FD" />
-                  <Setter TargetName="Bubble" Property="BorderBrush" Value="#BBDEFB" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsUser}" Value="False">
-                  <Setter TargetName="LeftAvatar" Property="Visibility" Value="Visible" />
-                  <Setter TargetName="RightAvatar" Property="Visibility" Value="Collapsed" />
-                </DataTrigger>
-              </DataTemplate.Triggers>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
+        <Grid Grid.Row="1" Margin="0,12,0,12">
+          <Border Background="White" CornerRadius="12" BorderBrush="#E5E8F0" BorderThickness="1">
+            <wv2:WebView2 x:Name="ChatWebView" />
+          </Border>
+        </Grid>
 
         <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="12"
                 BorderBrush="#E6E9F0" BorderThickness="1">

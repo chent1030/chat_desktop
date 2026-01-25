@@ -1,11 +1,16 @@
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Infrastructure.Config;
+using Markdig;
+using System.Linq;
 
 namespace ChatDesktop.App;
 
@@ -15,11 +20,21 @@ namespace ChatDesktop.App;
 public partial class MainWindow : Window
 {
     private INotifyCollectionChanged? _chatMessages;
-    private ScrollViewer? _chatScrollViewer;
+    private bool _chatRenderPending;
+    private bool _chatNeedsScroll;
+    private readonly DispatcherTimer _chatRenderTimer = new();
+    private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     public MainWindow()
     {
         InitializeComponent();
+        _chatRenderTimer.Interval = TimeSpan.FromMilliseconds(200);
+        _chatRenderTimer.Tick += (_, _) =>
+        {
+            _chatRenderTimer.Stop();
+            _chatRenderPending = false;
+            RenderChatHtml();
+        };
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -50,7 +65,7 @@ public partial class MainWindow : Window
         mainViewModel.TaskList.ChangeEmpNoRequested -= OnChangeEmpNoRequested;
         mainViewModel.TaskList.ChangeEmpNoRequested += OnChangeEmpNoRequested;
 
-        AttachChatAutoScroll(mainViewModel);
+        InitializeChatWebView(mainViewModel);
     }
 
     private void OnTaskDetailRequested(Core.Models.TaskItem task)
@@ -241,7 +256,7 @@ public partial class MainWindow : Window
         return false;
     }
 
-    private void AttachChatAutoScroll(MainViewModel viewModel)
+    private async void InitializeChatWebView(MainViewModel viewModel)
     {
         if (_chatMessages != null)
         {
@@ -254,52 +269,105 @@ public partial class MainWindow : Window
             messages.CollectionChanged += OnChatMessagesChanged;
         }
 
-        _chatScrollViewer = FindDescendantScrollViewer(ChatListBox);
+        foreach (var message in viewModel.Chat.Messages)
+        {
+            message.PropertyChanged += OnChatMessagePropertyChanged;
+        }
+
+        ChatWebView.NavigationCompleted -= OnChatWebNavigationCompleted;
+        ChatWebView.NavigationCompleted += OnChatWebNavigationCompleted;
+
+        await ChatWebView.EnsureCoreWebView2Async();
+        RenderChatHtml();
     }
 
     private void OnChatMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (ChatListBox.Items.Count == 0)
+        if (e.NewItems != null)
+        {
+            foreach (var item in e.NewItems.OfType<ChatMessageViewModel>())
+            {
+                item.PropertyChanged += OnChatMessagePropertyChanged;
+            }
+        }
+
+        if (e.OldItems != null)
+        {
+            foreach (var item in e.OldItems.OfType<ChatMessageViewModel>())
+            {
+                item.PropertyChanged -= OnChatMessagePropertyChanged;
+            }
+        }
+
+        ScheduleChatRender();
+    }
+
+    private void OnChatMessagePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ChatMessageViewModel.Content))
+        {
+            ScheduleChatRender();
+        }
+    }
+
+    private void ScheduleChatRender()
+    {
+        _chatNeedsScroll = true;
+        if (_chatRenderPending)
         {
             return;
         }
 
-        if (_chatScrollViewer != null)
-        {
-            var nearBottom = _chatScrollViewer.VerticalOffset >= _chatScrollViewer.ScrollableHeight - 40;
-            if (!nearBottom)
-            {
-                return;
-            }
-        }
-
-        var last = ChatListBox.Items[ChatListBox.Items.Count - 1];
-        ChatListBox.ScrollIntoView(last);
+        _chatRenderPending = true;
+        _chatRenderTimer.Stop();
+        _chatRenderTimer.Start();
     }
 
-    private static ScrollViewer? FindDescendantScrollViewer(DependencyObject? root)
+    private void RenderChatHtml()
     {
-        if (root == null)
+        if (DataContext is not MainViewModel viewModel)
         {
-            return null;
+            return;
         }
 
-        if (root is ScrollViewer viewer)
+        var sb = new StringBuilder();
+        sb.Append("<!doctype html><html><head><meta charset=\"utf-8\" />");
+        sb.Append("<style>");
+        sb.Append("body{font-family:'Segoe UI',sans-serif;background:#F4F6FA;margin:0;padding:12px;}");
+        sb.Append(".msg{display:flex;margin:10px 0;}");
+        sb.Append(".bubble{max-width:560px;padding:10px 12px;border-radius:12px;border:1px solid #E5E8F0;background:#fff;}");
+        sb.Append(".user{justify-content:flex-end;}");
+        sb.Append(".user .bubble{background:#E3F2FD;border-color:#BBDEFB;}");
+        sb.Append(".role{font-size:11px;color:#8A9099;margin-bottom:6px;}");
+        sb.Append("</style></head><body>");
+
+        foreach (var message in viewModel.Chat.Messages)
         {
-            return viewer;
+            var css = message.IsUser ? "msg user" : "msg";
+            var markdown = message.Content ?? string.Empty;
+            var html = Markdown.ToHtml(markdown, _markdownPipeline);
+            sb.Append($"<div class=\"{css}\"><div class=\"bubble\"><div class=\"role\">{message.RoleLabel}</div>{html}</div></div>");
         }
 
-        var count = VisualTreeHelper.GetChildrenCount(root);
-        for (var i = 0; i < count; i++)
+        sb.Append("</body></html>");
+        _chatNeedsScroll = true;
+        ChatWebView.NavigateToString(sb.ToString());
+    }
+
+    private async void OnChatWebNavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+    {
+        if (!_chatNeedsScroll)
         {
-            var child = VisualTreeHelper.GetChild(root, i);
-            var result = FindDescendantScrollViewer(child);
-            if (result != null)
-            {
-                return result;
-            }
+            return;
         }
 
-        return null;
+        _chatNeedsScroll = false;
+        try
+        {
+            await ChatWebView.ExecuteScriptAsync("window.scrollTo(0, document.body.scrollHeight);");
+        }
+        catch
+        {
+        }
     }
 }
