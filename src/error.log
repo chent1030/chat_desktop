@@ -1,6 +1,2 @@
-﻿[2026-01-26 18:38:31.663] [INFO ] [CHAT] 开始加载历史会话
-[2026-01-26 18:38:31.668] [INFO ] [CHAT] 加载历史会话=16，数据库=C:\Users\陈涛\AppData\Roaming\ChatDesktop\chat_desktop.db
-[2026-01-26 18:38:33.252] [INFO ] [CHAT] 打开会话下拉，开始加载历史会话
-[2026-01-26 18:38:33.252] [INFO ] [CHAT] 开始加载历史会话
-[2026-01-26 18:38:33.253] [INFO ] [CHAT] 加载历史会话=16，数据库=C:\Users\陈涛\AppData\Roaming\ChatDesktop\chat_desktop.db
-[2026-01-26 18:38:33.254] [INFO ] [CHAT] 会话下拉加载完成，数量=16
+﻿1>MainWindow.xaml.cs(209,71): Error CS0136 : 无法在此范围中声明名为“itemStyle”的局部变量或参数，因为该名称在封闭局部范围中用于定义局部变量或参数
+1>------- Finished building project: ChatDesktop.App. Succeeded: False. Errors: 1. Warnings: 0
