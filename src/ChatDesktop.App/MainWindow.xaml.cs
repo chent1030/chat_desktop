@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -131,14 +132,23 @@ public partial class MainWindow : Window
         mainViewModel.TaskList.OpenDetailCommand.Execute(task);
     }
 
-    private void OnConversationMenuClicked(object sender, RoutedEventArgs e)
+    private async void OnConversationMenuClicked(object sender, RoutedEventArgs e)
     {
         if (sender is not Button button || button.ContextMenu == null)
         {
             return;
         }
 
+        if (button.DataContext is MainViewModel mainViewModel)
+        {
+            await mainViewModel.Chat.LoadConversationsAsync();
+        }
+
         button.ContextMenu.DataContext = button.DataContext;
+        if (button.ContextMenu.ItemsSource != null)
+        {
+            CollectionViewSource.GetDefaultView(button.ContextMenu.ItemsSource)?.Refresh();
+        }
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
     }
