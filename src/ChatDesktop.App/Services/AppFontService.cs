@@ -60,14 +60,19 @@ public static class AppFontService
         try
         {
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var fontFolder = Path.Combine(baseDir, "Assets", "Fonts");
+            var fontFolder = Path.Combine(baseDir, "Assets", "fonts");
             if (!Directory.Exists(fontFolder))
             {
                 return null;
             }
 
             var uri = new Uri(fontFolder + Path.DirectorySeparatorChar, UriKind.Absolute);
-            return new FontFamily(uri, $"./#{familyName}");
+            // 使用字体文件实际家族名匹配，避免 familyName 不一致导致回退到默认字体
+            var families = Fonts.GetFontFamilies(uri);
+            var matched = families.FirstOrDefault(f =>
+                string.Equals(f.Source, familyName, StringComparison.OrdinalIgnoreCase)
+                || f.FamilyNames.Values.Any(n => string.Equals(n, familyName, StringComparison.OrdinalIgnoreCase)));
+            return matched ?? families.FirstOrDefault();
         }
         catch
         {
