@@ -25,6 +25,7 @@ public sealed class MqttService : IMqttService
     }
 
     public event Action? TaskChanged;
+    public event Action<string, string>? TaskNotification;
     public event Action<string>? ConnectionStateChanged;
 
     public async Task<bool> ConnectAsync(
@@ -221,6 +222,7 @@ public sealed class MqttService : IMqttService
 
         await _taskService.CreateAsync(task);
         TaskChanged?.Invoke();
+        RaiseTaskNotification("新增任务", task);
     }
 
     private async Task HandleUpdateAsync(JsonElement root)
@@ -268,6 +270,7 @@ public sealed class MqttService : IMqttService
 
         await _taskService!.UpdateAsync(task);
         TaskChanged?.Invoke();
+        RaiseTaskNotification("任务更新", task);
     }
 
     private async Task HandleDeleteAsync(JsonElement root)
@@ -280,6 +283,7 @@ public sealed class MqttService : IMqttService
 
         await _taskService!.DeleteAsync(task.Id);
         TaskChanged?.Invoke();
+        RaiseTaskNotification("任务删除", task);
     }
 
     private async Task HandleCompleteAsync(JsonElement root)
@@ -307,6 +311,13 @@ public sealed class MqttService : IMqttService
 
         await _taskService!.UpdateAsync(task);
         TaskChanged?.Invoke();
+        RaiseTaskNotification(isCompleted ? "任务完成" : "任务恢复", task);
+    }
+
+    private void RaiseTaskNotification(string title, TaskItem task)
+    {
+        var message = string.IsNullOrWhiteSpace(task.Title) ? "收到任务变更" : task.Title;
+        TaskNotification?.Invoke(title, message);
     }
 
     private async Task<TaskItem?> ResolveTaskAsync(JsonElement root)

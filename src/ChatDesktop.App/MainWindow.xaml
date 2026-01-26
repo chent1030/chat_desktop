@@ -199,7 +199,12 @@
                       <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted}" VerticalAlignment="Top" Margin="0,2,12,0" />
+                    <CheckBox Grid.Column="0"
+                              IsChecked="{Binding IsCompleted}"
+                              VerticalAlignment="Top"
+                              Margin="0,2,12,0"
+                              Command="{Binding DataContext.TaskList.ToggleCompletionCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                              CommandParameter="{Binding}" />
 
                     <StackPanel Grid.Column="1">
                       <Grid>

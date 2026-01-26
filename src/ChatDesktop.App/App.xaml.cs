@@ -107,11 +107,13 @@ public partial class App : Application
             if (_mqttService != null)
             {
                 _mqttService.TaskChanged -= OnMqttTaskChanged;
+                _mqttService.TaskNotification -= OnMqttTaskNotification;
                 await _mqttService.DisconnectAsync();
             }
 
             var mqttService = new Infrastructure.Mqtt.MqttService(_taskService);
             mqttService.TaskChanged += OnMqttTaskChanged;
+            mqttService.TaskNotification += OnMqttTaskNotification;
             _mqttService = mqttService;
 
             await mqttService.ConnectAsync(
@@ -131,6 +133,16 @@ public partial class App : Application
         }
 
         Dispatcher.InvokeAsync(() => _ = _mainViewModel.TaskList.LoadAsync());
+    }
+
+    private void OnMqttTaskNotification(string title, string message)
+    {
+        if (_miniWindowManager == null)
+        {
+            return;
+        }
+
+        Dispatcher.InvokeAsync(() => _miniWindowManager.ShowNotification(title, message));
     }
 
     protected override void OnExit(ExitEventArgs e)

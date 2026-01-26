@@ -62,6 +62,154 @@ public sealed class MiniWindowManager : IDisposable
         DisposeTrayIcon();
     }
 
+    public void ShowNotification(string title, string message)
+    {
+        if (_trayIcon == null)
+        {
+            return;
+        }
+
+        _trayIcon.Dispatcher.InvokeAsync(() =>
+        {
+            if (_trayIcon == null)
+            {
+                return;
+            }
+
+            var safeTitle = string.IsNullOrWhiteSpace(title) ? "任务提醒" : title;
+            var safeMessage = string.IsNullOrWhiteSpace(message) ? "收到任务变更" : message;
+
+            if (TryShowTrayNotification(_trayIcon, safeTitle, safeMessage))
+            {
+                return;
+            }
+
+            _trayIcon.ToolTipText = $"{safeTitle} - {safeMessage}";
+        });
+    }
+
+    private static bool TryShowTrayNotification(TaskbarIcon trayIcon, string title, string message)
+    {
+        var trayType = trayIcon.GetType();
+        var showNotification = trayType.GetMethod("ShowNotification", new[] { typeof(string), typeof(string) });
+        if (showNotification != null)
+        {
+            showNotification.Invoke(trayIcon, new object?[] { title, message });
+            return true;
+        }
+
+        var notificationType = trayType.Assembly.GetType("H.NotifyIcon.Notification");
+        if (notificationType != null)
+        {
+            var notification = Activator.CreateInstance(notificationType);
+            if (notification != null)
+            {
+                SetNotificationProperty(notificationType, notification, "Title", title);
+                if (!SetNotificationProperty(notificationType, notification, "Message", message))
+                {
+                    SetNotificationProperty(notificationType, notification, "Text", message);
+                }
+                SetNotificationIcon(notificationType, notification);
+
+                var showNotificationByType = trayType.GetMethod("ShowNotification", new[] { notificationType });
+                if (showNotificationByType != null)
+                {
+                    showNotificationByType.Invoke(trayIcon, new[] { notification });
+                    return true;
+                }
+            }
+        }
+
+        var showBalloon = trayType.GetMethod("ShowBalloonTip", new[] { typeof(string), typeof(string) });
+        if (showBalloon != null)
+        {
+            showBalloon.Invoke(trayIcon, new object?[] { title, message });
+            return true;
+        }
+
+        foreach (var method in trayType.GetMethods())
+        {
+            if (!string.Equals(method.Name, "ShowBalloonTip", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length != 4)
+            {
+                continue;
+            }
+
+            if (parameters[0].ParameterType != typeof(int) ||
+                parameters[1].ParameterType != typeof(string) ||
+                parameters[2].ParameterType != typeof(string))
+            {
+                continue;
+            }
+
+            var iconValue = GetEnumValue(parameters[3].ParameterType, "Info", "Information", "None");
+            if (iconValue == null && parameters[3].ParameterType.IsValueType)
+            {
+                iconValue = Activator.CreateInstance(parameters[3].ParameterType);
+            }
+
+            method.Invoke(trayIcon, new object?[] { 3000, title, message, iconValue });
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool SetNotificationProperty(Type notificationType, object instance, string name, object? value)
+    {
+        var property = notificationType.GetProperty(name);
+        if (property == null || !property.CanWrite)
+        {
+            return false;
+        }
+
+        property.SetValue(instance, value);
+        return true;
+    }
+
+    private static void SetNotificationIcon(Type notificationType, object instance)
+    {
+        var iconProperty = notificationType.GetProperty("Icon");
+        if (iconProperty == null || !iconProperty.CanWrite)
+        {
+            return;
+        }
+
+        var iconType = iconProperty.PropertyType;
+        if (!iconType.IsEnum)
+        {
+            return;
+        }
+
+        var iconValue = GetEnumValue(iconType, "Info", "Information", "None");
+        if (iconValue != null)
+        {
+            iconProperty.SetValue(instance, iconValue);
+        }
+    }
+
+    private static object? GetEnumValue(Type enumType, params string[] names)
+    {
+        var enumNames = Enum.GetNames(enumType);
+        foreach (var target in names)
+        {
+            foreach (var name in enumNames)
+            {
+                if (string.Equals(name, target, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Enum.Parse(enumType, name);
+                }
+            }
+        }
+
+        return null;
+    }
+
     private void OnMainWindowClosing(object? sender, CancelEventArgs e)
     {
         if (_exitRequested)
