@@ -21,10 +21,15 @@
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.DatePicker.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
+      <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>
+
       <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
       <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter" />
       <converters:PriorityToBrushConverter x:Key="PriorityToBrushConverter" />
 
+      <Style TargetType="Window">
+        <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+      </Style>
       <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}" />
       <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}" />
       <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}" />

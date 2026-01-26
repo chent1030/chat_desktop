@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ChatDesktop.App.Services;
 using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Core.Enums;
@@ -121,6 +122,62 @@ public partial class MainWindow : Window
 
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
+    }
+
+    private void OnFontMenuOpened(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem)
+        {
+            return;
+        }
+
+        BuildFontMenu(menuItem);
+    }
+
+    private static void BuildFontMenu(MenuItem menuItem)
+    {
+        menuItem.Items.Clear();
+        var currentKey = GetCurrentFontKey();
+
+        foreach (var option in AppFontService.Options)
+        {
+            var item = new MenuItem
+            {
+                Tag = option.Key,
+                IsCheckable = true,
+                IsChecked = string.Equals(option.Key, currentKey, StringComparison.OrdinalIgnoreCase),
+            };
+
+            var header = new TextBlock { Text = option.Label };
+            if (!string.IsNullOrWhiteSpace(option.FamilyName))
+            {
+                header.FontFamily = AppFontService.GetFontFamily(option.Key);
+            }
+
+            item.Header = header;
+            item.Click += OnFontMenuItemClicked;
+            menuItem.Items.Add(item);
+        }
+    }
+
+    private static async void OnFontMenuItemClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem item || item.Tag is not string key)
+        {
+            return;
+        }
+
+        if (Application.Current is App app)
+        {
+            await app.SetFontKeyAsync(key);
+        }
+    }
+
+    private static string GetCurrentFontKey()
+    {
+        return Application.Current is App app
+            ? app.CurrentFontKey
+            : AppFontService.DefaultKey;
     }
 
     private void OnChatInputKeyDown(object sender, KeyEventArgs e)

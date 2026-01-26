@@ -42,6 +42,7 @@ public partial class App : Application
             var settings = settingsService.LoadAsync().GetAwaiter().GetResult();
             _appSettings = settings;
             EnvConfig.Load(settings);
+            ApplyFontFromSettings();
             var empNo = settings.EmpNo ?? string.Empty;
 
             var remoteService = new UnifyTaskApiService();
@@ -126,6 +127,27 @@ public partial class App : Application
                 EnvConfig.MqttUsername,
                 EnvConfig.MqttPassword);
         }).Task;
+    }
+
+    public string CurrentFontKey => AppFontService.NormalizeKey(_appSettings?.FontKey);
+
+    public async Task SetFontKeyAsync(string key)
+    {
+        if (_settingsStore == null || _appSettings == null)
+        {
+            return;
+        }
+
+        var normalized = AppFontService.NormalizeKey(key);
+        _appSettings.FontKey = normalized;
+        Resources["AppFontFamily"] = AppFontService.GetFontFamily(normalized);
+        await _settingsStore.SaveAsync(_appSettings);
+    }
+
+    private void ApplyFontFromSettings()
+    {
+        var normalized = AppFontService.NormalizeKey(_appSettings?.FontKey);
+        Resources["AppFontFamily"] = AppFontService.GetFontFamily(normalized);
     }
 
     private void OnMqttTaskChanged()
