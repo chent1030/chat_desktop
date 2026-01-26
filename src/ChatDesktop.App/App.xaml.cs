@@ -24,6 +24,8 @@ public partial class App : Application
     private LocalSettingsStore? _settingsStore;
     private AppSettings? _appSettings;
 
+    public event EventHandler? FontChanged;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -155,6 +157,7 @@ public partial class App : Application
         var fontFamily = AppFontService.GetFontFamily(normalizedKey);
         Resources["AppFontFamily"] = fontFamily;
         Resources["MaterialDesignFont"] = fontFamily;
+        FontChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnMqttTaskChanged()

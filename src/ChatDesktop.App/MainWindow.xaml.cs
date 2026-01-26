@@ -72,7 +72,23 @@ public partial class MainWindow : Window
         mainViewModel.TaskList.ChangeEmpNoRequested -= OnChangeEmpNoRequested;
         mainViewModel.TaskList.ChangeEmpNoRequested += OnChangeEmpNoRequested;
 
+        if (Application.Current is App app)
+        {
+            app.FontChanged -= OnAppFontChanged;
+            app.FontChanged += OnAppFontChanged;
+        }
+
         InitializeChatWebView(mainViewModel);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (Application.Current is App app)
+        {
+            app.FontChanged -= OnAppFontChanged;
+        }
+
+        base.OnClosed(e);
     }
 
     private void OnTaskDetailRequested(Core.Models.TaskItem task)
@@ -502,7 +518,8 @@ public partial class MainWindow : Window
         var sb = new StringBuilder();
         sb.Append("<!doctype html><html><head><meta charset=\"utf-8\" />");
         sb.Append("<style>");
-        sb.Append("body{font-family:'Segoe UI',sans-serif;background:#F4F6FA;margin:0;padding:12px;");
+        sb.Append(BuildChatFontCss());
+        sb.Append("background:#F4F6FA;margin:0;padding:12px;");
         sb.Append("scrollbar-width:thin;scrollbar-color:#C2C9D6 transparent;}");
         sb.Append("body::-webkit-scrollbar{width:10px;}");
         sb.Append("body::-webkit-scrollbar-track{background:transparent;}");
@@ -535,6 +552,39 @@ public partial class MainWindow : Window
         sb.Append("</script>");
         sb.Append("</body></html>");
         return sb.ToString();
+    }
+
+    private static string BuildChatFontCss()
+    {
+        var key = GetCurrentFontKey();
+        var option = AppFontService.GetOption(key);
+        var familyName = string.IsNullOrWhiteSpace(option.FamilyName) ? "Segoe UI" : option.FamilyName;
+        var sb = new StringBuilder();
+        var fontPath = AppFontService.GetFontFilePath(key);
+        if (!string.IsNullOrWhiteSpace(fontPath))
+        {
+            var fontUri = new Uri(fontPath, UriKind.Absolute).AbsoluteUri;
+            sb.Append("@font-face{font-family:'");
+            sb.Append(familyName);
+            sb.Append("';src:url('");
+            sb.Append(fontUri);
+            sb.Append("');font-weight:normal;font-style:normal;}");
+        }
+
+        sb.Append("body{font-family:'");
+        sb.Append(familyName);
+        sb.Append("',Segoe UI,sans-serif;");
+        return sb.ToString();
+    }
+
+    private void OnAppFontChanged(object? sender, EventArgs e)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        InitializeChatHtml();
     }
 
     private string BuildMessageHtml(ChatMessageViewModel message)

@@ -323,7 +323,7 @@
             <Button x:Name="ConversationMenuButton" Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
                     HorizontalContentAlignment="Stretch" Click="OnConversationMenuClicked">
               <Button.ContextMenu>
-                <ContextMenu>
+                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                   <ContextMenu.Resources>
                     <DataTemplate DataType="{x:Type coreModels:Conversation}">
                       <Grid Margin="0,2">

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -23,6 +24,14 @@ public static class AppFontService
         new(SourceHanSansScKey, "思源黑体（Source Han Sans SC）", "Source Han Sans SC"),
         new(LxgwWenKaiKey, "霞鹜文楷", "LXGW WenKai"),
     };
+
+    private static readonly IReadOnlyDictionary<string, string> FontFiles =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [NotoSansScKey] = "NotoSansSC-Regular.ttf",
+            [SourceHanSansScKey] = "SourceHanSansSC-Regular.otf",
+            [LxgwWenKaiKey] = "LXGWWenKai-Regular.ttf",
+        };
 
     public static IReadOnlyList<AppFontOption> Options => OptionsInternal;
 
@@ -55,12 +64,26 @@ public static class AppFontService
         return TryCreateCustomFont(option.FamilyName) ?? SystemFonts.MessageFontFamily;
     }
 
+    public static string? GetFontFilePath(string? key)
+    {
+        var normalized = NormalizeKey(key);
+        if (!FontFiles.TryGetValue(normalized, out var fileName))
+        {
+            return null;
+        }
+
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        var fontFolder = Path.Combine(baseDir, "Assets", "Fonts");
+        var path = Path.Combine(fontFolder, fileName);
+        return File.Exists(path) ? path : null;
+    }
+
     private static FontFamily? TryCreateCustomFont(string familyName)
     {
         try
         {
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var fontFolder = Path.Combine(baseDir, "Assets", "fonts");
+            var fontFolder = Path.Combine(baseDir, "Assets", "Fonts");
             if (!Directory.Exists(fontFolder))
             {
                 return null;
