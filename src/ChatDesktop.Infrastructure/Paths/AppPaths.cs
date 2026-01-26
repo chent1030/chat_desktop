@@ -16,7 +16,7 @@ public static class AppPaths
 
     public static string DatabasePath => Path.Combine(AppDataRoot, AppConstants.DatabaseFileName);
 
-    public static string SettingsPath => Path.Combine(AppDataRoot, AppConstants.SettingsFileName);
+    public static string SettingsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppConstants.SettingsFileName);
 
     private static string InitializeRoot()
     {
