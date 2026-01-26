@@ -169,14 +169,15 @@ public partial class MainWindow : Window
         }
         menu.MinWidth = 360;
 
+        var menuItemStyle = TryFindResource("ConversationMenuItemStyle") as Style;
         var newItem = new MenuItem
         {
             Header = "新会话",
             Command = viewModel.Chat.NewConversationCommand
         };
-        if (TryFindResource("ConversationMenuItemStyle") is Style itemStyle)
+        if (menuItemStyle != null)
         {
-            newItem.Style = itemStyle;
+            newItem.Style = menuItemStyle;
         }
         menu.Items.Add(newItem);
         menu.Items.Add(new Separator());
@@ -206,9 +207,9 @@ public partial class MainWindow : Window
                 IsCheckable = true,
                 IsChecked = viewModel.Chat.CurrentConversationId == conversation.Id
             };
-            if (TryFindResource("ConversationMenuItemStyle") is Style itemStyle)
+            if (menuItemStyle != null)
             {
-                item.Style = itemStyle;
+                item.Style = menuItemStyle;
             }
             menu.Items.Add(item);
         }
