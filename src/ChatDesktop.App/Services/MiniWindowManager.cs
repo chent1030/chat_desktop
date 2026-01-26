@@ -87,6 +87,7 @@ public sealed class MiniWindowManager : IDisposable
             ToolTipText = "芯服务 - 双击恢复窗口",
             ContextMenu = BuildTrayMenu()
         };
+        _trayIcon.Visibility = Visibility.Visible;
         _trayIcon.TrayMouseDoubleClick += (_, _) => RestoreMainWindow();
     }
 

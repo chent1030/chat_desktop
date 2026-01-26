@@ -11,13 +11,12 @@
         ShowInTaskbar="False"
         WindowStartupLocation="Manual">
   <Grid Background="Transparent"
-        MouseLeftButtonDown="OnMouseLeftButtonDown"
-        MouseLeftButtonUp="OnMouseLeftButtonUp"
-        MouseMove="OnMouseMove">
+        MouseLeftButtonDown="OnMouseLeftButtonDown">
     <Border Width="120" Height="120" Background="Transparent">
       <Image x:Name="LogoImage"
              Width="80"
              Height="80"
+             Stretch="UniformToFill"
              HorizontalAlignment="Center"
              VerticalAlignment="Center" />
     </Border>

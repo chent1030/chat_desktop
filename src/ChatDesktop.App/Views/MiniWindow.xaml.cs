@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Animation;
 using ChatDesktop.Core.Models;
@@ -18,12 +19,10 @@ public partial class MiniWindow : Window
         new("pack://siteoforigin:,,,/Assets/Media/unread_logo.gif");
 
     private bool _hasUnread;
-    private bool _dragPending;
-    private Point _dragStart;
-
     public MiniWindow()
     {
         InitializeComponent();
+        LogoImage.SizeChanged += (_, _) => UpdateClip();
         SetUnreadCount(0);
     }
 
@@ -52,37 +51,17 @@ public partial class MiniWindow : Window
         image.EndInit();
         ImageBehavior.SetAnimatedSource(LogoImage, image);
         ImageBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
-    }
-
-    protected override void OnLocationChanged(EventArgs e)
-    {
-        base.OnLocationChanged(e);
-        PositionChanged?.Invoke(this, new WindowPoint { X = Left, Y = Top });
+        UpdateClip();
     }
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        _dragPending = true;
-        _dragStart = e.GetPosition(this);
-        CaptureMouse();
-    }
-
-    private void OnMouseMove(object sender, MouseEventArgs e)
-    {
-        if (!_dragPending || e.LeftButton != MouseButtonState.Pressed)
+        if (e.ClickCount == 2)
         {
+            RestoreRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
 
-        var current = e.GetPosition(this);
-        if (Math.Abs(current.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(current.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
-        {
-            return;
-        }
-
-        _dragPending = false;
-        ReleaseMouseCapture();
         try
         {
             DragMove();
@@ -92,17 +71,21 @@ public partial class MiniWindow : Window
         }
     }
 
-    private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    protected override void OnLocationChanged(EventArgs e)
     {
-        if (_dragPending)
+        base.OnLocationChanged(e);
+        PositionChanged?.Invoke(this, new WindowPoint { X = Left, Y = Top });
+    }
+
+    private void UpdateClip()
+    {
+        var size = Math.Min(LogoImage.ActualWidth, LogoImage.ActualHeight);
+        if (size <= 0)
         {
-            _dragPending = false;
-            ReleaseMouseCapture();
+            return;
         }
 
-        if (e.ClickCount == 2)
-        {
-            RestoreRequested?.Invoke(this, EventArgs.Empty);
-        }
+        var radius = size / 2;
+        LogoImage.Clip = new EllipseGeometry(new Point(radius, radius), radius, radius);
     }
 }
