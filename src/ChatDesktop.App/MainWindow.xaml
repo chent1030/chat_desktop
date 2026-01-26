@@ -4,9 +4,6 @@
         xmlns:md="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:coreEnums="clr-namespace:ChatDesktop.Core.Enums;assembly=ChatDesktop.Core"
-        xmlns:coreModels="clr-namespace:ChatDesktop.Core.Models;assembly=ChatDesktop.Core"
-        xmlns:scm="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
-        xmlns:selectors="clr-namespace:ChatDesktop.App.Selectors"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
@@ -45,13 +42,7 @@
         </Setter.Value>
       </Setter>
     </Style>
-    <Style x:Key="ConversationMenuItemStyle" TargetType="MenuItem">
-      <Setter Property="Command"
-              Value="{Binding DataContext.Chat.SelectConversationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-      <Setter Property="CommandParameter" Value="{Binding}" />
-    </Style>
-    <selectors:ConversationMenuItemStyleSelector x:Key="ConversationMenuItemStyleSelector"
-                                                 ConversationStyle="{StaticResource ConversationMenuItemStyle}" />
+    <!-- 会话菜单改为代码生成 -->
   </Window.Resources>
   <Grid Margin="12">
     <Grid.ColumnDefinitions>
@@ -323,38 +314,7 @@
             <Button x:Name="ConversationMenuButton" Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
                     HorizontalContentAlignment="Stretch" Click="OnConversationMenuClicked">
               <Button.ContextMenu>
-                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                  <ContextMenu.Resources>
-                    <DataTemplate DataType="{x:Type coreModels:Conversation}">
-                      <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                          <ColumnDefinition Width="*" />
-                          <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                          <TextBlock Text="{Binding LastMessageContent}" FontSize="11" Foreground="#7A808A"
-                                     Visibility="{Binding LastMessageContent, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
-                        </StackPanel>
-                        <Button Grid.Column="1" Style="{StaticResource MaterialDesignFlatButton}" Padding="4"
-                                Command="{Binding DataContext.Chat.DeleteConversationByIdCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                CommandParameter="{Binding}">
-                          <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" />
-                        </Button>
-                      </Grid>
-                    </DataTemplate>
-                  </ContextMenu.Resources>
-                  <ContextMenu.ItemsSource>
-                    <scm:CompositeCollection>
-                      <MenuItem Header="新会话" Command="{Binding Chat.NewConversationCommand}" />
-                      <Separator />
-                      <scm:CollectionContainer Collection="{Binding DataContext.Chat.Conversations, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                    </scm:CompositeCollection>
-                  </ContextMenu.ItemsSource>
-                  <ContextMenu.ItemContainerStyleSelector>
-                    <StaticResource ResourceKey="ConversationMenuItemStyleSelector" />
-                  </ContextMenu.ItemContainerStyleSelector>
-                </ContextMenu>
+                <ContextMenu x:Name="ConversationContextMenu" />
               </Button.ContextMenu>
               <Grid>
                 <Grid.ColumnDefinitions>

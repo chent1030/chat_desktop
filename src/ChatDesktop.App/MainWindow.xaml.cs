@@ -14,8 +14,10 @@ using ChatDesktop.App.Services;
 using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Core.Enums;
+using ChatDesktop.Core.Models;
 using ChatDesktop.Infrastructure.Config;
 using ChatDesktop.Infrastructure.Logging;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Web.WebView2.Core;
 using Markdig;
 using System.Linq;
@@ -146,6 +148,7 @@ public partial class MainWindow : Window
             _logService.Info("打开会话下拉，开始加载历史会话", "CHAT");
             await mainViewModel.Chat.LoadConversationsAsync();
             _logService.Info($"会话下拉加载完成，数量={mainViewModel.Chat.Conversations.Count}", "CHAT");
+            BuildConversationMenu(button.ContextMenu, mainViewModel);
         }
 
         button.ContextMenu.DataContext = button.DataContext;
@@ -155,6 +158,74 @@ public partial class MainWindow : Window
         }
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
+    }
+
+    private void BuildConversationMenu(ContextMenu menu, MainViewModel viewModel)
+    {
+        menu.Items.Clear();
+
+        var newItem = new MenuItem
+        {
+            Header = "新会话",
+            Command = viewModel.Chat.NewConversationCommand
+        };
+        menu.Items.Add(newItem);
+        menu.Items.Add(new Separator());
+
+        foreach (var conversation in viewModel.Chat.Conversations)
+        {
+            var item = new MenuItem
+            {
+                Command = viewModel.Chat.SelectConversationCommand,
+                CommandParameter = conversation,
+                Header = BuildConversationHeader(conversation, viewModel)
+            };
+            menu.Items.Add(item);
+        }
+    }
+
+    private FrameworkElement BuildConversationHeader(Conversation conversation, MainViewModel viewModel)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var title = string.IsNullOrWhiteSpace(conversation.Title)
+            ? $"会话 {conversation.Id}"
+            : conversation.Title;
+        var stack = new StackPanel();
+        stack.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold });
+
+        if (!string.IsNullOrWhiteSpace(conversation.LastMessageContent))
+        {
+            var subtitle = new TextBlock
+            {
+                Text = conversation.LastMessageContent,
+                FontSize = 11,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7A808A"))
+            };
+            stack.Children.Add(subtitle);
+        }
+
+        Grid.SetColumn(stack, 0);
+        grid.Children.Add(stack);
+
+        var deleteButton = new Button
+        {
+            Padding = new Thickness(4),
+            Command = viewModel.Chat.DeleteConversationByIdCommand,
+            CommandParameter = conversation
+        };
+        if (TryFindResource("MaterialDesignFlatButton") is Style style)
+        {
+            deleteButton.Style = style;
+        }
+        deleteButton.Content = new PackIcon { Kind = PackIconKind.DeleteOutline, Width = 16, Height = 16 };
+
+        Grid.SetColumn(deleteButton, 1);
+        grid.Children.Add(deleteButton);
+
+        return grid;
     }
 
     private void OnMoreMenuOpened(object sender, RoutedEventArgs e)
