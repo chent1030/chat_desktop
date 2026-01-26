@@ -27,6 +27,12 @@
       <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter" />
       <converters:PriorityToBrushConverter x:Key="PriorityToBrushConverter" />
 
+      <Style TargetType="{x:Type Control}" BasedOn="{StaticResource {x:Type Control}}">
+        <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+      </Style>
+      <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+      </Style>
       <Style TargetType="Window">
         <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
       </Style>
