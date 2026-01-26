@@ -135,14 +135,14 @@ public partial class MiniWindow : Window
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Media", fileName);
             if (!File.Exists(path))
             {
-                return Vector.Zero;
+                return new Vector(0, 0);
             }
 
             using var stream = File.OpenRead(path);
             var decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
             if (decoder.Frames.Count == 0)
             {
-                return Vector.Zero;
+                return new Vector(0, 0);
             }
 
             BitmapSource frame = decoder.Frames[0];
@@ -155,7 +155,7 @@ public partial class MiniWindow : Window
             var height = frame.PixelHeight;
             if (width <= 0 || height <= 0)
             {
-                return Vector.Zero;
+                return new Vector(0, 0);
             }
 
             var stride = width * 4;
@@ -187,7 +187,7 @@ public partial class MiniWindow : Window
 
             if (maxX < 0 || maxY < 0)
             {
-                return Vector.Zero;
+                return new Vector(0, 0);
             }
 
             var contentCenterX = (minX + maxX) / 2.0;
@@ -200,7 +200,7 @@ public partial class MiniWindow : Window
         }
         catch
         {
-            return Vector.Zero;
+            return new Vector(0, 0);
         }
     }
 }

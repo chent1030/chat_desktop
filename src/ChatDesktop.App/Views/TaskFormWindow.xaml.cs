@@ -32,21 +32,21 @@ public partial class TaskFormWindow : Window
         Close();
     }
 
-    private async void OnVoiceTitleClicked(object sender, RoutedEventArgs e)
+    private void OnVoiceTitleClicked(object sender, RoutedEventArgs e)
     {
-        await ApplyVoiceInputAsync(isTitle: true);
+        _ = ApplyVoiceInputAsync(isTitle: true);
     }
 
-    private async void OnVoiceDescriptionClicked(object sender, RoutedEventArgs e)
+    private void OnVoiceDescriptionClicked(object sender, RoutedEventArgs e)
     {
-        await ApplyVoiceInputAsync(isTitle: false);
+        _ = ApplyVoiceInputAsync(isTitle: false);
     }
 
-    private async Task ApplyVoiceInputAsync(bool isTitle)
+    private Task ApplyVoiceInputAsync(bool isTitle)
     {
         if (DataContext is not TaskFormViewModel viewModel)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var recorder = new AudioRecorderService();
@@ -69,6 +69,8 @@ public partial class TaskFormWindow : Window
                 viewModel.Description = inputVm.ResultText!;
             }
         }
+
+        return Task.CompletedTask;
     }
 
     private void OnPickDueDateTimeClicked(object sender, RoutedEventArgs e)
