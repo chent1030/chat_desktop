@@ -10,6 +10,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         Title="ChatDesktop" Height="800" Width="1200" MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
+        Icon="pack://siteoforigin:,,,/Assets/Icons/static_logo.ico"
         Background="#F4F6FA"
         Loaded="OnLoaded">
   <Window.Resources>

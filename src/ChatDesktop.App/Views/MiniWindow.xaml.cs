@@ -19,10 +19,15 @@ public partial class MiniWindow : Window
         new("pack://siteoforigin:,,,/Assets/Media/unread_logo.gif");
 
     private bool _hasUnread;
+    private Size _sourceSize;
     public MiniWindow()
     {
         InitializeComponent();
-        LogoImage.SizeChanged += (_, _) => UpdateClip();
+        LogoImage.SizeChanged += (_, _) =>
+        {
+            UpdateClip();
+            UpdateImageLayout();
+        };
         SetUnreadCount(0);
     }
 
@@ -51,7 +56,11 @@ public partial class MiniWindow : Window
         image.EndInit();
         ImageBehavior.SetAnimatedSource(LogoImage, image);
         ImageBehavior.SetRepeatBehavior(LogoImage, RepeatBehavior.Forever);
+        _sourceSize = image.PixelWidth > 0 && image.PixelHeight > 0
+            ? new Size(image.PixelWidth, image.PixelHeight)
+            : Size.Empty;
         UpdateClip();
+        UpdateImageLayout();
     }
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -87,5 +96,27 @@ public partial class MiniWindow : Window
 
         var radius = size / 2;
         LogoImage.Clip = new EllipseGeometry(new Point(radius, radius), radius, radius);
+    }
+
+    private void UpdateImageLayout()
+    {
+        if (_sourceSize.Width <= 0 || _sourceSize.Height <= 0)
+        {
+            return;
+        }
+
+        var width = LogoImage.ActualWidth;
+        var height = LogoImage.ActualHeight;
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var scale = Math.Max(width / _sourceSize.Width, height / _sourceSize.Height);
+        var scaledWidth = _sourceSize.Width * scale;
+        var scaledHeight = _sourceSize.Height * scale;
+        var offsetX = (width - scaledWidth) / 2;
+        var offsetY = (height - scaledHeight) / 2;
+        LogoImage.RenderTransform = new TranslateTransform(offsetX, offsetY);
     }
 }
