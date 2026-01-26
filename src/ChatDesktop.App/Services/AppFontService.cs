@@ -78,6 +78,12 @@ public static class AppFontService
         return File.Exists(path) ? path : null;
     }
 
+    public static string? GetFontFileName(string? key)
+    {
+        var normalized = NormalizeKey(key);
+        return FontFiles.TryGetValue(normalized, out var fileName) ? fileName : null;
+    }
+
     private static FontFamily? TryCreateCustomFont(string familyName)
     {
         try

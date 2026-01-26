@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -13,6 +14,7 @@ using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Core.Enums;
 using ChatDesktop.Infrastructure.Config;
+using Microsoft.Web.WebView2.Core;
 using Markdig;
 using System.Linq;
 
@@ -136,6 +138,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        button.ContextMenu.DataContext = button.DataContext;
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
     }
@@ -381,6 +384,14 @@ public partial class MainWindow : Window
         ChatWebView.NavigationCompleted += OnChatWebNavigationCompleted;
 
         await ChatWebView.EnsureCoreWebView2Async();
+        var assetsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets");
+        if (Directory.Exists(assetsPath) && ChatWebView.CoreWebView2 != null)
+        {
+            ChatWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                "appassets",
+                assetsPath,
+                CoreWebView2HostResourceAccessKind.Allow);
+        }
         InitializeChatHtml();
     }
 
@@ -560,14 +571,15 @@ public partial class MainWindow : Window
         var option = AppFontService.GetOption(key);
         var familyName = string.IsNullOrWhiteSpace(option.FamilyName) ? "Segoe UI" : option.FamilyName;
         var sb = new StringBuilder();
+        var fontFileName = AppFontService.GetFontFileName(key);
         var fontPath = AppFontService.GetFontFilePath(key);
-        if (!string.IsNullOrWhiteSpace(fontPath))
+        if (!string.IsNullOrWhiteSpace(fontFileName) && !string.IsNullOrWhiteSpace(fontPath))
         {
-            var fontUri = new Uri(fontPath, UriKind.Absolute).AbsoluteUri;
             sb.Append("@font-face{font-family:'");
             sb.Append(familyName);
             sb.Append("';src:url('");
-            sb.Append(fontUri);
+            sb.Append("https://appassets/Fonts/");
+            sb.Append(fontFileName);
             sb.Append("');font-weight:normal;font-style:normal;}");
         }
 
