@@ -6,6 +6,8 @@ using ChatDesktop.Infrastructure.Config;
 using ChatDesktop.Infrastructure.Data;
 using ChatDesktop.Infrastructure.Paths;
 using ChatDesktop.Infrastructure.Unify;
+using ChatDesktop.App.Services;
+using ChatDesktop.Core.Models;
 using ChatDesktop.App.Views;
 
 namespace ChatDesktop.App;
@@ -18,6 +20,9 @@ public partial class App : Application
     private Infrastructure.Mqtt.MqttService? _mqttService;
     private TaskService? _taskService;
     private MainViewModel? _mainViewModel;
+    private MiniWindowManager? _miniWindowManager;
+    private LocalSettingsStore? _settingsStore;
+    private AppSettings? _appSettings;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -33,8 +38,10 @@ public partial class App : Application
             schemaInitializer.InitializeAsync().GetAwaiter().GetResult();
 
             var settingsStore = new LocalSettingsStore();
+            _settingsStore = settingsStore;
             var settingsService = new AppSettingsService(settingsStore);
             var settings = settingsService.LoadAsync().GetAwaiter().GetResult();
+            _appSettings = settings;
             var empNo = settings.EmpNo ?? string.Empty;
 
             var remoteService = new UnifyTaskApiService();
@@ -61,6 +68,7 @@ public partial class App : Application
                 settings = settingsService.LoadAsync().GetAwaiter().GetResult();
                 empNo = settings.EmpNo ?? string.Empty;
             }
+            _appSettings = settings;
 
             var window = new MainWindow
             {
@@ -71,6 +79,11 @@ public partial class App : Application
             window.DataContext = viewModel;
             window.Show();
             window.Activate();
+            if (_settingsStore != null && _appSettings != null)
+            {
+                _miniWindowManager = new MiniWindowManager(window, viewModel, _settingsStore, _appSettings);
+                _miniWindowManager.Initialize();
+            }
             _ = viewModel.TaskList.LoadAsync();
             _ = viewModel.Chat.LoadConversationsAsync();
             _ = InitializeMqttAsync(empNo);
@@ -118,5 +131,11 @@ public partial class App : Application
         }
 
         Dispatcher.InvokeAsync(() => _ = _mainViewModel.TaskList.LoadAsync());
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _miniWindowManager?.Dispose();
+        base.OnExit(e);
     }
 }

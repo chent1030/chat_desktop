@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using ChatDesktop.Core.Dto;
 using ChatDesktop.Core.Enums;
 using ChatDesktop.Core.Models;
@@ -18,6 +19,7 @@ public sealed class TaskListViewModel : ViewModelBase
     private TaskFilter _selectedFilter = TaskFilter.Incomplete;
     private TaskSortOrder _selectedSort = TaskSortOrder.CreatedAtDesc;
     private string _searchKeyword = string.Empty;
+    private int _unreadCount;
     private bool _isLoading;
     private string? _error;
 
@@ -70,6 +72,21 @@ public sealed class TaskListViewModel : ViewModelBase
         private set
         {
             _statistics = value;
+            RaisePropertyChanged();
+        }
+    }
+
+    public int UnreadCount
+    {
+        get => _unreadCount;
+        private set
+        {
+            if (_unreadCount == value)
+            {
+                return;
+            }
+
+            _unreadCount = value;
             RaisePropertyChanged();
         }
     }
@@ -190,6 +207,7 @@ public sealed class TaskListViewModel : ViewModelBase
             }
 
             Statistics = await _taskService.GetStatisticsAsync();
+            UpdateUnreadCount();
         }
         catch (Exception ex)
         {
@@ -237,6 +255,7 @@ public sealed class TaskListViewModel : ViewModelBase
             {
                 await _taskService.MarkReadAsync(task.Id);
                 task.IsRead = true;
+                UpdateUnreadCount();
             }
             catch
             {
@@ -260,5 +279,10 @@ public sealed class TaskListViewModel : ViewModelBase
         {
             SelectedFilter = filter;
         }
+    }
+
+    private void UpdateUnreadCount()
+    {
+        UnreadCount = _tasks.Count(task => !task.IsRead);
     }
 }
