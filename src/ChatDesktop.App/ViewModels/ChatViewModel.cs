@@ -5,6 +5,7 @@ using ChatDesktop.Core.Models;
 using ChatDesktop.Core.Services;
 using ChatDesktop.Infrastructure.AI;
 using ChatDesktop.Infrastructure.Logging;
+using ChatDesktop.Infrastructure.Paths;
 using System.Windows;
 
 namespace ChatDesktop.App.ViewModels;
@@ -241,7 +242,9 @@ public sealed class ChatViewModel : ViewModelBase
 
     public async Task LoadConversationsAsync()
     {
+        _logService.Info("开始加载历史会话", "CHAT");
         var list = await _conversationService.GetActiveAsync();
+        _logService.Info($"加载历史会话={list.Count}，数据库={AppPaths.DatabasePath}", "CHAT");
         Conversations.Clear();
         foreach (var conversation in list)
         {
@@ -251,6 +254,7 @@ public sealed class ChatViewModel : ViewModelBase
         if (_currentConversationId != null)
         {
             SelectedConversation = Conversations.FirstOrDefault(c => c.Id == _currentConversationId);
+            _logService.Info($"保持当前会话 id={_currentConversationId}", "CHAT");
             return;
         }
 
@@ -259,11 +263,13 @@ public sealed class ChatViewModel : ViewModelBase
             SelectedConversation = null;
             RaisePropertyChanged(nameof(CurrentConversationTitle));
             RaisePropertyChanged(nameof(CurrentConversationSubtitle));
+            _logService.Info("当前会话已不存在，清空选择", "CHAT");
         }
     }
 
     public async Task CreateConversationAsync()
     {
+        _logService.Info("开始创建新会话", "CHAT");
         var conversation = new Conversation
         {
             AgentId = "default",
@@ -273,10 +279,12 @@ public sealed class ChatViewModel : ViewModelBase
         };
 
         _currentConversationId = await _conversationService.CreateAsync(conversation);
+        _logService.Info($"创建会话 id={_currentConversationId}，数据库={AppPaths.DatabasePath}", "CHAT");
         _backendConversationId = null;
         Messages.Clear();
         await LoadConversationsAsync();
         SelectedConversation = Conversations.FirstOrDefault(c => c.Id == _currentConversationId);
+        _logService.Info($"创建完成，当前会话 id={_currentConversationId}", "CHAT");
     }
 
     public async Task SendAsync()
@@ -288,6 +296,7 @@ public sealed class ChatViewModel : ViewModelBase
 
         try
         {
+            _logService.Info("开始发送消息", "CHAT");
             IsLoading = true;
             Error = null;
             RequestStatus = "请求已发送";
@@ -313,6 +322,7 @@ public sealed class ChatViewModel : ViewModelBase
             };
 
             var userMessageId = await _conversationService.AddMessageAsync(userMessage);
+            _logService.Info($"保存用户消息 id={userMessageId}，会话={_currentConversationId}", "CHAT");
             var userVm = new ChatMessageViewModel(userMessageId, userMessage.Role, userMessage.Content, userMessage.Status);
             Messages.Add(userVm);
 
@@ -328,6 +338,7 @@ public sealed class ChatViewModel : ViewModelBase
             };
 
             var assistantMessageId = await _conversationService.AddMessageAsync(assistantMessage);
+            _logService.Info($"保存助手消息 id={assistantMessageId}，会话={_currentConversationId}", "CHAT");
             assistantMessage.Id = assistantMessageId;
             var assistantVm = new ChatMessageViewModel(assistantMessageId, assistantMessage.Role, assistantMessage.Content, assistantMessage.Status);
             Messages.Add(assistantVm);
@@ -415,6 +426,7 @@ public sealed class ChatViewModel : ViewModelBase
 
             assistantMessage.Status = MessageStatus.Sent;
             await _conversationService.UpdateMessageAsync(assistantMessage);
+            _logService.Info($"更新助手消息完成 id={assistantMessage.Id}，会话={_currentConversationId}", "CHAT");
             assistantVm.Status = assistantMessage.Status;
             if (!string.IsNullOrWhiteSpace(pendingText))
             {
@@ -449,6 +461,7 @@ public sealed class ChatViewModel : ViewModelBase
             IsStreaming = false;
             _chatCts?.Dispose();
             _chatCts = null;
+            _logService.Info("发送消息流程结束", "CHAT");
         }
     }
 
@@ -460,11 +473,13 @@ public sealed class ChatViewModel : ViewModelBase
             return;
         }
 
+        _logService.Info($"加载会话消息，会话={_currentConversationId}", "CHAT");
         var list = await _conversationService.GetMessagesAsync(_currentConversationId.Value);
         foreach (var message in list)
         {
             Messages.Add(new ChatMessageViewModel(message.Id, message.Role, message.Content, message.Status));
         }
+        _logService.Info($"加载消息完成，会话={_currentConversationId}，数量={list.Count}", "CHAT");
     }
 
     private async Task SaveTitleAsync()
@@ -474,6 +489,7 @@ public sealed class ChatViewModel : ViewModelBase
             return;
         }
 
+        _logService.Info($"保存会话标题，会话={SelectedConversation.Id}", "CHAT");
         SelectedConversation.Title = SelectedConversationTitle;
         await _conversationService.UpdateAsync(SelectedConversation);
         await LoadConversationsAsync();
@@ -486,6 +502,7 @@ public sealed class ChatViewModel : ViewModelBase
             return;
         }
 
+        _logService.Info($"删除当前会话，会话={SelectedConversation.Id}", "CHAT");
         await _conversationService.SoftDeleteAsync(SelectedConversation.Id);
         _currentConversationId = null;
         _backendConversationId = null;
@@ -503,10 +520,12 @@ public sealed class ChatViewModel : ViewModelBase
             Messages.Clear();
             RaisePropertyChanged(nameof(CurrentConversationTitle));
             RaisePropertyChanged(nameof(CurrentConversationSubtitle));
+            _logService.Info("切换会话为空，清空选择", "CHAT");
             return Task.CompletedTask;
         }
 
         SelectedConversation = conversation;
+        _logService.Info($"切换会话 id={conversation.Id}", "CHAT");
         return Task.CompletedTask;
     }
 
@@ -517,6 +536,7 @@ public sealed class ChatViewModel : ViewModelBase
             return;
         }
 
+        _logService.Info($"删除指定会话，会话={conversation.Id}", "CHAT");
         await _conversationService.SoftDeleteAsync(conversation.Id);
 
         if (_currentConversationId == conversation.Id)

@@ -15,6 +15,7 @@ using ChatDesktop.App.ViewModels;
 using ChatDesktop.App.Views;
 using ChatDesktop.Core.Enums;
 using ChatDesktop.Infrastructure.Config;
+using ChatDesktop.Infrastructure.Logging;
 using Microsoft.Web.WebView2.Core;
 using Markdig;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace ChatDesktop.App;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private readonly LogService _logService = new();
     private INotifyCollectionChanged? _chatMessages;
     private readonly DispatcherTimer _chatUpdateTimer = new();
     private readonly HashSet<int> _pendingUpdateIds = new();
@@ -141,7 +143,9 @@ public partial class MainWindow : Window
 
         if (button.DataContext is MainViewModel mainViewModel)
         {
+            _logService.Info("打开会话下拉，开始加载历史会话", "CHAT");
             await mainViewModel.Chat.LoadConversationsAsync();
+            _logService.Info($"会话下拉加载完成，数量={mainViewModel.Chat.Conversations.Count}", "CHAT");
         }
 
         button.ContextMenu.DataContext = button.DataContext;
