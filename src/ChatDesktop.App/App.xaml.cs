@@ -140,14 +140,21 @@ public partial class App : Application
 
         var normalized = AppFontService.NormalizeKey(key);
         _appSettings.FontKey = normalized;
-        Resources["AppFontFamily"] = AppFontService.GetFontFamily(normalized);
+        ApplyFont(normalized);
         await _settingsStore.SaveAsync(_appSettings);
     }
 
     private void ApplyFontFromSettings()
     {
         var normalized = AppFontService.NormalizeKey(_appSettings?.FontKey);
-        Resources["AppFontFamily"] = AppFontService.GetFontFamily(normalized);
+        ApplyFont(normalized);
+    }
+
+    private void ApplyFont(string normalizedKey)
+    {
+        var fontFamily = AppFontService.GetFontFamily(normalizedKey);
+        Resources["AppFontFamily"] = fontFamily;
+        Resources["MaterialDesignFont"] = fontFamily;
     }
 
     private void OnMqttTaskChanged()
