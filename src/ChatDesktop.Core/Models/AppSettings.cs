@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace ChatDesktop.Core.Models;
 
 /// <summary>
@@ -13,6 +16,9 @@ public sealed class AppSettings
 
     public WindowBounds? MainWindowBounds { get; set; }
     public WindowPoint? MiniWindowPosition { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtraConfig { get; set; }
 }
 
 /// <summary>

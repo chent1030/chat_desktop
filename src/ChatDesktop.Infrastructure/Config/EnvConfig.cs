@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Text;
 using ChatDesktop.Core.Constants;
+using ChatDesktop.Core.Models;
+using System.Text.Json;
 
 namespace ChatDesktop.Infrastructure.Config;
 
@@ -12,10 +14,11 @@ public static class EnvConfig
     private static readonly ConcurrentDictionary<string, string> Values = new();
     private static bool _loaded;
 
-    public static void Load(string? envPath = null)
+    public static void Load(AppSettings? settings = null, string? envPath = null)
     {
         if (_loaded)
         {
+            ApplySettings(settings);
             return;
         }
 
@@ -45,7 +48,33 @@ public static class EnvConfig
             }
         }
 
+        ApplySettings(settings);
         _loaded = true;
+    }
+
+    public static void ApplySettings(AppSettings? settings)
+    {
+        if (settings?.ExtraConfig == null)
+        {
+            return;
+        }
+
+        foreach (var (rawKey, element) in settings.ExtraConfig)
+        {
+            if (string.IsNullOrWhiteSpace(rawKey))
+            {
+                continue;
+            }
+
+            var value = ConvertToString(element);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            var key = rawKey.Trim();
+            Values[key.ToUpperInvariant()] = value;
+        }
     }
 
     private static string? ResolveEnvPath(string? envPath)
@@ -156,5 +185,25 @@ public static class EnvConfig
 
         var normalized = raw.Trim().ToLowerInvariant();
         return normalized is "true" or "1" or "yes" or "y";
+    }
+
+    private static string? ConvertToString(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                return element.GetString();
+            case JsonValueKind.Number:
+                return element.ToString();
+            case JsonValueKind.True:
+                return "true";
+            case JsonValueKind.False:
+                return "false";
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                return null;
+            default:
+                return element.ToString();
+        }
     }
 }

@@ -30,8 +30,6 @@ public partial class App : Application
 
         try
         {
-            EnvConfig.Load();
-
             var connectionFactory = new SqliteConnectionFactory(AppPaths.DatabasePath);
             var schemaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Schema.sql");
             var schemaInitializer = new SchemaInitializer(connectionFactory, schemaPath);
@@ -42,6 +40,7 @@ public partial class App : Application
             var settingsService = new AppSettingsService(settingsStore);
             var settings = settingsService.LoadAsync().GetAwaiter().GetResult();
             _appSettings = settings;
+            EnvConfig.Load(settings);
             var empNo = settings.EmpNo ?? string.Empty;
 
             var remoteService = new UnifyTaskApiService();
@@ -67,6 +66,7 @@ public partial class App : Application
                 empWindow.ShowDialog();
                 settings = settingsService.LoadAsync().GetAwaiter().GetResult();
                 empNo = settings.EmpNo ?? string.Empty;
+                EnvConfig.Load(settings);
             }
             _appSettings = settings;
 
