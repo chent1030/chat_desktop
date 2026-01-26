@@ -168,6 +168,9 @@ public partial class MainWindow : Window
             menu.Style = menuStyle;
         }
         menu.MinWidth = 360;
+        menu.MaxHeight = 420;
+        menu.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Auto);
+        menu.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
 
         var menuItemStyle = TryFindResource("ConversationMenuItemStyle") as Style;
         var newItem = new MenuItem
@@ -217,7 +220,7 @@ public partial class MainWindow : Window
 
     private FrameworkElement BuildConversationHeader(Conversation conversation, MainViewModel viewModel)
     {
-        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        var grid = new Grid { Margin = new Thickness(0, 4, 0, 4), MinHeight = 44 };
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -225,7 +228,7 @@ public partial class MainWindow : Window
             ? $"会话 {conversation.Id}"
             : conversation.Title;
         var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
-        titleRow.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold });
+        titleRow.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold, FontSize = 13 });
         if (viewModel.Chat.CurrentConversationId == conversation.Id)
         {
             var badge = new Border
@@ -253,7 +256,9 @@ public partial class MainWindow : Window
             {
                 Text = conversation.LastMessageContent,
                 FontSize = 11,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7A808A"))
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7A808A")),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxWidth = 240
             };
             stack.Children.Add(subtitle);
         }
