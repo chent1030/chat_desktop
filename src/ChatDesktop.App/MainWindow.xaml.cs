@@ -163,14 +163,38 @@ public partial class MainWindow : Window
     private void BuildConversationMenu(ContextMenu menu, MainViewModel viewModel)
     {
         menu.Items.Clear();
+        if (TryFindResource("ConversationMenuStyle") is Style menuStyle)
+        {
+            menu.Style = menuStyle;
+        }
+        menu.MinWidth = 360;
 
         var newItem = new MenuItem
         {
             Header = "新会话",
             Command = viewModel.Chat.NewConversationCommand
         };
+        if (TryFindResource("ConversationMenuItemStyle") is Style itemStyle)
+        {
+            newItem.Style = itemStyle;
+        }
         menu.Items.Add(newItem);
         menu.Items.Add(new Separator());
+
+        if (viewModel.Chat.Conversations.Count == 0)
+        {
+            var emptyItem = new MenuItem
+            {
+                Header = new TextBlock
+                {
+                    Text = "暂无历史会话",
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9AA3B2"))
+                },
+                IsEnabled = false
+            };
+            menu.Items.Add(emptyItem);
+            return;
+        }
 
         foreach (var conversation in viewModel.Chat.Conversations)
         {
@@ -178,8 +202,14 @@ public partial class MainWindow : Window
             {
                 Command = viewModel.Chat.SelectConversationCommand,
                 CommandParameter = conversation,
-                Header = BuildConversationHeader(conversation, viewModel)
+                Header = BuildConversationHeader(conversation, viewModel),
+                IsCheckable = true,
+                IsChecked = viewModel.Chat.CurrentConversationId == conversation.Id
             };
+            if (TryFindResource("ConversationMenuItemStyle") is Style itemStyle)
+            {
+                item.Style = itemStyle;
+            }
             menu.Items.Add(item);
         }
     }
@@ -193,8 +223,28 @@ public partial class MainWindow : Window
         var title = string.IsNullOrWhiteSpace(conversation.Title)
             ? $"会话 {conversation.Id}"
             : conversation.Title;
+        var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
+        titleRow.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold });
+        if (viewModel.Chat.CurrentConversationId == conversation.Id)
+        {
+            var badge = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E3EEFF")),
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(6, 1, 6, 1),
+                Child = new TextBlock
+                {
+                    Text = "当前",
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4C6EF5"))
+                }
+            };
+            titleRow.Children.Add(badge);
+        }
+
         var stack = new StackPanel();
-        stack.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold });
+        stack.Children.Add(titleRow);
 
         if (!string.IsNullOrWhiteSpace(conversation.LastMessageContent))
         {
@@ -216,7 +266,11 @@ public partial class MainWindow : Window
             Command = viewModel.Chat.DeleteConversationByIdCommand,
             CommandParameter = conversation
         };
-        if (TryFindResource("MaterialDesignFlatButton") is Style style)
+        if (TryFindResource("ConversationMenuDeleteButtonStyle") is Style deleteStyle)
+        {
+            deleteButton.Style = deleteStyle;
+        }
+        else if (TryFindResource("MaterialDesignFlatButton") is Style style)
         {
             deleteButton.Style = style;
         }
@@ -616,11 +670,13 @@ public partial class MainWindow : Window
         sb.Append("<style>");
         sb.Append(BuildChatFontCss());
         sb.Append("background:#F4F6FA;margin:0;padding:12px;");
-        sb.Append("scrollbar-width:thin;scrollbar-color:#C2C9D6 transparent;}");
-        sb.Append("body::-webkit-scrollbar{width:10px;}");
-        sb.Append("body::-webkit-scrollbar-track{background:transparent;}");
-        sb.Append("body::-webkit-scrollbar-thumb{background:#C2C9D6;border-radius:8px;border:2px solid transparent;background-clip:content-box;}");
-        sb.Append("body::-webkit-scrollbar-thumb:hover{background:#9AA3B2;background-clip:content-box;}");
+        sb.Append("scrollbar-width:thin;scrollbar-color:#AEBBEF #EEF2F8;}");
+        sb.Append("body::-webkit-scrollbar{width:10px;height:10px;}");
+        sb.Append("body::-webkit-scrollbar-track{background:#EEF2F8;border-radius:10px;}");
+        sb.Append("body::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#B8C7F4,#8EA6F0);");
+        sb.Append("border-radius:10px;border:2px solid #EEF2F8;background-clip:content-box;}");
+        sb.Append("body::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#AABAF0,#7F9AEC);}");
+        sb.Append("body::-webkit-scrollbar-corner{background:#EEF2F8;}");
         sb.Append(".msg{display:flex;margin:10px 0;}");
         sb.Append(".bubble{max-width:560px;padding:10px 12px;border-radius:12px;border:1px solid #E5E8F0;background:#fff;}");
         sb.Append(".user{justify-content:flex-end;}");

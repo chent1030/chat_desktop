@@ -42,6 +42,77 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <Style x:Key="ConversationMenuStyle" TargetType="ContextMenu">
+      <Setter Property="Background" Value="#F9FBFF" />
+      <Setter Property="BorderBrush" Value="#E1E6F0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="SnapsToDevicePixels" Value="True" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ContextMenu">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="12">
+              <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.18" />
+              </Border.Effect>
+              <StackPanel IsItemsHost="True" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="ConversationMenuItemStyle" TargetType="MenuItem">
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Margin" Value="4,2" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="MenuItem">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="10">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="#EEF3FF" />
+                <Setter Property="BorderBrush" Value="#C9D7F7" />
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="#E5ECFF" />
+                <Setter Property="BorderBrush" Value="#B8C8F0" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="ConversationMenuDeleteButtonStyle" TargetType="Button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="4" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}" CornerRadius="6">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#FBE9E7" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <!-- 会话菜单改为代码生成 -->
   </Window.Resources>
   <Grid Margin="12">
@@ -311,25 +382,56 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="ConversationMenuButton" Grid.Column="0" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
-                    HorizontalContentAlignment="Stretch" Click="OnConversationMenuClicked">
-              <Button.ContextMenu>
-                <ContextMenu x:Name="ConversationContextMenu" />
-              </Button.ContextMenu>
-              <Grid>
+            <StackPanel Grid.Column="0">
+              <Button x:Name="ConversationMenuButton" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,8"
+                      HorizontalContentAlignment="Stretch" Click="OnConversationMenuClicked">
+                <Button.ContextMenu>
+                  <ContextMenu x:Name="ConversationContextMenu" />
+                </Button.ContextMenu>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock Text="{Binding Chat.CurrentConversationTitle}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Chat.CurrentConversationSubtitle}" Foreground="#7A808A" FontSize="11"
+                               Visibility="{Binding Chat.CurrentConversationSubtitle, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+                  </StackPanel>
+                  <materialDesign:PackIcon Kind="MenuDown" Width="18" Height="18" Foreground="#6B7280"
+                                           Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+
+              <Grid Margin="0,6,0,0" Visibility="{Binding Chat.IsEditingTitle, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel>
-                  <TextBlock Text="{Binding Chat.CurrentConversationTitle}" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding Chat.CurrentConversationSubtitle}" Foreground="#7A808A" FontSize="11"
-                             Visibility="{Binding Chat.CurrentConversationSubtitle, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
-                </StackPanel>
-                <materialDesign:PackIcon Kind="MenuDown" Width="18" Height="18" Foreground="#6B7280"
-                                         Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" />
+                <TextBox Grid.Column="0"
+                         Text="{Binding Chat.SelectedConversationTitle, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="编辑对话标题"
+                         Margin="0,0,8,0" />
+                <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="8,4"
+                        Command="{Binding Chat.FinishEditTitleCommand}">
+                  <TextBlock Text="保存" />
+                </Button>
+                <Button Grid.Column="2" Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4" Margin="6,0,0,0"
+                        Command="{Binding Chat.CancelEditTitleCommand}">
+                  <TextBlock Text="取消" />
+                </Button>
               </Grid>
-            </Button>
+
+              <Button Style="{StaticResource MaterialDesignFlatButton}" Padding="6,2" HorizontalAlignment="Left"
+                      Visibility="{Binding Chat.IsViewingTitle, Converter={StaticResource BooleanToVisibilityConverter}}"
+                      Command="{Binding Chat.StartEditTitleCommand}">
+                <StackPanel Orientation="Horizontal">
+                  <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14" Margin="0,0,6,0" />
+                  <TextBlock Text="编辑标题" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
               <Border Background="#EEF1FF" CornerRadius="10" Padding="2">

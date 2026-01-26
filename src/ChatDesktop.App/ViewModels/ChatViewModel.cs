@@ -31,6 +31,7 @@ public sealed class ChatViewModel : ViewModelBase
     private Conversation? _selectedConversation;
     private string _selectedConversationTitle = string.Empty;
     private string _assistantKey = "xin_service";
+    private bool _isEditingTitle;
 
     public ChatViewModel(
         ConversationService conversationService,
@@ -51,6 +52,9 @@ public sealed class ChatViewModel : ViewModelBase
         DeleteConversationCommand = new AsyncRelayCommand(DeleteConversationAsync, () => SelectedConversation != null);
         SelectConversationCommand = new AsyncRelayCommand<Conversation>(SelectConversationAsync);
         DeleteConversationByIdCommand = new AsyncRelayCommand<Conversation>(DeleteConversationByIdAsync);
+        StartEditTitleCommand = new RelayCommand(_ => StartEditTitle(), _ => SelectedConversation != null && !IsEditingTitle);
+        FinishEditTitleCommand = new AsyncRelayCommand(FinishEditTitleAsync, () => SelectedConversation != null && IsEditingTitle && !string.IsNullOrWhiteSpace(SelectedConversationTitle));
+        CancelEditTitleCommand = new RelayCommand(_ => CancelEditTitle(), _ => SelectedConversation != null && IsEditingTitle);
 
         AssistantOptions = new List<EnumOption<string>>
         {
@@ -134,11 +138,17 @@ public sealed class ChatViewModel : ViewModelBase
             _currentConversationId = value?.Id;
             _backendConversationId = null;
             SelectedConversationTitle = value?.Title ?? string.Empty;
+            IsEditingTitle = false;
             _ = LoadMessagesAsync();
             SaveTitleCommand.RaiseCanExecuteChanged();
             DeleteConversationCommand.RaiseCanExecuteChanged();
+            FinishEditTitleCommand.RaiseCanExecuteChanged();
+            CancelEditTitleCommand.RaiseCanExecuteChanged();
+            StartEditTitleCommand.RaiseCanExecuteChanged();
             RaisePropertyChanged(nameof(CurrentConversationTitle));
             RaisePropertyChanged(nameof(CurrentConversationSubtitle));
+            RaisePropertyChanged(nameof(CurrentConversationId));
+            RaisePropertyChanged(nameof(IsViewingTitle));
         }
     }
 
@@ -154,8 +164,30 @@ public sealed class ChatViewModel : ViewModelBase
 
             _selectedConversationTitle = value;
             RaisePropertyChanged();
+            FinishEditTitleCommand.RaiseCanExecuteChanged();
         }
     }
+
+    public bool IsEditingTitle
+    {
+        get => _isEditingTitle;
+        private set
+        {
+            if (_isEditingTitle == value)
+            {
+                return;
+            }
+
+            _isEditingTitle = value;
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(IsViewingTitle));
+            StartEditTitleCommand.RaiseCanExecuteChanged();
+            FinishEditTitleCommand.RaiseCanExecuteChanged();
+            CancelEditTitleCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public bool IsViewingTitle => SelectedConversation != null && !IsEditingTitle;
 
     public string AssistantKey
     {
@@ -217,6 +249,8 @@ public sealed class ChatViewModel : ViewModelBase
         }
     }
 
+    public int? CurrentConversationId => _currentConversationId;
+
     public string? CurrentConversationSubtitle
     {
         get
@@ -239,6 +273,9 @@ public sealed class ChatViewModel : ViewModelBase
     public AsyncRelayCommand DeleteConversationCommand { get; }
     public AsyncRelayCommand<Conversation> SelectConversationCommand { get; }
     public AsyncRelayCommand<Conversation> DeleteConversationByIdCommand { get; }
+    public RelayCommand StartEditTitleCommand { get; }
+    public AsyncRelayCommand FinishEditTitleCommand { get; }
+    public RelayCommand CancelEditTitleCommand { get; }
 
     public async Task LoadConversationsAsync()
     {
@@ -325,6 +362,7 @@ public sealed class ChatViewModel : ViewModelBase
             _logService.Info($"保存用户消息 id={userMessageId}，会话={_currentConversationId}", "CHAT");
             var userVm = new ChatMessageViewModel(userMessageId, userMessage.Role, userMessage.Content, userMessage.Status);
             Messages.Add(userVm);
+            await TryApplyTitleFromFirstMessageAsync(content);
 
             var assistantMessage = new Message
             {
@@ -490,9 +528,7 @@ public sealed class ChatViewModel : ViewModelBase
         }
 
         _logService.Info($"保存会话标题，会话={SelectedConversation.Id}", "CHAT");
-        SelectedConversation.Title = SelectedConversationTitle;
-        await _conversationService.UpdateAsync(SelectedConversation);
-        await LoadConversationsAsync();
+        await UpdateTitleAsync(SelectedConversationTitle, reloadList: true);
     }
 
     private async Task DeleteConversationAsync()
@@ -548,5 +584,102 @@ public sealed class ChatViewModel : ViewModelBase
         }
 
         await LoadConversationsAsync();
+    }
+
+    private void StartEditTitle()
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        IsEditingTitle = true;
+    }
+
+    private async Task FinishEditTitleAsync()
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        var trimmed = SelectedConversationTitle?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        await UpdateTitleAsync(trimmed, reloadList: true);
+        IsEditingTitle = false;
+    }
+
+    private void CancelEditTitle()
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        SelectedConversationTitle = SelectedConversation.Title ?? string.Empty;
+        IsEditingTitle = false;
+    }
+
+    private async Task UpdateTitleAsync(string title, bool reloadList)
+    {
+        if (SelectedConversation == null)
+        {
+            return;
+        }
+
+        var trimmed = title.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        SelectedConversation.Title = trimmed;
+        SelectedConversationTitle = trimmed;
+        await _conversationService.UpdateAsync(SelectedConversation);
+        if (reloadList)
+        {
+            await LoadConversationsAsync();
+        }
+
+        RaisePropertyChanged(nameof(CurrentConversationTitle));
+    }
+
+    private async Task TryApplyTitleFromFirstMessageAsync(string content)
+    {
+        if (SelectedConversation == null || IsEditingTitle)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedConversation.Title) && SelectedConversation.Title != "新对话")
+        {
+            return;
+        }
+
+        var title = BuildTitleFromContent(content);
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return;
+        }
+
+        _logService.Info($"使用首条问题作为标题，标题={title}", "CHAT");
+        await UpdateTitleAsync(title, reloadList: true);
+    }
+
+    private static string BuildTitleFromContent(string content)
+    {
+        var trimmed = content.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return string.Empty;
+        }
+
+        var normalized = string.Join(" ", trimmed.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries));
+        const int maxLength = 28;
+        return normalized.Length <= maxLength ? normalized : normalized[..maxLength];
     }
 }
