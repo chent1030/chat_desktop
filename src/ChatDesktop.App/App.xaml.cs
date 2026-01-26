@@ -27,6 +27,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         try
         {
@@ -74,11 +75,13 @@ public partial class App : Application
             {
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
+            MainWindow = window;
             var viewModel = MainViewModel.CreateDefault(taskService, remoteService, empNo, conversationService);
             _mainViewModel = viewModel;
             window.DataContext = viewModel;
             window.Show();
             window.Activate();
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
             if (_settingsStore != null && _appSettings != null)
             {
                 _miniWindowManager = new MiniWindowManager(window, viewModel, _settingsStore, _appSettings);
