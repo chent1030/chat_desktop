@@ -348,7 +348,7 @@
                     <scm:CompositeCollection>
                       <MenuItem Header="新会话" Command="{Binding Chat.NewConversationCommand}" />
                       <Separator />
-                      <scm:CollectionContainer Collection="{Binding Chat.Conversations}" />
+                      <scm:CollectionContainer Collection="{Binding DataContext.Chat.Conversations, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                     </scm:CompositeCollection>
                   </ContextMenu.ItemsSource>
                   <ContextMenu.ItemContainerStyleSelector>
