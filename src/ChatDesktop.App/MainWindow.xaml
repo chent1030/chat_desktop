@@ -103,8 +103,9 @@
                     Click="OnConversationMenuClicked">
               <materialDesign:PackIcon Kind="DotsVertical" Width="18" Height="18" />
               <Button.ContextMenu>
-                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                  <MenuItem Header="字体" SubmenuOpened="OnFontMenuOpened" />
+                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                             Opened="OnMoreMenuOpened">
+                  <MenuItem x:Name="FontMenuItem" Header="字体" />
                   <Separator />
                   <MenuItem Header="清除已完成任务" Command="{Binding TaskList.ClearCompletedCommand}" />
                   <MenuItem Header="修改工号" Command="{Binding TaskList.OpenChangeEmpNoCommand}" />

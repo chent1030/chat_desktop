@@ -124,14 +124,14 @@ public partial class MainWindow : Window
         button.ContextMenu.IsOpen = true;
     }
 
-    private void OnFontMenuOpened(object sender, RoutedEventArgs e)
+    private void OnMoreMenuOpened(object sender, RoutedEventArgs e)
     {
-        if (sender is not MenuItem menuItem)
+        if (FontMenuItem == null)
         {
             return;
         }
 
-        BuildFontMenu(menuItem);
+        BuildFontMenu(FontMenuItem);
     }
 
     private static void BuildFontMenu(MenuItem menuItem)
