@@ -228,7 +228,13 @@ public partial class MainWindow : Window
             ? $"会话 {conversation.Id}"
             : conversation.Title;
         var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
-        titleRow.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold, FontSize = 13 });
+        titleRow.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 13,
+            Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F2937"))
+        });
         if (viewModel.Chat.CurrentConversationId == conversation.Id)
         {
             var badge = new Border
@@ -256,7 +262,7 @@ public partial class MainWindow : Window
             {
                 Text = conversation.LastMessageContent,
                 FontSize = 11,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7A808A")),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")),
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 MaxWidth = 240
             };
