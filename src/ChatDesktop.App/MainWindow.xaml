@@ -80,6 +80,8 @@
                     BorderThickness="{TemplateBinding BorderThickness}"
                     CornerRadius="10">
               <ContentPresenter Margin="4,2"
+                                ContentSource="Header"
+                                RecognizesAccessKey="True"
                                 TextElement.Foreground="{TemplateBinding Foreground}" />
             </Border>
             <ControlTemplate.Triggers>
