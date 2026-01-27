@@ -143,7 +143,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (button.DataContext is MainViewModel mainViewModel)
+        if (button.ContextMenu.Name == "ConversationContextMenu" && button.DataContext is MainViewModel mainViewModel)
         {
             _logService.Info("打开会话下拉，开始加载历史会话", "CHAT");
             await mainViewModel.Chat.LoadConversationsAsync();
@@ -156,6 +156,17 @@ public partial class MainWindow : Window
         {
             CollectionViewSource.GetDefaultView(button.ContextMenu.ItemsSource)?.Refresh();
         }
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+    }
+
+    private void OnMoreMenuClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.ContextMenu == null)
+        {
+            return;
+        }
+
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
     }
