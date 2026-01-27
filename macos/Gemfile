@@ -1,5 +1,0 @@
-source 'https://rubygems.org'
-
-# Use a version of activesupport compatible with Ruby 2.6
-gem 'activesupport', '~> 5.2.0'
-gem 'cocoapods', '~> 1.16'
